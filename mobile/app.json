@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Selah Music Player",
+    "slug": "selah-music-player",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0D14",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.selah.musicplayer",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.selah.musicplayer",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0D14",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.WAKE_LOCK",
+        "android.permission.FOREGROUND_SERVICE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Selah Music Player to access your music and audio files.",
+          "savePhotosPermission": "Allow Selah Music Player to manage music files.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
+    ]
+  }
+}
