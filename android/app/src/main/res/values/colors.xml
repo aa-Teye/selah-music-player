@@ -1,0 +1,8 @@
+<resources>
+    <color name="bg_primary">#0A0D14</color>
+    <color name="bg_secondary">#111622</color>
+    <color name="gold_primary">#E5A93C</color>
+    <color name="gold_light">#FCD34D</color>
+    <color name="text_main">#F3F4F6</color>
+    <color name="text_muted">#9CA3AF</color>
+</resources>

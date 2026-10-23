@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Muzio Spirit</string>
+    <string name="verse_of_the_day">Verse of the Day</string>
+    <string name="play_featured">Play Devotional Anthem</string>
+    <string name="local_library">Local Library</string>
+    <string name="youtube_watch">YouTube Watch</string>
+    <string name="ai_discovery">AI Music Finder</string>
+    <string name="equalizer_title">Sound &amp; Equalizer</string>
+</resources>
