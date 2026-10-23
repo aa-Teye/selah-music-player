@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Expo & Mobile
+.expo/
+mobile/.expo/
+mobile/node_modules/
+mobile/dist/
+web-build/
+
+# Android Native Builds
+*.apk
+*.aab
+*.jks
+*.keystore
+local.properties
+.gradle/
+build/
+android/.gradle/
+android/app/build/
+mobile/android/.gradle/
+mobile/android/app/build/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
