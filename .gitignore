@@ -43,3 +43,4 @@ mobile/android/app/build/
 *.sln
 *.sw?
 
+.claude/
