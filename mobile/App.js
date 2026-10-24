@@ -97,8 +97,9 @@ export default function App() {
     setCurrentPosition(0);
     setDuration(track.duration || 180);
 
-    // Play immediately if audio URI exists (local or streaming)
-    if (track.uri) {
+    // Play immediately if audio source exists (bundled asset or streaming/file URI)
+    const audioSource = track.asset || track.uri;
+    if (audioSource) {
       try {
         if (statusSubRef.current) {
           try {
@@ -115,7 +116,7 @@ export default function App() {
           soundRef.current = null;
         }
 
-        const player = createAudioPlayer({ uri: track.uri });
+        const player = createAudioPlayer(audioSource);
         soundRef.current = player;
         player.playbackRate = playbackSpeed;
         player.play();
