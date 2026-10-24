@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, SafeAreaView, StatusBar, Alert } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, AudioModule } from 'expo-audio';
 
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
@@ -42,12 +42,12 @@ export default function App() {
   useEffect(() => {
     async function initApp() {
       try {
-        await Audio.setAudioModeAsync({
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false
-        });
+        if (AudioModule && AudioModule.setAudioModeAsync) {
+          await AudioModule.setAudioModeAsync({
+            staysActiveInBackground: true,
+            playsInSilentModeIOS: true
+          }).catch(() => {});
+        }
 
         // Load saved favorites, local tracks, streak from AsyncStorage
         const [savedFavs, savedLocal, savedStreak] = await Promise.all([
@@ -70,7 +70,10 @@ export default function App() {
 
     return () => {
       if (soundRef.current) {
-        soundRef.current.unloadAsync();
+        try {
+          soundRef.current.pause();
+          soundRef.current.remove();
+        } catch (_) {}
       }
       if (playbackTimer.current) {
         clearInterval(playbackTimer.current);
@@ -93,15 +96,20 @@ export default function App() {
     if (track.sourceType === 'local' && track.uri) {
       try {
         if (soundRef.current) {
-          await soundRef.current.unloadAsync();
+          try {
+            soundRef.current.pause();
+            soundRef.current.remove();
+          } catch (_) {}
+          soundRef.current = null;
         }
-        const { sound, status } = await Audio.Sound.createAsync(
-          { uri: track.uri },
-          { shouldPlay: true, rate: playbackSpeed }
-        );
-        soundRef.current = sound;
-        if (status.durationMillis) {
-          setDuration(Math.floor(status.durationMillis / 1000));
+
+        const player = createAudioPlayer({ uri: track.uri });
+        soundRef.current = player;
+        player.playbackRate = playbackSpeed;
+        player.play();
+
+        if (player.duration) {
+          setDuration(Math.floor(player.duration));
         }
       } catch (err) {
         console.log('Error playing local audio sound:', err);
@@ -132,7 +140,9 @@ export default function App() {
     if (currentPosition > 4) {
       setCurrentPosition(0);
       if (soundRef.current) {
-        soundRef.current.setPositionAsync(0).catch(() => {});
+        try {
+          soundRef.current.seekTo(0);
+        } catch (_) {}
       }
       return;
     }
@@ -145,26 +155,30 @@ export default function App() {
   }, [currentPosition, tracks, currentTrack, handlePlayTrack]);
 
   // Toggle Play / Pause
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
       if (soundRef.current) {
-        await soundRef.current.pauseAsync().catch(() => {});
+        try {
+          soundRef.current.pause();
+        } catch (_) {}
       }
     } else {
       setIsPlaying(true);
       if (soundRef.current) {
-        await soundRef.current.playAsync().catch(() => {});
+        try {
+          soundRef.current.play();
+        } catch (_) {}
       }
     }
   };
 
   // Interactive Audio Seeking (Scrubber)
-  const handleSeek = async (targetSeconds) => {
+  const handleSeek = (targetSeconds) => {
     setCurrentPosition(targetSeconds);
     if (soundRef.current && currentTrack?.sourceType === 'local') {
       try {
-        await soundRef.current.setPositionAsync(targetSeconds * 1000);
+        soundRef.current.seekTo(targetSeconds);
       } catch (e) {
         console.log('Error seeking position:', e);
       }
@@ -172,11 +186,11 @@ export default function App() {
   };
 
   // Playback Speed Controller
-  const handleSetSpeed = async (newSpeed) => {
+  const handleSetSpeed = (newSpeed) => {
     setPlaybackSpeed(newSpeed);
     if (soundRef.current && currentTrack?.sourceType === 'local') {
       try {
-        await soundRef.current.setRateAsync(newSpeed, true);
+        soundRef.current.playbackRate = newSpeed;
       } catch (e) {
         console.log('Error setting speed:', e);
       }
@@ -206,7 +220,9 @@ export default function App() {
           // Pause playback gently
           setIsPlaying(false);
           if (soundRef.current) {
-            soundRef.current.pauseAsync().catch(() => {});
+            try {
+              soundRef.current.pause();
+            } catch (_) {}
           }
           Alert.alert("Sleep Timer Ended 🌙", "Selah has gently paused your music. Goodnight!");
           return null;
@@ -380,7 +396,7 @@ export default function App() {
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onNext={handleNextTrack}
-        onOpenFullPlayer={() => setIsFullPlayerVisible(true)}
+        onOpenFullPlayer={() => setIsFullPlayerVisible(false) || setIsFullPlayerVisible(true)}
         currentPosition={currentPosition}
         duration={duration}
       />

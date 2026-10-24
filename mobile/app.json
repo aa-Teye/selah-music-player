@@ -49,7 +49,8 @@
           "savePhotosPermission": "Allow Selah Music Player to manage music files.",
           "isAccessMediaLocationEnabled": false
         }
-      ]
+      ],
+      "expo-audio"
     ]
   }
 }
