@@ -2,14 +2,19 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function BottomTabs({ activeTab, onSelectTab }) {
+export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
   const tabs = [
     { id: 'home', label: 'Home', iconType: 'ion', icon: 'home-sharp' },
     { id: 'library', label: 'Library', iconType: 'ion', icon: 'musical-notes' },
     { id: 'youtube', label: 'YouTube', iconType: 'ion', icon: 'play-circle' },
-    { id: 'ai', label: 'AI Music', iconType: 'mci', icon: 'creation' },
+    { id: 'playlists', label: 'Playlists', iconType: 'ion', icon: 'albums-outline' },
     { id: 'settings', label: 'EQ', iconType: 'ion', icon: 'options' }
   ];
+
+  const handlePress = (tabId) => {
+    if (onTabChange) onTabChange(tabId);
+    if (onSelectTab) onSelectTab(tabId);
+  };
 
   return (
     <View style={styles.container}>
@@ -21,7 +26,7 @@ export default function BottomTabs({ activeTab, onSelectTab }) {
           <TouchableOpacity
             key={tab.id}
             style={styles.tabButton}
-            onPress={() => onSelectTab(tab.id)}
+            onPress={() => handlePress(tab.id)}
             activeOpacity={0.7}
           >
             {tab.iconType === 'ion' ? (

@@ -23,12 +23,6 @@ export default function TopHeader({
             <Text style={styles.streakText}>{streakDays}</Text>
             <Text style={styles.streakLabel}>DAYS</Text>
           </View>
-
-          {/* AI Search shortcut */}
-          <TouchableOpacity style={styles.aiButton} onPress={onOpenAi}>
-            <MaterialCommunityIcons name="creation" size={16} color="#E5A93C" />
-            <Text style={styles.aiButtonText}>AI</Text>
-          </TouchableOpacity>
         </View>
       </View>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, SafeAreaView, StatusBar, Alert } from 'react-native';
-import { createAudioPlayer, AudioModule } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
@@ -10,7 +10,7 @@ import FullPlayerModal from './src/components/FullPlayerModal';
 import HomeScreen from './src/screens/HomeScreen';
 import LocalLibraryScreen from './src/screens/LocalLibraryScreen';
 import YouTubeWatchScreen from './src/screens/YouTubeWatchScreen';
-import AiDiscoveryScreen from './src/screens/AiDiscoveryScreen';
+import PlaylistsScreen from './src/screens/PlaylistsScreen';
 import EqualizerScreen from './src/screens/EqualizerScreen';
 
 import { DAILY_DEVOTION, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
@@ -26,7 +26,7 @@ export default function App() {
   const [duration, setDuration] = useState(INITIAL_TRACKS[0].duration || 180);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
-  const [favorites, setFavorites] = useState(['yt-1', 'yt-2']);
+  const [favorites, setFavorites] = useState(['track-1', 'track-2']);
   const [isFullPlayerVisible, setIsFullPlayerVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
@@ -35,6 +35,7 @@ export default function App() {
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
 
   const soundRef = useRef(null);
+  const statusSubRef = useRef(null);
   const playbackTimer = useRef(null);
   const sleepTimerRef = useRef(null);
 
@@ -42,12 +43,11 @@ export default function App() {
   useEffect(() => {
     async function initApp() {
       try {
-        if (AudioModule && AudioModule.setAudioModeAsync) {
-          await AudioModule.setAudioModeAsync({
-            staysActiveInBackground: true,
-            playsInSilentModeIOS: true
-          }).catch(() => {});
-        }
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
+          interruptionMode: 'doNotMix'
+        }).catch((err) => console.log('AudioMode configuration notice:', err));
 
         // Load saved favorites, local tracks, streak from AsyncStorage
         const [savedFavs, savedLocal, savedStreak] = await Promise.all([
@@ -69,6 +69,11 @@ export default function App() {
     initApp();
 
     return () => {
+      if (statusSubRef.current) {
+        try {
+          statusSubRef.current.remove();
+        } catch (_) {}
+      }
       if (soundRef.current) {
         try {
           soundRef.current.pause();
@@ -92,9 +97,16 @@ export default function App() {
     setCurrentPosition(0);
     setDuration(track.duration || 180);
 
-    // If local track with native uri
-    if (track.sourceType === 'local' && track.uri) {
+    // Play immediately if audio URI exists (local or streaming)
+    if (track.uri) {
       try {
+        if (statusSubRef.current) {
+          try {
+            statusSubRef.current.remove();
+          } catch (_) {}
+          statusSubRef.current = null;
+        }
+
         if (soundRef.current) {
           try {
             soundRef.current.pause();
@@ -108,14 +120,23 @@ export default function App() {
         player.playbackRate = playbackSpeed;
         player.play();
 
-        if (player.duration) {
-          setDuration(Math.floor(player.duration));
-        }
+        const sub = player.addListener('playbackStatusUpdate', (status) => {
+          if (status.duration && status.duration > 0) {
+            setDuration(Math.floor(status.duration));
+          }
+          if (typeof status.currentTime === 'number') {
+            setCurrentPosition(Math.floor(status.currentTime));
+          }
+          if (status.didJustFinish) {
+            handleNextTrack();
+          }
+        });
+        statusSubRef.current = sub;
       } catch (err) {
-        console.log('Error playing local audio sound:', err);
+        console.log('Error playing audio sound:', err);
       }
     }
-  }, [playbackSpeed]);
+  }, [playbackSpeed, handleNextTrack]);
 
   // Next Track
   const handleNextTrack = useCallback(() => {
@@ -176,7 +197,7 @@ export default function App() {
   // Interactive Audio Seeking (Scrubber)
   const handleSeek = (targetSeconds) => {
     setCurrentPosition(targetSeconds);
-    if (soundRef.current && currentTrack?.sourceType === 'local') {
+    if (soundRef.current) {
       try {
         soundRef.current.seekTo(targetSeconds);
       } catch (e) {
@@ -188,7 +209,7 @@ export default function App() {
   // Playback Speed Controller
   const handleSetSpeed = (newSpeed) => {
     setPlaybackSpeed(newSpeed);
-    if (soundRef.current && currentTrack?.sourceType === 'local') {
+    if (soundRef.current) {
       try {
         soundRef.current.playbackRate = newSpeed;
       } catch (e) {
@@ -232,9 +253,9 @@ export default function App() {
     }, 1000);
   };
 
-  // Time ticker
+  // Fallback Time ticker (only active when native audio player is not attached)
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !soundRef.current) {
       playbackTimer.current = setInterval(() => {
         setCurrentPosition((prev) => {
           if (prev >= duration && duration > 0) {
@@ -373,10 +394,13 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'ai' && (
-          <AiDiscoveryScreen
+        {activeTab === 'playlists' && (
+          <PlaylistsScreen
+            tracks={tracks}
+            favorites={favorites}
             onPlayTrack={handlePlayTrack}
             currentTrack={currentTrack}
+            isPlaying={isPlaying}
           />
         )}
 
@@ -426,7 +450,11 @@ export default function App() {
       />
 
       {/* Bottom Navigation Tabs */}
-      <BottomTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomTabs 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onSelectTab={setActiveTab} 
+      />
     </SafeAreaView>
   );
 }

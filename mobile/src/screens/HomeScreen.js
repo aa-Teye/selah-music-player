@@ -32,7 +32,7 @@ export default function HomeScreen({
       <View style={styles.heroCard}>
         <View style={styles.badgeRow}>
           <View style={styles.verseBadge}>
-            <MaterialCommunityIcons name="creation" size={14} color="#E5A93C" />
+            <Ionicons name="book-outline" size={13} color="#E5A93C" />
             <Text style={styles.verseBadgeText}>VERSE OF THE DAY</Text>
           </View>
           <View style={styles.streakBadge}>
@@ -53,11 +53,6 @@ export default function HomeScreen({
             <Ionicons name="play" size={18} color="#0A0D14" />
             <Text style={styles.playAnthemText}>Play Devotional Anthem</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.aiPromptBtn} onPress={onOpenAi}>
-            <MaterialCommunityIcons name="creation" size={16} color="#E5A93C" />
-            <Text style={styles.aiPromptText}>AI Music</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -74,7 +69,6 @@ export default function HomeScreen({
               style={[styles.moodPill, isActive && styles.activeMoodPill]}
               onPress={() => setActiveMood(tag.id)}
             >
-              <Text style={styles.moodIcon}>{tag.icon}</Text>
               <Text style={[styles.moodText, isActive && styles.activeMoodText]}>
                 {tag.label}
               </Text>
