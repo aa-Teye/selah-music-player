@@ -20,7 +20,7 @@
     "react-native-youtube-iframe": "^2.4.0"
   },
   "scripts": {
-    "start": "expo start --expo-go -c",
+    "start": "expo start --go -c",
     "tunnel": "expo start --tunnel --go -c",
     "android": "expo run:android",
     "ios": "expo run:ios",

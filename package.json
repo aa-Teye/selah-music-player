@@ -8,8 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "electron": "electron .",
-    "cap:build": "npm run build && npx cap sync"
+    "electron": "electron ."
   },
   "dependencies": {
     "lucide-react": "^1.61.0",

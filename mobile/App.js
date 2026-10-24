@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar, Alert } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 import TopHeader from './src/components/TopHeader';
@@ -38,6 +39,7 @@ export default function App() {
   const statusSubRef = useRef(null);
   const playbackTimer = useRef(null);
   const sleepTimerRef = useRef(null);
+  const handleNextTrackRef = useRef(null);
 
   // Initialize native audio & Load persistent state
   useEffect(() => {
@@ -118,7 +120,9 @@ export default function App() {
 
         const player = createAudioPlayer(audioSource);
         soundRef.current = player;
-        player.playbackRate = playbackSpeed;
+        if (typeof player.setPlaybackRate === 'function') {
+          player.setPlaybackRate(playbackSpeed);
+        }
         player.play();
 
         const sub = player.addListener('playbackStatusUpdate', (status) => {
@@ -129,7 +133,7 @@ export default function App() {
             setCurrentPosition(Math.floor(status.currentTime));
           }
           if (status.didJustFinish) {
-            handleNextTrack();
+            handleNextTrackRef.current?.();
           }
         });
         statusSubRef.current = sub;
@@ -137,7 +141,7 @@ export default function App() {
         console.log('Error playing audio sound:', err);
       }
     }
-  }, [playbackSpeed, handleNextTrack]);
+  }, [playbackSpeed]);
 
   // Next Track
   const handleNextTrack = useCallback(() => {
@@ -156,6 +160,8 @@ export default function App() {
       handlePlayTrack(tracks[0]);
     }
   }, [tracks, isShuffle, currentTrack, handlePlayTrack]);
+
+  handleNextTrackRef.current = handleNextTrack;
 
   // Previous Track
   const handlePrevTrack = useCallback(() => {
@@ -212,7 +218,9 @@ export default function App() {
     setPlaybackSpeed(newSpeed);
     if (soundRef.current) {
       try {
-        soundRef.current.playbackRate = newSpeed;
+        if (typeof soundRef.current.setPlaybackRate === 'function') {
+          soundRef.current.setPlaybackRate(newSpeed);
+        }
       } catch (e) {
         console.log('Error setting speed:', e);
       }
@@ -347,8 +355,9 @@ export default function App() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0D14" />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0A0D14" />
 
       {/* Top Header */}
       <TopHeader
@@ -456,7 +465,8 @@ export default function App() {
         onTabChange={setActiveTab} 
         onSelectTab={setActiveTab} 
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
