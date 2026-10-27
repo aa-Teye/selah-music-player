@@ -55,7 +55,8 @@
         {
           "photosPermission": "Allow Selah Music Player to access your music and audio files.",
           "savePhotosPermission": "Allow Selah Music Player to manage music files.",
-          "isAccessMediaLocationEnabled": false
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["audio", "photo"]
         }
       ],
       "expo-audio"

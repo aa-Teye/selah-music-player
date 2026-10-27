@@ -30,71 +30,145 @@ export default function LocalLibraryScreen({
   const handleAutoScanDevice = async () => {
     try {
       setIsScanning(true);
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          "Permission Required", 
-          "Please grant media permission so Selah can scan and list the music files on your device."
-        );
+
+      // Check existing permission first with explicit 'audio' granular permission
+      let perm = await MediaLibrary.getPermissionsAsync(false, ['audio']);
+      if (!perm.granted) {
+        perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
+      }
+
+      if (!perm.granted) {
+        if (!perm.canAskAgain) {
+          Alert.alert(
+            "Audio Permission Needed",
+            "Selah needs permission to read music files on your phone. Please allow 'Music and audio' permission in your device Settings -> Apps -> Selah Music Player -> Permissions.",
+            [{ text: "OK" }]
+          );
+        } else {
+          Alert.alert(
+            "Permission Required", 
+            "Please grant media permission so Selah can scan and list the music files on your device."
+          );
+        }
         setIsScanning(false);
         return;
       }
 
       // Fetch audio assets from phone storage
-      const media = await MediaLibrary.getAssetsAsync({
-        mediaType: 'audio',
-        first: 300,
-        sortBy: [[MediaLibrary.SortBy.creationTime, false]]
-      });
+      // Use modificationTime instead of creationTime to prevent Android MediaStore DATE_TAKEN column errors
+      const allDiscovered = [];
+      let hasNextPage = true;
+      let after = undefined;
+      let pageCount = 0;
 
-      if (media.assets && media.assets.length > 0) {
-        const discovered = media.assets.map((asset) => {
-          const rawName = asset.filename || 'Audio Track';
-          const cleanTitle = rawName.replace(/\.[^/.]+$/, "");
-          return {
-            id: `local-scan-${asset.id}`,
-            title: cleanTitle,
-            artist: "Device Storage",
-            album: "My Audio Files",
-            duration: Math.round(asset.duration || 180),
-            category: "local",
-            sourceType: "local",
-            uri: asset.uri,
-            coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80",
-            lyrics: `[Device Audio: ${cleanTitle}]\nOffline audio from your phone.`
-          };
+      while (hasNextPage && pageCount < 5) {
+        pageCount++;
+        const media = await MediaLibrary.getAssetsAsync({
+          mediaType: MediaLibrary.MediaType.audio,
+          first: 100,
+          after,
+          sortBy: [[MediaLibrary.SortBy.modificationTime, false]]
         });
 
+        if (media.assets && media.assets.length > 0) {
+          for (const asset of media.assets) {
+            const rawName = asset.filename || 'Audio Track';
+            const cleanTitle = rawName.replace(/\.[^/.]+$/, "");
+            allDiscovered.push({
+              id: `local-scan-${asset.id}`,
+              title: cleanTitle,
+              artist: "Device Storage",
+              album: "My Audio Files",
+              duration: Math.round(asset.duration || 180),
+              category: "local",
+              sourceType: "local",
+              uri: asset.uri,
+              coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80",
+              lyrics: `[Device Audio: ${cleanTitle}]\nOffline audio from your phone.`
+            });
+          }
+        }
+
+        hasNextPage = Boolean(media.hasNextPage && media.endCursor);
+        after = media.endCursor;
+        if (!media.assets || media.assets.length === 0) break;
+      }
+
+      if (allDiscovered.length > 0) {
         if (onBatchAddLocalTracks) {
-          onBatchAddLocalTracks(discovered);
+          onBatchAddLocalTracks(allDiscovered);
         }
         Alert.alert(
           "Scan Complete! 🎵", 
-          `Found ${discovered.length} audio file${discovered.length === 1 ? '' : 's'} on your phone.`
+          `Found and added ${allDiscovered.length} audio file${allDiscovered.length === 1 ? '' : 's'} on your phone.`
         );
       } else {
-        Alert.alert("No Audio Files Found", "No MP3 or audio files were detected in your device music folders. You can still use 'Import File' to select manually.");
+        Alert.alert(
+          "No Audio Files Found", 
+          "No MP3 or audio files were detected in your device music folders. You can still use 'Import' to select files or folders directly."
+        );
       }
     } catch (err) {
-      console.log('Error scanning media:', err);
-      Alert.alert("Scan Error", "Unable to scan storage. You can use 'Import File' instead.");
+      console.log('Error scanning media, attempting fallback:', err);
+      // Fallback query without custom sortBy if device ROM has non-standard MediaStore column layout
+      try {
+        const fallbackMedia = await MediaLibrary.getAssetsAsync({
+          mediaType: MediaLibrary.MediaType.audio,
+          first: 150
+        });
+
+        if (fallbackMedia.assets && fallbackMedia.assets.length > 0) {
+          const fallbackTracks = fallbackMedia.assets.map((asset) => {
+            const rawName = asset.filename || 'Audio Track';
+            const cleanTitle = rawName.replace(/\.[^/.]+$/, "");
+            return {
+              id: `local-scan-${asset.id}`,
+              title: cleanTitle,
+              artist: "Device Storage",
+              album: "My Audio Files",
+              duration: Math.round(asset.duration || 180),
+              category: "local",
+              sourceType: "local",
+              uri: asset.uri,
+              coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80",
+              lyrics: `[Device Audio: ${cleanTitle}]\nOffline audio from your phone.`
+            };
+          });
+
+          if (onBatchAddLocalTracks) {
+            onBatchAddLocalTracks(fallbackTracks);
+          }
+          Alert.alert(
+            "Scan Complete! 🎵", 
+            `Found ${fallbackTracks.length} audio file${fallbackTracks.length === 1 ? '' : 's'} on your phone.`
+          );
+          return;
+        }
+      } catch (fallbackErr) {
+        console.log('Fallback scan failed:', fallbackErr);
+      }
+
+      Alert.alert(
+        "Scan Notice", 
+        `Could not scan media: ${err?.message || 'Storage permission or MediaStore query error'}.\n\nYou can use the "Import" button to pick music files directly.`
+      );
     } finally {
       setIsScanning(false);
     }
   };
 
-  // Pick individual file or folder via DocumentPicker
+  // Pick individual files or batch select via DocumentPicker
   const handlePickAudio = async () => {
     try {
       const res = await DocumentPicker.getDocumentAsync({
         type: ['audio/*'],
+        multiple: true,
         copyToCacheDirectory: true
       });
 
       if (!res.canceled && res.assets && res.assets.length > 0) {
-        const file = res.assets[0];
-        const newTrack = {
-          id: `local-${Date.now()}`,
+        const importedTracks = res.assets.map((file, idx) => ({
+          id: `local-${Date.now()}-${idx}`,
           title: file.name.replace(/\.[^/.]+$/, ""),
           artist: "My Phone Storage",
           album: "Local Library",
@@ -104,11 +178,19 @@ export default function LocalLibraryScreen({
           uri: file.uri,
           coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80",
           lyrics: `[Local Audio Track: ${file.name}]\nPlaying from your phone storage.`
-        };
+        }));
 
-        onAddLocalTrack(newTrack);
-        onPlayTrack(newTrack);
-        Alert.alert("Song Imported", `"${file.name}" added to your local library!`);
+        if (importedTracks.length > 1) {
+          if (onBatchAddLocalTracks) {
+            onBatchAddLocalTracks(importedTracks);
+          }
+          Alert.alert("Songs Imported", `Imported ${importedTracks.length} songs into your local library!`);
+        } else if (importedTracks.length === 1) {
+          const singleTrack = importedTracks[0];
+          onAddLocalTrack(singleTrack);
+          onPlayTrack(singleTrack);
+          Alert.alert("Song Imported", `"${singleTrack.title}" added to your local library!`);
+        }
       }
     } catch (err) {
       console.log('Error picking audio:', err);
