@@ -12,21 +12,25 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as MediaLibrary from 'expo-media-library';
+import { Id3Service } from '../services/id3Service';
 
 export default function LocalLibraryScreen({
-  localTracks,
+  localTracks = [],
   onAddLocalTrack,
   onBatchAddLocalTracks,
   onPlayTrack,
   currentTrack,
   isPlaying,
-  onDeleteTrack
+  onDeleteTrack,
+  onOpenAddToPlaylist,
+  onOpenSetRingtone
 }) {
   const [filterQuery, setFilterQuery] = useState('');
-  const [activeSubTab, setActiveSubTab] = useState('tracks'); // tracks, artists, albums
+  const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
+  const [selectedFolder, setSelectedFolder] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Auto-scan entire phone storage with expo-media-library
+  // Auto-scan entire phone storage with expo-media-library & ID3 metadata enrichment
   const handleAutoScanDevice = async () => {
     try {
       setIsScanning(true);
@@ -55,7 +59,6 @@ export default function LocalLibraryScreen({
       }
 
       // Fetch audio assets from phone storage
-      // Use modificationTime instead of creationTime to prevent Android MediaStore DATE_TAKEN column errors
       const allDiscovered = [];
       let hasNextPage = true;
       let after = undefined;
@@ -72,20 +75,7 @@ export default function LocalLibraryScreen({
 
         if (media.assets && media.assets.length > 0) {
           for (const asset of media.assets) {
-            const rawName = asset.filename || 'Audio Track';
-            const cleanTitle = rawName.replace(/\.[^/.]+$/, "");
-            allDiscovered.push({
-              id: `local-scan-${asset.id}`,
-              title: cleanTitle,
-              artist: "Device Storage",
-              album: "My Audio Files",
-              duration: Math.round(asset.duration || 180),
-              category: "local",
-              sourceType: "local",
-              uri: asset.uri,
-              coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80",
-              lyrics: `[Device Audio: ${cleanTitle}]\nOffline audio from your phone.`
-            });
+            allDiscovered.push(Id3Service.enrichAsset(asset));
           }
         }
 
@@ -105,12 +95,11 @@ export default function LocalLibraryScreen({
       } else {
         Alert.alert(
           "No Audio Files Found", 
-          "No MP3 or audio files were detected in your device music folders. You can still use 'Import' to select files or folders directly."
+          "No MP3 or audio files were detected in your device music folders. You can still use 'Import' to select files directly."
         );
       }
     } catch (err) {
       console.log('Error scanning media, attempting fallback:', err);
-      // Fallback query without custom sortBy if device ROM has non-standard MediaStore column layout
       try {
         const fallbackMedia = await MediaLibrary.getAssetsAsync({
           mediaType: MediaLibrary.MediaType.audio,
@@ -118,23 +107,7 @@ export default function LocalLibraryScreen({
         });
 
         if (fallbackMedia.assets && fallbackMedia.assets.length > 0) {
-          const fallbackTracks = fallbackMedia.assets.map((asset) => {
-            const rawName = asset.filename || 'Audio Track';
-            const cleanTitle = rawName.replace(/\.[^/.]+$/, "");
-            return {
-              id: `local-scan-${asset.id}`,
-              title: cleanTitle,
-              artist: "Device Storage",
-              album: "My Audio Files",
-              duration: Math.round(asset.duration || 180),
-              category: "local",
-              sourceType: "local",
-              uri: asset.uri,
-              coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80",
-              lyrics: `[Device Audio: ${cleanTitle}]\nOffline audio from your phone.`
-            };
-          });
-
+          const fallbackTracks = fallbackMedia.assets.map((asset) => Id3Service.enrichAsset(asset));
           if (onBatchAddLocalTracks) {
             onBatchAddLocalTracks(fallbackTracks);
           }
@@ -157,7 +130,7 @@ export default function LocalLibraryScreen({
     }
   };
 
-  // Pick individual files or batch select via DocumentPicker
+  // Pick individual files or batch select via DocumentPicker with ID3 enrichment
   const handlePickAudio = async () => {
     try {
       const res = await DocumentPicker.getDocumentAsync({
@@ -167,18 +140,25 @@ export default function LocalLibraryScreen({
       });
 
       if (!res.canceled && res.assets && res.assets.length > 0) {
-        const importedTracks = res.assets.map((file, idx) => ({
-          id: `local-${Date.now()}-${idx}`,
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          artist: "My Phone Storage",
-          album: "Local Library",
-          duration: 180,
-          category: "local",
-          sourceType: "local",
-          uri: file.uri,
-          coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80",
-          lyrics: `[Local Audio Track: ${file.name}]\nPlaying from your phone storage.`
-        }));
+        const importedTracks = res.assets.map((file, idx) => {
+          const rawName = file.name || 'Audio Track';
+          const meta = Id3Service.parseFilenameMetadata(rawName);
+          const cover = Id3Service.generateCuratedArtwork(meta.title, meta.artist);
+
+          return {
+            id: `local-${Date.now()}-${idx}`,
+            title: meta.title,
+            artist: meta.artist,
+            album: meta.album,
+            folder: 'Imported Files',
+            duration: 180,
+            category: "local",
+            sourceType: "local",
+            uri: file.uri,
+            coverUrl: cover,
+            lyrics: `[Local Audio Track: ${file.name}]\nPlaying from your phone storage.`
+          };
+        });
 
         if (importedTracks.length > 1) {
           if (onBatchAddLocalTracks) {
@@ -202,6 +182,14 @@ export default function LocalLibraryScreen({
     t.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
     t.artist.toLowerCase().includes(filterQuery.toLowerCase())
   );
+
+  // Group by folders
+  const foldersMap = {};
+  localTracks.forEach(t => {
+    const folder = t.folder || "Music";
+    if (!foldersMap[folder]) foldersMap[folder] = [];
+    foldersMap[folder].push(t);
+  });
 
   // Group by artists
   const artistsMap = {};
@@ -304,11 +292,11 @@ export default function LocalLibraryScreen({
             ) : null}
           </View>
 
-          {/* Sub-tabs */}
+          {/* Sub-tabs: Songs, Folders, Artists */}
           <View style={styles.subTabsRow}>
             <TouchableOpacity 
               style={[styles.subTab, activeSubTab === 'tracks' && styles.subTabActive]} 
-              onPress={() => setActiveSubTab('tracks')}
+              onPress={() => { setActiveSubTab('tracks'); setSelectedFolder(null); }}
             >
               <Text style={[styles.subTabText, activeSubTab === 'tracks' && styles.subTabTextActive]}>
                 All Songs ({localTracks.length})
@@ -316,8 +304,17 @@ export default function LocalLibraryScreen({
             </TouchableOpacity>
 
             <TouchableOpacity 
+              style={[styles.subTab, activeSubTab === 'folders' && styles.subTabActive]} 
+              onPress={() => setActiveSubTab('folders')}
+            >
+              <Text style={[styles.subTabText, activeSubTab === 'folders' && styles.subTabTextActive]}>
+                Folders ({Object.keys(foldersMap).length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
               style={[styles.subTab, activeSubTab === 'artists' && styles.subTabActive]} 
-              onPress={() => setActiveSubTab('artists')}
+              onPress={() => { setActiveSubTab('artists'); setSelectedFolder(null); }}
             >
               <Text style={[styles.subTabText, activeSubTab === 'artists' && styles.subTabTextActive]}>
                 Artists ({Object.keys(artistsMap).length})
@@ -325,7 +322,7 @@ export default function LocalLibraryScreen({
             </TouchableOpacity>
           </View>
 
-          {/* Tracks List */}
+          {/* ==================== SUB-TAB 1: ALL TRACKS ==================== */}
           {activeSubTab === 'tracks' && (
             <View style={styles.songsList}>
               {filteredTracks.map((item) => {
@@ -357,19 +354,148 @@ export default function LocalLibraryScreen({
                       </Text>
                     </View>
 
-                    <TouchableOpacity 
-                      style={styles.deleteBtn}
-                      onPress={() => onDeleteTrack && onDeleteTrack(item.id)}
-                    >
-                      <Ionicons name="trash-outline" size={18} color="#6B7280" />
-                    </TouchableOpacity>
+                    <View style={styles.cardActions}>
+                      {/* Set as Ringtone / Caller Tune */}
+                      {onOpenSetRingtone && (
+                        <TouchableOpacity 
+                          style={styles.actionIconBtn}
+                          onPress={() => onOpenSetRingtone(item)}
+                        >
+                          <Ionicons name="notifications-outline" size={18} color="#9CA3AF" />
+                        </TouchableOpacity>
+                      )}
+
+                      {/* Add to Playlist */}
+                      {onOpenAddToPlaylist && (
+                        <TouchableOpacity 
+                          style={styles.actionIconBtn}
+                          onPress={() => onOpenAddToPlaylist(item)}
+                        >
+                          <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+                        </TouchableOpacity>
+                      )}
+
+                      {/* Delete */}
+                      <TouchableOpacity 
+                        style={styles.actionIconBtn}
+                        onPress={() => onDeleteTrack && onDeleteTrack(item.id)}
+                      >
+                        <Ionicons name="trash-outline" size={18} color="#6B7280" />
+                      </TouchableOpacity>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
           )}
 
-          {/* Artists List */}
+          {/* ==================== SUB-TAB 2: FOLDER BROWSER ==================== */}
+          {activeSubTab === 'folders' && (
+            <View style={styles.folderContainer}>
+              {selectedFolder ? (
+                // Inside a specific folder
+                <View>
+                  <TouchableOpacity 
+                    style={styles.folderBackBtn} 
+                    onPress={() => setSelectedFolder(null)}
+                  >
+                    <Ionicons name="arrow-back" size={18} color="#E5A93C" />
+                    <Text style={styles.folderBackText}>All Folders</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.folderHeaderCard}>
+                    <Ionicons name="folder-open" size={28} color="#E5A93C" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.folderHeaderTitle}>{selectedFolder}</Text>
+                      <Text style={styles.folderHeaderSub}>
+                        {(foldersMap[selectedFolder] || []).length} audio tracks
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.playFolderBtn}
+                      onPress={() => {
+                        const tracksInFolder = foldersMap[selectedFolder];
+                        if (tracksInFolder && tracksInFolder.length > 0) {
+                          onPlayTrack(tracksInFolder[0]);
+                        }
+                      }}
+                    >
+                      <Ionicons name="play" size={16} color="#0A0D14" />
+                      <Text style={styles.playFolderText}>Play Folder</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.songsList}>
+                    {(foldersMap[selectedFolder] || []).map((item) => {
+                      const isCurrent = currentTrack?.id === item.id;
+                      return (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={[styles.songCard, isCurrent && styles.songCardActive]}
+                          onPress={() => onPlayTrack(item)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.songIconBox}>
+                            <Ionicons 
+                              name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
+                              size={20} 
+                              color={isCurrent ? "#E5A93C" : "#9CA3AF"} 
+                            />
+                          </View>
+                          <View style={styles.songInfo}>
+                            <Text style={[styles.songTitle, isCurrent && styles.songTitleActive]} numberOfLines={1}>
+                              {item.title}
+                            </Text>
+                            <Text style={styles.songArtist} numberOfLines={1}>
+                              {item.artist} • {formatTime(item.duration)}
+                            </Text>
+                          </View>
+                          <View style={styles.cardActions}>
+                            {onOpenSetRingtone && (
+                              <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenSetRingtone(item)}>
+                                <Ionicons name="notifications-outline" size={18} color="#9CA3AF" />
+                              </TouchableOpacity>
+                            )}
+                            {onOpenAddToPlaylist && (
+                              <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenAddToPlaylist(item)}>
+                                <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : (
+                // List of all folders
+                <View style={styles.foldersGrid}>
+                  {Object.keys(foldersMap).map((folderName) => {
+                    const count = foldersMap[folderName].length;
+                    return (
+                      <TouchableOpacity
+                        key={folderName}
+                        style={styles.folderCard}
+                        onPress={() => setSelectedFolder(folderName)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.folderIconBox}>
+                          <Ionicons name="folder" size={26} color="#E5A93C" />
+                        </View>
+                        <View style={styles.folderDetails}>
+                          <Text style={styles.folderName} numberOfLines={1}>{folderName}</Text>
+                          <Text style={styles.folderCount}>{count} track{count === 1 ? '' : 's'}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* ==================== SUB-TAB 3: ARTISTS ==================== */}
           {activeSubTab === 'artists' && (
             <View style={styles.artistsList}>
               {Object.keys(artistsMap).map((artistName) => (
@@ -406,7 +532,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 120
+    paddingBottom: 130
   },
   headerRow: {
     flexDirection: 'row',
@@ -420,25 +546,25 @@ const styles = StyleSheet.create({
     color: '#F9FAFB'
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     marginTop: 2
   },
   actionBtns: {
     flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center'
+    alignItems: 'center',
+    gap: 8
   },
   scanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(229, 169, 60, 0.15)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
-    gap: 6
+    borderColor: '#E5A93C',
+    gap: 5
   },
   btnDisabled: {
     opacity: 0.6
@@ -453,18 +579,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#E5A93C',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 18,
     gap: 4
   },
   importBtnText: {
     color: '#0A0D14',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 12
   },
   emptyCard: {
     backgroundColor: '#121824',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
@@ -475,32 +601,31 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: 'rgba(229, 169, 60, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16
+    marginBottom: 14
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: '#F9FAFB',
-    marginBottom: 8
+    marginBottom: 6
   },
   emptySub: {
     fontSize: 13,
     color: '#9CA3AF',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-    paddingHorizontal: 12
+    lineHeight: 18,
+    marginBottom: 20
   },
   heroScanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#E5A93C',
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 25,
+    paddingVertical: 12,
+    borderRadius: 12,
     gap: 8,
     width: '100%',
     justifyContent: 'center',
@@ -509,23 +634,25 @@ const styles = StyleSheet.create({
   heroScanBtnText: {
     color: '#0A0D14',
     fontWeight: '800',
-    fontSize: 15
+    fontSize: 14
   },
   heroImportBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 12,
+    gap: 8,
     width: '100%',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    backgroundColor: '#1A2234',
+    borderWidth: 1,
+    borderColor: '#374151'
   },
   heroImportBtnText: {
     color: '#E5A93C',
-    fontWeight: '600',
-    fontSize: 14
+    fontWeight: '700',
+    fontSize: 13
   },
   searchBar: {
     flexDirection: 'row',
@@ -533,8 +660,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#121824',
     borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
+    height: 44,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: '#1F2937',
     gap: 8
@@ -542,34 +669,32 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: '#F9FAFB',
-    fontSize: 14,
-    padding: 0
+    fontSize: 13
   },
   subTabsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16
+    backgroundColor: '#121824',
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 14
   },
   subTab: {
-    paddingHorizontal: 14,
+    flex: 1,
     paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: '#121824',
-    borderWidth: 1,
-    borderColor: '#1F2937'
+    alignItems: 'center',
+    borderRadius: 9
   },
   subTabActive: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
-    borderColor: '#E5A93C'
+    backgroundColor: '#E5A93C'
   },
   subTabText: {
-    color: '#9CA3AF',
-    fontSize: 13,
-    fontWeight: '600'
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF'
   },
   subTabTextActive: {
-    color: '#E5A93C',
-    fontWeight: '700'
+    color: '#0A0D14',
+    fontWeight: '800'
   },
   songsList: {
     gap: 8
@@ -578,21 +703,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#121824',
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 12,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#1F2937',
     gap: 12
   },
   songCardActive: {
-    borderColor: '#E5A93C',
+    borderColor: 'rgba(229, 169, 60, 0.5)',
     backgroundColor: 'rgba(229, 169, 60, 0.08)'
   },
   songIconBox: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 10,
-    backgroundColor: '#1A2333',
+    backgroundColor: '#1A2234',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -600,20 +725,108 @@ const styles = StyleSheet.create({
     flex: 1
   },
   songTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#F9FAFB',
-    marginBottom: 3
+    color: '#F9FAFB'
   },
   songTitleActive: {
     color: '#E5A93C'
   },
   songArtist: {
     fontSize: 12,
-    color: '#9CA3AF'
+    color: '#9CA3AF',
+    marginTop: 2
   },
-  deleteBtn: {
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  actionIconBtn: {
     padding: 6
+  },
+  folderContainer: {
+    gap: 10
+  },
+  foldersGrid: {
+    gap: 8
+  },
+  folderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#121824',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    gap: 12
+  },
+  folderIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  folderDetails: {
+    flex: 1
+  },
+  folderName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#F9FAFB'
+  },
+  folderCount: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2
+  },
+  folderBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12
+  },
+  folderBackText: {
+    color: '#E5A93C',
+    fontWeight: '700',
+    fontSize: 13
+  },
+  folderHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#121824',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    marginBottom: 12,
+    gap: 12
+  },
+  folderHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F9FAFB'
+  },
+  folderHeaderSub: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2
+  },
+  playFolderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E5A93C',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    gap: 4
+  },
+  playFolderText: {
+    color: '#0A0D14',
+    fontWeight: '700',
+    fontSize: 12
   },
   artistsList: {
     gap: 8

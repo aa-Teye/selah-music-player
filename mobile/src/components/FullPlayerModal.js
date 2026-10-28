@@ -11,6 +11,7 @@ import {
   ScrollView 
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import SyncedLyricsView from './SyncedLyricsView';
 
 export default function FullPlayerModal({
   visible,
@@ -32,7 +33,11 @@ export default function FullPlayerModal({
   playbackSpeed = 1.0,
   onSetSpeed,
   sleepTimerRemaining,
-  onSetSleepTimer
+  onSetSleepTimer,
+  onOpenAddToPlaylist,
+  onOpenSetRingtone,
+  onOpenAudioTrimmer,
+  onOpenCarMode
 }) {
   const [activeTab, setActiveTab] = useState('player'); // 'player' | 'lyrics'
   const [showSleepModal, setShowSleepModal] = useState(false);
@@ -126,13 +131,20 @@ export default function FullPlayerModal({
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={() => onToggleFavorite(currentTrack.id)} style={styles.iconBtn}>
-            <Ionicons 
-              name={isFavorite ? "heart" : "heart-outline"} 
-              size={24} 
-              color={isFavorite ? "#E5A93C" : "#9CA3AF"} 
-            />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            {onOpenCarMode && (
+              <TouchableOpacity onPress={onOpenCarMode} style={styles.iconBtn}>
+                <MaterialCommunityIcons name="car" size={22} color="#E5A93C" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={() => onToggleFavorite(currentTrack.id)} style={styles.iconBtn}>
+              <Ionicons 
+                name={isFavorite ? "heart" : "heart-outline"} 
+                size={24} 
+                color={isFavorite ? "#E5A93C" : "#9CA3AF"} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Content Body */}
@@ -173,14 +185,12 @@ export default function FullPlayerModal({
             </View>
           </View>
         ) : (
-          <ScrollView style={styles.lyricsScroll} contentContainerStyle={styles.lyricsContent}>
-            <Text style={styles.lyricsSongTitle}>{currentTrack.title}</Text>
-            <Text style={styles.lyricsSongArtist}>{currentTrack.artist}</Text>
-            <View style={styles.lyricsDivider} />
-            <Text style={styles.lyricsText}>
-              {currentTrack.lyrics || "No synchronized lyrics found for this track."}
-            </Text>
-          </ScrollView>
+          <SyncedLyricsView
+            currentTrack={currentTrack}
+            currentPosition={currentPosition}
+            duration={duration}
+            onSeek={onSeek}
+          />
         )}
 
         {/* Controls Section */}
@@ -243,8 +253,13 @@ export default function FullPlayerModal({
             </TouchableOpacity>
           </View>
 
-          {/* Extra Utilities Bar (Speed & Sleep Timer) */}
-          <View style={styles.utilityBar}>
+          {/* Extra Utilities Bar (Speed, Sleep Timer, Playlist, Ringtone, Cutter) */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.utilityBarContent}
+            style={styles.utilityBar}
+          >
             {/* Speed Changer */}
             <TouchableOpacity style={styles.utilityPill} onPress={handleCycleSpeed}>
               <Ionicons name="speedometer-outline" size={15} color="#E5A93C" />
@@ -265,7 +280,39 @@ export default function FullPlayerModal({
                 {sleepTimerRemaining ? `${formatTime(sleepTimerRemaining)}` : 'Sleep Timer'}
               </Text>
             </TouchableOpacity>
-          </View>
+
+            {/* Add to Playlist */}
+            {onOpenAddToPlaylist && (
+              <TouchableOpacity 
+                style={styles.utilityPill} 
+                onPress={() => onOpenAddToPlaylist(currentTrack)}
+              >
+                <Ionicons name="bookmark-outline" size={15} color="#E5A93C" />
+                <Text style={styles.utilityPillText}>+ Playlist</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Set Ringtone / Caller Tune */}
+            {onOpenSetRingtone && (
+              <TouchableOpacity 
+                style={styles.utilityPill} 
+                onPress={() => onOpenSetRingtone(currentTrack)}
+              >
+                <MaterialCommunityIcons name="phone-incoming" size={15} color="#E5A93C" />
+                <Text style={styles.utilityPillText}>Ringtone</Text>
+              </TouchableOpacity>
+            )}
+            {/* Audio Trimmer & Ringtone Cutter */}
+            {onOpenAudioTrimmer && (
+              <TouchableOpacity 
+                style={styles.utilityPill} 
+                onPress={() => onOpenAudioTrimmer(currentTrack)}
+              >
+                <MaterialCommunityIcons name="content-cut" size={15} color="#E5A93C" />
+                <Text style={styles.utilityPillText}>Cutter</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
         </View>
 
         {/* Sleep Timer Selection Modal */}
@@ -527,10 +574,14 @@ const styles = StyleSheet.create({
     elevation: 6
   },
   utilityBar: {
+    marginTop: 4,
+    maxHeight: 44
+  },
+  utilityBarContent: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 4
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 8
   },
   utilityPill: {
     flexDirection: 'row',

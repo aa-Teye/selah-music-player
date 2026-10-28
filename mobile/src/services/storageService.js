@@ -6,6 +6,7 @@ const KEYS = {
   PLAYLISTS: '@selah_playlists',
   STREAK: '@selah_streak',
   RECENTLY_PLAYED: '@selah_recent_tracks',
+  RECENT_TRACKS: '@selah_recent_tracks',
   SETTINGS: '@selah_settings'
 };
 
@@ -96,6 +97,73 @@ export const StorageService = {
       return current;
     } catch (e) {
       return { streakDays: 14, lastActiveDate: new Date().toDateString() };
+    }
+  },
+
+  // Recently Played Tracks
+  async getRecentlyPlayed() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.RECENT_TRACKS || '@selah_recent_tracks');
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async addRecentlyPlayed(track) {
+    if (!track) return;
+    try {
+      const current = await this.getRecentlyPlayed();
+      const filtered = current.filter(t => t.id !== track.id);
+      const updated = [track, ...filtered].slice(0, 20); // Keep last 20
+      await AsyncStorage.setItem(KEYS.RECENT_TRACKS || '@selah_recent_tracks', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.log('Error saving recent track:', e);
+    }
+  },
+
+  // Custom User Lyrics per track
+  async getCustomLyrics(trackId) {
+    if (!trackId) return null;
+    try {
+      const raw = await AsyncStorage.getItem(`@selah_lyrics_${trackId}`);
+      return raw || null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async saveCustomLyrics(trackId, lyricsText) {
+    if (!trackId) return;
+    try {
+      await AsyncStorage.setItem(`@selah_lyrics_${trackId}`, lyricsText);
+    } catch (e) {
+      console.log('Error saving lyrics:', e);
+    }
+  },
+
+  // Devotion Listening Statistics
+  async getListeningStats() {
+    try {
+      const data = await AsyncStorage.getItem('@selah_listening_stats');
+      return data ? JSON.parse(data) : { totalSeconds: 0, tracksPlayedCount: 0 };
+    } catch (e) {
+      return { totalSeconds: 0, tracksPlayedCount: 0 };
+    }
+  },
+
+  async recordListeningSession(seconds = 30) {
+    try {
+      const current = await this.getListeningStats();
+      const updated = {
+        totalSeconds: (current.totalSeconds || 0) + seconds,
+        tracksPlayedCount: (current.tracksPlayedCount || 0) + 1
+      };
+      await AsyncStorage.setItem('@selah_listening_stats', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.log('Error saving stats:', e);
     }
   }
 };

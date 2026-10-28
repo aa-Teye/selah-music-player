@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, StatusBar, Alert } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
@@ -13,6 +13,11 @@ import LocalLibraryScreen from './src/screens/LocalLibraryScreen';
 import YouTubeWatchScreen from './src/screens/YouTubeWatchScreen';
 import PlaylistsScreen from './src/screens/PlaylistsScreen';
 import EqualizerScreen from './src/screens/EqualizerScreen';
+import AddToPlaylistModal from './src/components/AddToPlaylistModal';
+import SetRingtoneModal from './src/components/SetRingtoneModal';
+import AudioTrimmerModal from './src/components/AudioTrimmerModal';
+import CarModeModal from './src/components/CarModeModal';
+import ListeningStatsModal from './src/components/ListeningStatsModal';
 
 import { DAILY_DEVOTION, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
@@ -21,6 +26,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [tracks, setTracks] = useState(INITIAL_TRACKS);
   const [localTracks, setLocalTracks] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
+  const [playlistModalTrack, setPlaylistModalTrack] = useState(null);
+  const [ringtoneModalTrack, setRingtoneModalTrack] = useState(null);
+  const [trimmerModalTrack, setTrimmerModalTrack] = useState(null);
+  const [isCarModeVisible, setIsCarModeVisible] = useState(false);
+  const [isStatsVisible, setIsStatsVisible] = useState(false);
+  const [recentTracks, setRecentTracks] = useState([]);
+  const [listeningStats, setListeningStats] = useState({ totalSeconds: 0, tracksPlayedCount: 0 });
   const [currentTrack, setCurrentTrack] = useState(INITIAL_TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -51,15 +64,30 @@ export default function App() {
           interruptionMode: 'doNotMix'
         }).catch((err) => console.log('AudioMode configuration notice:', err));
 
-        // Load saved favorites, local tracks, streak from AsyncStorage
-        const [savedFavs, savedLocal, savedStreak] = await Promise.all([
+        // Request notification permission for lock-screen & shade controls on Android
+        if (Platform.OS === 'android') {
+          try {
+            await requestNotificationPermissionsAsync();
+          } catch (notifErr) {
+            console.log('Notification permission notice:', notifErr);
+          }
+        }
+
+        // Load saved favorites, local tracks, streak, playlists, recent tracks & stats
+        const [savedFavs, savedLocal, savedStreak, savedPlaylists, savedRecent, savedStats] = await Promise.all([
           StorageService.getFavorites(),
           StorageService.getLocalTracks(),
-          StorageService.recordDailyStreak()
+          StorageService.recordDailyStreak(),
+          StorageService.getPlaylists(),
+          StorageService.getRecentlyPlayed(),
+          StorageService.getListeningStats()
         ]);
 
         if (savedFavs) setFavorites(savedFavs);
         if (savedStreak) setStreakData(savedStreak);
+        if (savedPlaylists) setPlaylists(savedPlaylists);
+        if (savedRecent) setRecentTracks(savedRecent);
+        if (savedStats) setListeningStats(savedStats);
         if (savedLocal && savedLocal.length > 0) {
           setLocalTracks(savedLocal);
           setTracks((prev) => [...savedLocal, ...prev]);
@@ -99,30 +127,54 @@ export default function App() {
     setCurrentPosition(0);
     setDuration(track.duration || 180);
 
+    // Record to recently played and increment listening stats
+    StorageService.addRecentlyPlayed(track).then((updated) => {
+      if (updated) setRecentTracks(updated);
+    });
+    StorageService.recordListeningSession(30).then((stats) => {
+      if (stats) setListeningStats(stats);
+    });
+
+    // Clean up previous audio player so it stops immediately (e.g. when switching to YouTube or a new track)
+    if (statusSubRef.current) {
+      try {
+        statusSubRef.current.remove();
+      } catch (_) {}
+      statusSubRef.current = null;
+    }
+
+    if (soundRef.current) {
+      try {
+        soundRef.current.pause();
+        soundRef.current.remove();
+      } catch (_) {}
+      soundRef.current = null;
+    }
+
     // Play immediately if audio source exists (bundled asset or streaming/file URI)
     const audioSource = track.asset || track.uri;
     if (audioSource) {
       try {
-        if (statusSubRef.current) {
-          try {
-            statusSubRef.current.remove();
-          } catch (_) {}
-          statusSubRef.current = null;
-        }
-
-        if (soundRef.current) {
-          try {
-            soundRef.current.pause();
-            soundRef.current.remove();
-          } catch (_) {}
-          soundRef.current = null;
-        }
-
         const player = createAudioPlayer(audioSource);
         soundRef.current = player;
         if (typeof player.setPlaybackRate === 'function') {
           player.setPlaybackRate(playbackSpeed);
         }
+
+        // Configure system lock screen and notification shade media controls
+        if (typeof player.setActiveForLockScreen === 'function') {
+          try {
+            player.setActiveForLockScreen(true, {
+              title: track.title || 'Worship Track',
+              artist: track.artist || 'Selah Music',
+              album: track.album || 'Selah Local Audio',
+              artworkUrl: track.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=500&q=80'
+            });
+          } catch (lockErr) {
+            console.log('Lock screen activation notice:', lockErr);
+          }
+        }
+
         player.play();
 
         const sub = player.addListener('playbackStatusUpdate', (status) => {
@@ -343,6 +395,68 @@ export default function App() {
     setTracks((prev) => [newTrack, ...prev]);
   };
 
+  // Create new custom playlist
+  const handleCreatePlaylist = (name, initialTrackId) => {
+    const newPl = {
+      id: `pl-${Date.now()}`,
+      name,
+      trackIds: initialTrackId ? [initialTrackId] : [],
+      createdAt: new Date().toISOString()
+    };
+    setPlaylists((prev) => {
+      const updated = [newPl, ...prev];
+      StorageService.savePlaylists(updated);
+      return updated;
+    });
+    Alert.alert("Playlist Created 🎵", `"${name}" has been created!`);
+  };
+
+  // Delete custom playlist
+  const handleDeletePlaylist = (playlistId) => {
+    setPlaylists((prev) => {
+      const updated = prev.filter((p) => p.id !== playlistId);
+      StorageService.savePlaylists(updated);
+      return updated;
+    });
+  };
+
+  // Toggle track inside a playlist
+  const handleToggleTrackInPlaylist = (playlistId, trackId) => {
+    setPlaylists((prev) => {
+      const updated = prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const exists = (pl.trackIds || []).includes(trackId);
+        const newTrackIds = exists
+          ? pl.trackIds.filter((id) => id !== trackId)
+          : [...(pl.trackIds || []), trackId];
+        return { ...pl, trackIds: newTrackIds };
+      });
+      StorageService.savePlaylists(updated);
+      return updated;
+    });
+  };
+
+  // Play entire playlist
+  const handlePlayPlaylist = (playlistTracks) => {
+    if (!playlistTracks || playlistTracks.length === 0) return;
+    setTracks((prev) => {
+      const existingIds = new Set(prev.map(t => t.id));
+      const fresh = playlistTracks.filter(t => !existingIds.has(t.id));
+      return [...fresh, ...prev];
+    });
+    handlePlayTrack(playlistTracks[0]);
+  };
+
+  // Open Add to Playlist Modal
+  const handleOpenAddToPlaylist = (track) => {
+    setPlaylistModalTrack(track);
+  };
+
+  // Open Set Ringtone / Caller Tune Modal
+  const handleOpenSetRingtone = (track) => {
+    setRingtoneModalTrack(track || currentTrack);
+  };
+
   // Filtered tracks
   const visibleTracks = tracks.filter((t) => {
     if (!searchQuery) return true;
@@ -380,6 +494,9 @@ export default function App() {
             setActiveMood={setActiveMood}
             moodTags={MOOD_TAGS}
             onOpenAi={() => setActiveTab('ai')}
+            onOpenAddToPlaylist={handleOpenAddToPlaylist}
+            recentTracks={recentTracks}
+            onOpenStats={() => setIsStatsVisible(true)}
           />
         )}
 
@@ -392,6 +509,8 @@ export default function App() {
             currentTrack={currentTrack}
             isPlaying={isPlaying}
             onDeleteTrack={handleDeleteLocalTrack}
+            onOpenAddToPlaylist={handleOpenAddToPlaylist}
+            onOpenSetRingtone={handleOpenSetRingtone}
           />
         )}
 
@@ -411,6 +530,20 @@ export default function App() {
             onPlayTrack={handlePlayTrack}
             currentTrack={currentTrack}
             isPlaying={isPlaying}
+            playlists={playlists}
+            onCreatePlaylist={handleCreatePlaylist}
+            onDeletePlaylist={handleDeletePlaylist}
+            onPlayPlaylist={handlePlayPlaylist}
+            onToggleTrackInPlaylist={handleToggleTrackInPlaylist}
+          />
+        )}
+
+        {activeTab === 'ai' && (
+          <AiDiscoveryScreen
+            onPlayTrack={handlePlayTrack}
+            currentTrack={currentTrack}
+            onBack={() => setActiveTab('home')}
+            onOpenAddToPlaylist={handleOpenAddToPlaylist}
           />
         )}
 
@@ -430,7 +563,7 @@ export default function App() {
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onNext={handleNextTrack}
-        onOpenFullPlayer={() => setIsFullPlayerVisible(false) || setIsFullPlayerVisible(true)}
+        onOpenFullPlayer={() => setIsFullPlayerVisible(true)}
         currentPosition={currentPosition}
         duration={duration}
       />
@@ -457,6 +590,68 @@ export default function App() {
         onSetSpeed={handleSetSpeed}
         sleepTimerRemaining={sleepTimerRemaining}
         onSetSleepTimer={handleSetSleepTimer}
+        onOpenAddToPlaylist={handleOpenAddToPlaylist}
+        onOpenSetRingtone={handleOpenSetRingtone}
+        onOpenAudioTrimmer={(t) => setTrimmerModalTrack(t || currentTrack)}
+        onOpenCarMode={() => setIsCarModeVisible(true)}
+      />
+
+      {/* Add To Playlist Modal */}
+      <AddToPlaylistModal
+        visible={Boolean(playlistModalTrack)}
+        track={playlistModalTrack}
+        playlists={playlists}
+        onClose={() => setPlaylistModalTrack(null)}
+        onToggleTrackInPlaylist={handleToggleTrackInPlaylist}
+        onCreatePlaylist={handleCreatePlaylist}
+      />
+
+      {/* Set Caller Tune / Ringtone Modal */}
+      <SetRingtoneModal
+        visible={Boolean(ringtoneModalTrack)}
+        track={ringtoneModalTrack}
+        onClose={() => setRingtoneModalTrack(null)}
+      />
+
+      {/* Audio Trimmer & Ringtone Cutter Modal */}
+      <AudioTrimmerModal
+        visible={Boolean(trimmerModalTrack)}
+        track={trimmerModalTrack}
+        duration={duration}
+        onClose={() => setTrimmerModalTrack(null)}
+        onPlayPreview={(start, end) => {
+          handleSeek(start);
+          setIsPlaying(true);
+          if (soundRef.current) {
+            try { soundRef.current.play(); } catch (_) {}
+          }
+        }}
+        onApplyRingtone={(track) => {
+          setTrimmerModalTrack(null);
+          setRingtoneModalTrack(track);
+        }}
+      />
+
+      {/* Fullscreen Car & Stage Mode Modal */}
+      <CarModeModal
+        visible={isCarModeVisible}
+        onClose={() => setIsCarModeVisible(false)}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
+        onNext={handleNextTrack}
+        onPrev={handlePrevTrack}
+        isFavorite={favorites.includes(currentTrack?.id)}
+        onToggleFavorite={handleToggleFavorite}
+      />
+
+      {/* Worship Journey & Listening Statistics Modal */}
+      <ListeningStatsModal
+        visible={isStatsVisible}
+        onClose={() => setIsStatsVisible(false)}
+        stats={listeningStats}
+        streakDays={streakData?.streakDays || 14}
+        favoritesCount={favorites.length}
       />
 
       {/* Bottom Navigation Tabs */}

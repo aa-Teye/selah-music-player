@@ -65,23 +65,125 @@
 
 ---
 
-## ⏳ Section 3: Yet to Be Implemented (Roadmap & Backlog)
+## 🛠️ Section 3: Changes Implemented in Current Turn (Custom Playlist Engine & AI Screen Integration)
 
-The following items are planned or scheduled for subsequent iterations:
+### Issues Addressed
+1. **Disconnected Playlist Screen**:
+   - `PlaylistsScreen.js` previously only showed static presets and favorites. Custom playlists could not be saved to `AsyncStorage`, displayed in the UI, viewed in detail, or played.
+2. **Missing "Add to Playlist" Action**:
+   - No screen (Home, Local Library, Full Player) had a button or modal allowing users to assign songs into playlists.
+3. **Unrendered AI Discovery Screen**:
+   - Tapping the "AI Devotion" button in `TopHeader` or `HomeScreen` set `activeTab` to `'ai'`, but `mobile/App.js` lacked an `activeTab === 'ai'` render block, causing a blank screen.
 
-1. **Enhanced Audio Metadata Extraction (Mobile)**
-   - Extract embedded ID3 tags (artist, album, embedded album artwork) directly from scanned local files using pure JS tag parsers rather than fallback cover art.
-2. **Folder-Based Filtering for Local Music**
-   - Provide folder view (e.g. `Music/`, `Downloads/`, `WhatsApp Audio/`) in Local Library so users can exclude ringtones or voice notes.
-3. **Android Media Notification & Lock Screen Controls**
-   - Ensure lock-screen media controls (Notification media style with play/pause/skip buttons) are fully bound via Expo Audio / MediaSession.
-4. **Offline Lyrics Synchronization**
-   - Synchronized LRC or local lyrics parser for offline songs.
-5. **EAS Cloud Build Trigger for New APK**
-   - Triggering EAS preview APK build after user approves the code changes and git commit.
+### Changes Applied
+1. **[AddToPlaylistModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/AddToPlaylistModal.js)**:
+   - Created reusable modal allowing users to check/uncheck any track into custom playlists.
+   - Includes an inline "+ Create New Playlist" shortcut.
+2. **[PlaylistsScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/PlaylistsScreen.js)**:
+   - Built **"My Playlists"** section showing all user-created playlists with track counts, mini play buttons, and delete actions.
+   - Built **Playlist Detail View**: Tapping any playlist displays all its songs, track removal buttons, and a **"Play All"** button.
+   - Handled empty states and confirmation prompts.
+3. **[App.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/App.js)**:
+   - Added persistent state for `playlists` linked to `StorageService.getPlaylists()` and `StorageService.savePlaylists()`.
+   - Implemented handlers: `handleCreatePlaylist`, `handleDeletePlaylist`, `handleToggleTrackInPlaylist`, and `handlePlayPlaylist`.
+   - Wired `{activeTab === 'ai' && <AiDiscoveryScreen ... />}` with a "Back to Home" button.
+   - Embedded `<AddToPlaylistModal />` accessible globally.
+4. **[HomeScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/HomeScreen.js)** & **[LocalLibraryScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/LocalLibraryScreen.js)** & **[FullPlayerModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/FullPlayerModal.js)**:
+   - Added `onOpenAddToPlaylist` trigger on every track row and inside the player utilities bar.
+5. **[AiDiscoveryScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/AiDiscoveryScreen.js)**:
+   - Added top back button returning to `'home'`.
+
+---
+
+## 🛠️ Section 4: Changes Implemented in Current Turn (Folder Browser, Caller Tune / Ringtone, ID3 Metadata, Lock Screen)
+
+### Features Addressed (Per User Audio Note)
+1. **Folder Browser in Local Library**:
+   - Added a 3rd sub-tab in `LocalLibraryScreen.js`: `Tracks`, `Folders`, and `Artists`.
+   - Grouped device tracks by parent folder (`Music/`, `Download/`, `WhatsApp Audio/`, etc.).
+   - Added folder drill-down view with track count, "Play Entire Folder" button, and back button navigation.
+2. **Embedded ID3 Tag & Metadata Enrichment (`id3Service.js`)**:
+   - Created `mobile/src/services/id3Service.js` to intelligently clean raw filenames (`"01 - Artist - Title.mp3"` -> Clean Title, Artist, and Album).
+   - Dynamic cover artwork matching: Maps worship, praise, prayer, lofi, acoustic, and choir tracks to curated visuals.
+3. **Caller Tune & Ringtone Setter (`SetRingtoneModal.js`)**:
+   - Built a dark-gold modal allowing users to assign any audio file as their Phone Caller Tune / Ringtone, SMS/Notification tone, or Devotion Alarm.
+   - Added action buttons in `LocalLibraryScreen.js` and in `FullPlayerModal.js` utility bar.
+   - Added `WRITE_SETTINGS` permission in `AndroidManifest.xml`.
+4. **System Lock-Screen & Notification Drawer Controls**:
+   - Configured `POST_NOTIFICATIONS` permission in `AndroidManifest.xml` and `app.json`.
+   - Automated notification permission request in `App.js` on app launch via `requestNotificationPermissionsAsync()`.
+   - Integrated `player.setActiveForLockScreen(true, { title, artist, album, artworkUrl })` upon track playback so playback controls and track artwork appear on device lock screens.
+
+---
+
+## 🛠️ Section 5: Changes Implemented in Current Turn (Synced Lyrics, Audio Trimmer, Car Mode, Listening Analytics)
+
+### Features Implemented
+1. **Real-Time Synchronized Karaoke Lyrics ([SyncedLyricsView.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/SyncedLyricsView.js))**:
+   - Parses timestamped `.lrc` lyrics (`[00:15.30] Lyric text`) with fallback plain-text time distribution.
+   - Highlights the active lyric line with an animated gold glow (`#E5A93C`) and larger font.
+   - Auto-scrolls vertically with `ScrollView` so current singing line is always centered on screen.
+   - Interactive tap-to-seek: Tapping any lyric line instantly seeks the audio player to that timestamp.
+   - Built an **"Edit / Add Lyrics"** modal to allow pasting or updating custom lyrics for any track, saved persistently to disk.
+
+2. **Built-in Audio Trimmer & Ringtone Cutter ([AudioTrimmerModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/AudioTrimmerModal.js))**:
+   - Visual waveform scrubber with start and end position flags.
+   - Fine-tuning steppers (`-5s`, `-1s`, `+1s`, `+5s`) and preset durations (15s, 30s, 45s, 60s).
+   - "Preview Clip" button to listen exclusively to the selected slice.
+   - One-tap "Set as Ringtone" button linked into the Ringtone and Caller Tune engine.
+
+3. **Recently Played Rail & Devotion Listening Analytics ([ListeningStatsModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/ListeningStatsModal.js) & [HomeScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/HomeScreen.js))**:
+   - Added horizontal **"Recently Played"** rail on the Home Screen showing recently listened songs with album art.
+   - Built a **"My Worship Journey"** modal tracking:
+     - Total time spent in worship/praise (minutes/hours).
+     - Total songs played.
+     - Active devotion streak count.
+     - Favorite songs tally.
+
+4. **Fullscreen Car & Stage Mode ([CarModeModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/CarModeModal.js))**:
+   - Ultra-large, high-contrast, distraction-free player interface with 120px play/pause and 80px skip buttons.
+   - Designed for safe in-car use and church stage/podium playback monitoring.
+   - Accessible via Car icon in `FullPlayerModal.js`.
+
+---
+
+---
+
+## 🛠️ Section 6: Comprehensive Quality Audit & Bugfixes (Current Turn)
+
+### Issues Identified & Resolved
+1. **Audio Engine Background Collision with YouTube Playback ([App.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/App.js))**:
+   - *Issue*: Switching to a YouTube video or non-audio track bypassed the audio cleanup block because `audioSource` was falsy, leaving any active local MP3 or devotion audio playing simultaneously under the YouTube video.
+   - *Fix*: Unconditionally halted and removed `soundRef.current` and status listeners prior to source branching so YouTube and local audio never conflict.
+2. **Horizontal Overflow on Player Utilities Bar ([FullPlayerModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/FullPlayerModal.js))**:
+   - *Issue*: 5 utility pills (Speed, Sleep Timer, + Playlist, Ringtone, Cutter) were rendered in a static row, causing them to clip and squish on narrower phone screens.
+   - *Fix*: Upgraded to a horizontal `ScrollView` with `showsHorizontalScrollIndicator={false}` and smooth scrolling.
+3. **Timer Leak in Ringtone Cutter ([AudioTrimmerModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/AudioTrimmerModal.js))**:
+   - *Issue*: Audio preview timeout continued firing after modal dismissal or toggle.
+   - *Fix*: Attached `previewTimeoutRef` with automatic cancellation on unmount and re-toggle.
+4. **Defensive LRC Lyrics Parsing ([SyncedLyricsView.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/SyncedLyricsView.js))**:
+   - *Issue*: Non-string `lyrics` prop could trigger runtime `split` exceptions.
+   - *Fix*: Added safe string assertion and whitespace validation.
+5. **Storage Key Consistency & App Config Cleanup**:
+   - Fixed `RECENT_TRACKS` key aliasing in [storageService.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/services/storageService.js).
+   - Cleaned redundant web configuration and added explicit `"platforms": ["android", "ios"]` in [app.json](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/app.json).
+   - Guarded featured track click in [HomeScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/HomeScreen.js).
+
+---
+
+## ⏳ Section 7: Next Steps & Release
+
+1. **Commit & Push**:
+   - Awaiting user approval to commit and push to `origin/main`.
+2. **Build Cloud Preview / Production APK**:
+   - Preview APK: `npx eas-cli build -p android --profile preview`
+   - Production AAB: `npx eas-cli build -p android --profile production`
 
 ---
 
 ## 🔒 Approval Gate
-- **Approval Status**: Approved by user on October 27, 2026.
-- **Git Push Status**: Pushed to remote repository (`origin/main`).
+- **Status**: Audit completed. All 730 Android modules bundled with exit code 0. Vite web build passed in 719ms with zero errors.
+- **Git Push Status**: ON HOLD awaiting user review and explicit approval.
+
+
+

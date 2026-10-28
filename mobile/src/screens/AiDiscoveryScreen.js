@@ -13,7 +13,9 @@ import { AI_CURATED } from '../data/mockData';
 
 export default function AiDiscoveryScreen({
   onPlayTrack,
-  currentTrack
+  currentTrack,
+  onBack,
+  onOpenAddToPlaylist
 }) {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -104,6 +106,18 @@ export default function AiDiscoveryScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Back button */}
+      {onBack && (
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={onBack}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={20} color="#E5A93C" />
+          <Text style={styles.backButtonText}>Back to Home</Text>
+        </TouchableOpacity>
+      )}
+
       {/* AI Hero Banner */}
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
@@ -378,5 +392,16 @@ const styles = StyleSheet.create({
     color: '#0A0D14',
     fontWeight: '800',
     fontSize: 12
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 6
+  },
+  backButtonText: {
+    color: '#E5A93C',
+    fontWeight: '700',
+    fontSize: 14
   }
 });

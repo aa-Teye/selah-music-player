@@ -18,7 +18,10 @@ export default function HomeScreen({
   activeMood,
   setActiveMood,
   moodTags,
-  onOpenAi
+  onOpenAi,
+  onOpenAddToPlaylist,
+  recentTracks = [],
+  onOpenStats
 }) {
   const filteredTracks = activeMood === 'all' 
     ? tracks 
@@ -35,10 +38,18 @@ export default function HomeScreen({
             <Ionicons name="book-outline" size={13} color="#E5A93C" />
             <Text style={styles.verseBadgeText}>VERSE OF THE DAY</Text>
           </View>
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={14} color="#F97316" />
-            <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
-          </View>
+          {onOpenStats ? (
+            <TouchableOpacity style={styles.streakBadge} onPress={onOpenStats}>
+              <Ionicons name="flame" size={14} color="#F97316" />
+              <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
+              <Ionicons name="chevron-forward" size={12} color="#F97316" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.streakBadge}>
+              <Ionicons name="flame" size={14} color="#F97316" />
+              <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
+            </View>
+          )}
         </View>
 
         <Text style={styles.verseQuote}>{devotion.verse}</Text>
@@ -48,13 +59,50 @@ export default function HomeScreen({
         <View style={styles.actionRow}>
           <TouchableOpacity 
             style={styles.playAnthemBtn}
-            onPress={() => onPlayTrack(featuredTrack)}
+            onPress={() => featuredTrack && onPlayTrack && onPlayTrack(featuredTrack)}
           >
             <Ionicons name="play" size={18} color="#0A0D14" />
             <Text style={styles.playAnthemText}>Play Devotional Anthem</Text>
           </TouchableOpacity>
+
+          {onOpenStats && (
+            <TouchableOpacity 
+              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
+              onPress={onOpenStats}
+            >
+              <Ionicons name="stats-chart" size={16} color="#E5A93C" />
+              <Text style={[styles.playAnthemText, { color: '#E5A93C' }]}>My Stats</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+
+      {/* Recently Played Horizontal Rail */}
+      {recentTracks && recentTracks.length > 0 && (
+        <View style={{ marginBottom: 20 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recently Played</Text>
+            <Text style={styles.sectionSubtitle}>{recentTracks.length} tracks</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+            {recentTracks.map((item) => (
+              <TouchableOpacity
+                key={`recent-${item.id}`}
+                style={styles.recentItemCard}
+                onPress={() => onPlayTrack(item)}
+                activeOpacity={0.8}
+              >
+                <Image 
+                  source={{ uri: item.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' }} 
+                  style={styles.recentCover} 
+                />
+                <Text style={styles.recentTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.recentArtist} numberOfLines={1}>{item.artist}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Mood Filter Pills */}
       <View style={styles.sectionHeader}>
@@ -106,6 +154,17 @@ export default function HomeScreen({
                   <View style={styles.cardYtTag}>
                     <Text style={styles.cardYtText}>YouTube</Text>
                   </View>
+                )}
+                {onOpenAddToPlaylist && (
+                  <TouchableOpacity 
+                    style={styles.cardAddPlBtn}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      onOpenAddToPlaylist(track);
+                    }}
+                  >
+                    <Ionicons name="bookmark-outline" size={13} color="#E5A93C" />
+                  </TouchableOpacity>
                 )}
               </View>
 
@@ -330,6 +389,44 @@ const styles = StyleSheet.create({
   cardArtist: {
     color: '#9CA3AF',
     fontSize: 11,
+    marginTop: 2
+  },
+  cardAddPlBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(10, 13, 20, 0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.4)'
+  },
+  recentItemCard: {
+    width: 110,
+    marginRight: 12,
+    backgroundColor: '#111622',
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  recentCover: {
+    width: '100%',
+    height: 94,
+    borderRadius: 8,
+    marginBottom: 6
+  },
+  recentTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  recentArtist: {
+    color: '#9CA3AF',
+    fontSize: 10,
     marginTop: 2
   }
 });
