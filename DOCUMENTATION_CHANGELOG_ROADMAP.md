@@ -164,7 +164,11 @@
 4. **Defensive LRC Lyrics Parsing ([SyncedLyricsView.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/SyncedLyricsView.js))**:
    - *Issue*: Non-string `lyrics` prop could trigger runtime `split` exceptions.
    - *Fix*: Added safe string assertion and whitespace validation.
-5. **Storage Key Consistency & App Config Cleanup**:
+5. **Up Next Playback Queue ([PlaybackQueueView.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/PlaybackQueueView.js))**:
+   - Created mobile counterpart for the desktop `QueueDrawer.jsx`.
+   - Added 3rd tab (`Queue`) in [FullPlayerModal.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/components/FullPlayerModal.js) header (`Player | Lyrics | Queue`).
+   - Integrated track list, playing indicator, instant tap-to-play, track removal, and clear queue with confirmation.
+6. **Storage Key Consistency & App Config Cleanup**:
    - Fixed `RECENT_TRACKS` key aliasing in [storageService.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/services/storageService.js).
    - Cleaned redundant web configuration and added explicit `"platforms": ["android", "ios"]` in [app.json](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/app.json).
    - Guarded featured track click in [HomeScreen.js](file:///Users/Robert/Documents/MYCODINGWORKS/MUZIO%20PLAYER%20/mobile/src/screens/HomeScreen.js).

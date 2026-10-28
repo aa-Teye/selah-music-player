@@ -594,6 +594,10 @@ export default function App() {
         onOpenSetRingtone={handleOpenSetRingtone}
         onOpenAudioTrimmer={(t) => setTrimmerModalTrack(t || currentTrack)}
         onOpenCarMode={() => setIsCarModeVisible(true)}
+        queue={tracks}
+        onPlayTrack={handlePlayTrack}
+        onRemoveFromQueue={(trackId) => setTracks((prev) => prev.filter((t) => t.id !== trackId))}
+        onClearQueue={() => setTracks(currentTrack ? [currentTrack] : [])}
       />
 
       {/* Add To Playlist Modal */}

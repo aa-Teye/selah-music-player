@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import SyncedLyricsView from './SyncedLyricsView';
+import PlaybackQueueView from './PlaybackQueueView';
 
 export default function FullPlayerModal({
   visible,
@@ -37,9 +38,13 @@ export default function FullPlayerModal({
   onOpenAddToPlaylist,
   onOpenSetRingtone,
   onOpenAudioTrimmer,
-  onOpenCarMode
+  onOpenCarMode,
+  queue = [],
+  onPlayTrack,
+  onRemoveFromQueue,
+  onClearQueue
 }) {
-  const [activeTab, setActiveTab] = useState('player'); // 'player' | 'lyrics'
+  const [activeTab, setActiveTab] = useState('player'); // 'player' | 'lyrics' | 'queue'
   const [showSleepModal, setShowSleepModal] = useState(false);
   const spinAnim = useRef(new Animated.Value(0)).current;
   const scrubberWidthRef = useRef(0);
@@ -129,6 +134,13 @@ export default function FullPlayerModal({
             >
               <Text style={[styles.headerTabText, activeTab === 'lyrics' && styles.activeTabText]}>Lyrics</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.headerTabPill, activeTab === 'queue' && styles.activeTabPill]}
+              onPress={() => setActiveTab('queue')}
+            >
+              <Text style={[styles.headerTabText, activeTab === 'queue' && styles.activeTabText]}>Queue</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -184,12 +196,21 @@ export default function FullPlayerModal({
               <Text style={styles.fullAlbum} numberOfLines={1}>{currentTrack.album || 'Selah Music Release'}</Text>
             </View>
           </View>
-        ) : (
+        ) : activeTab === 'lyrics' ? (
           <SyncedLyricsView
             currentTrack={currentTrack}
             currentPosition={currentPosition}
             duration={duration}
             onSeek={onSeek}
+          />
+        ) : (
+          <PlaybackQueueView
+            queue={queue}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            onPlayTrack={onPlayTrack}
+            onRemoveFromQueue={onRemoveFromQueue}
+            onClearQueue={onClearQueue}
           />
         )}
 
