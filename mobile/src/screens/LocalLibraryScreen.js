@@ -16,6 +16,7 @@ import { Id3Service } from '../services/id3Service';
 
 export default function LocalLibraryScreen({
   localTracks = [],
+  searchQuery = '',
   onAddLocalTrack,
   onBatchAddLocalTracks,
   onPlayTrack,
@@ -26,63 +27,96 @@ export default function LocalLibraryScreen({
   onOpenSetRingtone,
   onOpenEditTags
 }) {
-  const [filterQuery, setFilterQuery] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Auto-scan entire phone storage with expo-media-library & ID3 metadata enrichment
+  // Auto-scan phone storage across all Android versions
   const handleAutoScanDevice = async () => {
     try {
       setIsScanning(true);
 
-      // Check existing permission first with explicit 'audio' granular permission
-      let perm = await MediaLibrary.getPermissionsAsync(false, ['audio']);
+      // Check existing permission first across Android 10-15
+      let perm = await MediaLibrary.getPermissionsAsync();
       if (!perm.granted) {
-        perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
+        try {
+          perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
+        } catch (_) {
+          perm = await MediaLibrary.requestPermissionsAsync();
+        }
       }
 
       if (!perm.granted) {
-        if (!perm.canAskAgain) {
-          Alert.alert(
-            "Audio Permission Needed",
-            "Selah needs permission to read music files on your phone. Please allow 'Music and audio' permission in your device Settings -> Apps -> Selah Music Player -> Permissions.",
-            [{ text: "OK" }]
-          );
-        } else {
-          Alert.alert(
-            "Permission Required", 
-            "Please grant media permission so Selah can scan and list the music files on your device."
-          );
-        }
+        // Fallback request
+        try {
+          perm = await MediaLibrary.requestPermissionsAsync();
+        } catch (_) {}
+      }
+
+      if (!perm.granted) {
+        Alert.alert(
+          "Audio Permission Needed",
+          "Selah needs permission to read music files on your phone. Please grant 'Music and audio' permission in your device Settings -> Apps -> Selah Music Player -> Permissions.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Open Settings", onPress: () => Linking.openSettings && Linking.openSettings() }
+          ]
+        );
         setIsScanning(false);
         return;
       }
 
-      // Fetch audio assets from phone storage
+      // Fetch audio assets from phone storage (safe across all phone manufacturers)
       const allDiscovered = [];
       let hasNextPage = true;
       let after = undefined;
       let pageCount = 0;
 
-      while (hasNextPage && pageCount < 5) {
+      while (hasNextPage && pageCount < 10) {
         pageCount++;
-        const media = await MediaLibrary.getAssetsAsync({
-          mediaType: MediaLibrary.MediaType.audio,
-          first: 100,
-          after,
-          sortBy: [[MediaLibrary.SortBy.modificationTime, false]]
-        });
+        const options = {
+          mediaType: [MediaLibrary.MediaType.audio],
+          first: 100
+        };
+        if (after) {
+          options.after = String(after);
+        }
 
-        if (media.assets && media.assets.length > 0) {
+        const media = await MediaLibrary.getAssetsAsync(options);
+
+        if (media && media.assets && media.assets.length > 0) {
           for (const asset of media.assets) {
             allDiscovered.push(Id3Service.enrichAsset(asset));
           }
         }
 
-        hasNextPage = Boolean(media.hasNextPage && media.endCursor);
+        hasNextPage = Boolean(media.hasNextPage && media.endCursor && media.endCursor !== after);
         after = media.endCursor;
         if (!media.assets || media.assets.length === 0) break;
+      }
+
+      // If audio query returned 0 files, check general media assets for audio extensions
+      if (allDiscovered.length === 0) {
+        try {
+          const fallback = await MediaLibrary.getAssetsAsync({ first: 200 });
+          if (fallback && fallback.assets) {
+            for (const asset of fallback.assets) {
+              const fname = (asset.filename || asset.uri || '').toLowerCase();
+              if (
+                fname.endsWith('.mp3') ||
+                fname.endsWith('.m4a') ||
+                fname.endsWith('.wav') ||
+                fname.endsWith('.aac') ||
+                fname.endsWith('.flac') ||
+                fname.endsWith('.ogg')
+              ) {
+                allDiscovered.push(Id3Service.enrichAsset(asset));
+              }
+            }
+          }
+        } catch (fallbackErr) {
+          console.log('Secondary media scan fallback notice:', fallbackErr);
+        }
       }
 
       if (allDiscovered.length > 0) {
@@ -91,40 +125,19 @@ export default function LocalLibraryScreen({
         }
         Alert.alert(
           "Scan Complete! 🎵", 
-          `Found and added ${allDiscovered.length} audio file${allDiscovered.length === 1 ? '' : 's'} on your phone.`
+          `Found and added ${allDiscovered.length} actual music file${allDiscovered.length === 1 ? '' : 's'} from your phone.`
         );
       } else {
         Alert.alert(
           "No Audio Files Found", 
-          "No MP3 or audio files were detected in your device music folders. You can still use 'Import' to select files directly."
+          "No music files were detected in standard Android media folders. You can tap 'Import' to select your audio files directly from any folder."
         );
       }
     } catch (err) {
-      console.log('Error scanning media, attempting fallback:', err);
-      try {
-        const fallbackMedia = await MediaLibrary.getAssetsAsync({
-          mediaType: MediaLibrary.MediaType.audio,
-          first: 150
-        });
-
-        if (fallbackMedia.assets && fallbackMedia.assets.length > 0) {
-          const fallbackTracks = fallbackMedia.assets.map((asset) => Id3Service.enrichAsset(asset));
-          if (onBatchAddLocalTracks) {
-            onBatchAddLocalTracks(fallbackTracks);
-          }
-          Alert.alert(
-            "Scan Complete! 🎵", 
-            `Found ${fallbackTracks.length} audio file${fallbackTracks.length === 1 ? '' : 's'} on your phone.`
-          );
-          return;
-        }
-      } catch (fallbackErr) {
-        console.log('Fallback scan failed:', fallbackErr);
-      }
-
+      console.log('Error scanning media:', err);
       Alert.alert(
         "Scan Notice", 
-        `Could not scan media: ${err?.message || 'Storage permission or MediaStore query error'}.\n\nYou can use the "Import" button to pick music files directly.`
+        `Could not scan media: ${err?.message || 'Storage error'}.\n\nYou can use the "Import" button to pick music files directly.`
       );
     } finally {
       setIsScanning(false);
@@ -178,11 +191,17 @@ export default function LocalLibraryScreen({
     }
   };
 
-  // Filter local tracks
-  const filteredTracks = localTracks.filter(t => 
-    t.title.toLowerCase().includes(filterQuery.toLowerCase()) ||
-    t.artist.toLowerCase().includes(filterQuery.toLowerCase())
-  );
+  // Filter local tracks with global searchQuery
+  const activeQuery = (searchQuery || '').trim().toLowerCase();
+  const filteredTracks = localTracks.filter(t => {
+    if (!activeQuery) return true;
+    return (
+      (t.title && t.title.toLowerCase().includes(activeQuery)) ||
+      (t.artist && t.artist.toLowerCase().includes(activeQuery)) ||
+      (t.album && t.album.toLowerCase().includes(activeQuery)) ||
+      (t.folder && t.folder.toLowerCase().includes(activeQuery))
+    );
+  });
 
   // Group by folders
   const foldersMap = {};

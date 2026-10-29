@@ -18,6 +18,7 @@ const { width } = Dimensions.get('window');
 export default function YouTubeWatchScreen({
   currentTrack,
   isPlaying,
+  searchQuery = '',
   onPlayTrack,
   onAddYouTubeTrack
 }) {
@@ -158,7 +159,13 @@ export default function YouTubeWatchScreen({
         <Text style={styles.sectionTitle}>Curated Music Videos</Text>
       </View>
 
-      {featuredVideos.map((item) => {
+      {featuredVideos
+        .filter(item => {
+          if (!searchQuery) return true;
+          const q = searchQuery.toLowerCase();
+          return item.title.toLowerCase().includes(q) || item.artist.toLowerCase().includes(q);
+        })
+        .map((item) => {
         const isCurrent = currentTrack?.youtubeId === item.youtubeId;
         return (
           <TouchableOpacity

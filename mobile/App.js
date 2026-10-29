@@ -109,6 +109,8 @@ export default function App() {
         if (savedLocal && savedLocal.length > 0) {
           setLocalTracks(savedLocal);
           setTracks((prev) => [...savedLocal, ...prev]);
+          setCurrentTrack(savedLocal[0]);
+          setDuration(savedLocal[0].duration || 180);
         }
       } catch (e) {
         console.log('Error initializing app storage:', e);
@@ -575,6 +577,7 @@ export default function App() {
         {activeTab === 'library' && (
           <LocalLibraryScreen
             localTracks={localTracks}
+            searchQuery={searchQuery}
             onAddLocalTrack={handleAddLocalTrack}
             onBatchAddLocalTracks={handleBatchAddLocalTracks}
             onPlayTrack={handlePlayTrack}
@@ -591,6 +594,7 @@ export default function App() {
           <YouTubeWatchScreen
             currentTrack={currentTrack}
             isPlaying={isPlaying}
+            searchQuery={searchQuery}
             onPlayTrack={handlePlayTrack}
             onAddYouTubeTrack={handleAddYouTubeTrack}
           />
