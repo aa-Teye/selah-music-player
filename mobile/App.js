@@ -18,6 +18,9 @@ import SetRingtoneModal from './src/components/SetRingtoneModal';
 import AudioTrimmerModal from './src/components/AudioTrimmerModal';
 import CarModeModal from './src/components/CarModeModal';
 import ListeningStatsModal from './src/components/ListeningStatsModal';
+import PrayerBookmarksModal from './src/components/PrayerBookmarksModal';
+import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
+import EditTagsModal from './src/components/EditTagsModal';
 
 import { DAILY_DEVOTION, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
@@ -34,6 +37,13 @@ export default function App() {
   const [isStatsVisible, setIsStatsVisible] = useState(false);
   const [recentTracks, setRecentTracks] = useState([]);
   const [listeningStats, setListeningStats] = useState({ totalSeconds: 0, tracksPlayedCount: 0 });
+  const [bookmarks, setBookmarks] = useState([]);
+  const [isBookmarksModalVisible, setIsBookmarksModalVisible] = useState(false);
+  const [isAmbientModalVisible, setIsAmbientModalVisible] = useState(false);
+  const [activeSoundscape, setActiveSoundscape] = useState(null);
+  const [ambientVolume, setAmbientVolume] = useState(0.5);
+  const [crossfadeSeconds, setCrossfadeSeconds] = useState(0);
+  const [tagEditTrack, setTagEditTrack] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(INITIAL_TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -73,14 +83,16 @@ export default function App() {
           }
         }
 
-        // Load saved favorites, local tracks, streak, playlists, recent tracks & stats
-        const [savedFavs, savedLocal, savedStreak, savedPlaylists, savedRecent, savedStats] = await Promise.all([
+        // Load saved favorites, local tracks, streak, playlists, recent tracks, stats, bookmarks & settings
+        const [savedFavs, savedLocal, savedStreak, savedPlaylists, savedRecent, savedStats, savedBookmarks, savedSettings] = await Promise.all([
           StorageService.getFavorites(),
           StorageService.getLocalTracks(),
           StorageService.recordDailyStreak(),
           StorageService.getPlaylists(),
           StorageService.getRecentlyPlayed(),
-          StorageService.getListeningStats()
+          StorageService.getListeningStats(),
+          StorageService.getBookmarks(),
+          StorageService.getSettings()
         ]);
 
         if (savedFavs) setFavorites(savedFavs);
@@ -88,6 +100,12 @@ export default function App() {
         if (savedPlaylists) setPlaylists(savedPlaylists);
         if (savedRecent) setRecentTracks(savedRecent);
         if (savedStats) setListeningStats(savedStats);
+        if (savedBookmarks) setBookmarks(savedBookmarks);
+        if (savedSettings) {
+          if (typeof savedSettings.crossfadeSeconds === 'number') setCrossfadeSeconds(savedSettings.crossfadeSeconds);
+          if (savedSettings.ambientSoundType) setActiveSoundscape(savedSettings.ambientSoundType);
+          if (typeof savedSettings.ambientVolume === 'number') setAmbientVolume(savedSettings.ambientVolume);
+        }
         if (savedLocal && savedLocal.length > 0) {
           setLocalTracks(savedLocal);
           setTracks((prev) => [...savedLocal, ...prev]);
@@ -457,6 +475,60 @@ export default function App() {
     setRingtoneModalTrack(track || currentTrack);
   };
 
+  // Scripture & Prayer Bookmarks
+  const handleAddBookmark = (entry) => {
+    StorageService.addBookmark(entry).then((updated) => {
+      if (updated) setBookmarks(updated);
+    });
+  };
+
+  const handleDeleteBookmark = (bmId) => {
+    StorageService.deleteBookmark(bmId).then((updated) => {
+      if (updated) setBookmarks(updated);
+    });
+  };
+
+  const handleJumpToBookmark = (bm) => {
+    if (currentTrack?.id !== bm.trackId) {
+      const target = tracks.find((t) => t.id === bm.trackId);
+      if (target) {
+        handlePlayTrack(target);
+      }
+    }
+    setTimeout(() => {
+      handleSeek(bm.timestamp);
+    }, 300);
+  };
+
+  // Soundscape & Crossfade settings
+  const handleSetCrossfade = (seconds) => {
+    setCrossfadeSeconds(seconds);
+    StorageService.saveSettings({ crossfadeSeconds: seconds, ambientSoundType: activeSoundscape, ambientVolume });
+  };
+
+  const handleSelectSoundscape = (soundType) => {
+    setActiveSoundscape(soundType);
+    StorageService.saveSettings({ crossfadeSeconds, ambientSoundType: soundType, ambientVolume });
+  };
+
+  const handleSetAmbientVolume = (vol) => {
+    setAmbientVolume(vol);
+    StorageService.saveSettings({ crossfadeSeconds, ambientSoundType: activeSoundscape, ambientVolume: vol });
+  };
+
+  // In-app tag editor save
+  const handleSaveEditedTrack = (updatedTrack) => {
+    setLocalTracks((prev) => {
+      const updated = prev.map((t) => (t.id === updatedTrack.id ? updatedTrack : t));
+      StorageService.saveLocalTracks(updated);
+      return updated;
+    });
+    setTracks((prev) => prev.map((t) => (t.id === updatedTrack.id ? updatedTrack : t)));
+    if (currentTrack?.id === updatedTrack.id) {
+      setCurrentTrack(updatedTrack);
+    }
+  };
+
   // Filtered tracks
   const visibleTracks = tracks.filter((t) => {
     if (!searchQuery) return true;
@@ -511,6 +583,7 @@ export default function App() {
             onDeleteTrack={handleDeleteLocalTrack}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             onOpenSetRingtone={handleOpenSetRingtone}
+            onOpenEditTags={(track) => setTagEditTrack(track)}
           />
         )}
 
@@ -553,6 +626,10 @@ export default function App() {
             onSetSleepTimer={handleSetSleepTimer}
             playbackSpeed={playbackSpeed}
             onSetSpeed={handleSetSpeed}
+            crossfadeSeconds={crossfadeSeconds}
+            onSetCrossfade={handleSetCrossfade}
+            activeSoundscape={activeSoundscape}
+            onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
           />
         )}
       </View>
@@ -598,6 +675,10 @@ export default function App() {
         onPlayTrack={handlePlayTrack}
         onRemoveFromQueue={(trackId) => setTracks((prev) => prev.filter((t) => t.id !== trackId))}
         onClearQueue={() => setTracks(currentTrack ? [currentTrack] : [])}
+        onOpenPrayerBookmarks={() => setIsBookmarksModalVisible(true)}
+        onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
+        activeSoundscape={activeSoundscape}
+        bookmarksCount={bookmarks.filter(b => b.trackId === currentTrack?.id).length}
       />
 
       {/* Add To Playlist Modal */}
@@ -656,6 +737,37 @@ export default function App() {
         stats={listeningStats}
         streakDays={streakData?.streakDays || 14}
         favoritesCount={favorites.length}
+      />
+
+      {/* Scripture & Prayer Bookmarks Modal */}
+      <PrayerBookmarksModal
+        visible={isBookmarksModalVisible}
+        onClose={() => setIsBookmarksModalVisible(false)}
+        currentTrack={currentTrack}
+        currentPosition={currentPosition}
+        bookmarks={bookmarks}
+        onAddBookmark={handleAddBookmark}
+        onDeleteBookmark={handleDeleteBookmark}
+        onJumpToBookmark={handleJumpToBookmark}
+      />
+
+      {/* Bedtime Ambient Soundscapes Modal */}
+      <AmbientSoundscapesModal
+        visible={isAmbientModalVisible}
+        onClose={() => setIsAmbientModalVisible(false)}
+        activeSoundscape={activeSoundscape}
+        onSelectSoundscape={handleSelectSoundscape}
+        ambientVolume={ambientVolume}
+        onSetVolume={handleSetAmbientVolume}
+        sleepTimerRemaining={sleepTimerRemaining}
+      />
+
+      {/* In-App ID3 Tag Editor Modal */}
+      <EditTagsModal
+        visible={Boolean(tagEditTrack)}
+        track={tagEditTrack}
+        onClose={() => setTagEditTrack(null)}
+        onSaveTrack={handleSaveEditedTrack}
       />
 
       {/* Bottom Navigation Tabs */}

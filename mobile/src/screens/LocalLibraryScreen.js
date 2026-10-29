@@ -23,7 +23,8 @@ export default function LocalLibraryScreen({
   isPlaying,
   onDeleteTrack,
   onOpenAddToPlaylist,
-  onOpenSetRingtone
+  onOpenSetRingtone,
+  onOpenEditTags
 }) {
   const [filterQuery, setFilterQuery] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
@@ -354,7 +355,16 @@ export default function LocalLibraryScreen({
                       </Text>
                     </View>
 
-                    <View style={styles.cardActions}>
+                      {/* Edit Tags */}
+                      {onOpenEditTags && (
+                        <TouchableOpacity 
+                          style={styles.actionIconBtn}
+                          onPress={() => onOpenEditTags(item)}
+                        >
+                          <MaterialCommunityIcons name="tag-outline" size={18} color="#9CA3AF" />
+                        </TouchableOpacity>
+                      )}
+
                       {/* Set as Ringtone / Caller Tune */}
                       {onOpenSetRingtone && (
                         <TouchableOpacity 
@@ -451,6 +461,11 @@ export default function LocalLibraryScreen({
                             </Text>
                           </View>
                           <View style={styles.cardActions}>
+                            {onOpenEditTags && (
+                              <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenEditTags(item)}>
+                                <MaterialCommunityIcons name="tag-outline" size={18} color="#9CA3AF" />
+                              </TouchableOpacity>
+                            )}
                             {onOpenSetRingtone && (
                               <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenSetRingtone(item)}>
                                 <Ionicons name="notifications-outline" size={18} color="#9CA3AF" />

@@ -7,6 +7,7 @@ const KEYS = {
   STREAK: '@selah_streak',
   RECENTLY_PLAYED: '@selah_recent_tracks',
   RECENT_TRACKS: '@selah_recent_tracks',
+  BOOKMARKS: '@selah_bookmarks',
   SETTINGS: '@selah_settings'
 };
 
@@ -164,6 +165,75 @@ export const StorageService = {
       return updated;
     } catch (e) {
       console.log('Error saving stats:', e);
+    }
+  },
+
+  // Scripture & Prayer Bookmarks
+  async getBookmarks() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.BOOKMARKS);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.log('Error loading bookmarks:', e);
+      return [];
+    }
+  },
+
+  async saveBookmarks(bookmarks) {
+    try {
+      await AsyncStorage.setItem(KEYS.BOOKMARKS, JSON.stringify(bookmarks));
+    } catch (e) {
+      console.log('Error saving bookmarks:', e);
+    }
+  },
+
+  async addBookmark(entry) {
+    try {
+      const current = await this.getBookmarks();
+      const newBookmark = {
+        id: `bm-${Date.now()}`,
+        trackId: entry.trackId,
+        trackTitle: entry.trackTitle || 'Worship Track',
+        trackArtist: entry.trackArtist || 'Selah Music',
+        timestamp: Math.round(entry.timestamp || 0),
+        note: entry.note || '',
+        scripture: entry.scripture || '',
+        createdAt: new Date().toISOString()
+      };
+      const updated = [newBookmark, ...current];
+      await this.saveBookmarks(updated);
+      return updated;
+    } catch (e) {
+      console.log('Error adding bookmark:', e);
+    }
+  },
+
+  async deleteBookmark(bookmarkId) {
+    try {
+      const current = await this.getBookmarks();
+      const updated = current.filter((b) => b.id !== bookmarkId);
+      await this.saveBookmarks(updated);
+      return updated;
+    } catch (e) {
+      console.log('Error deleting bookmark:', e);
+    }
+  },
+
+  // General App Settings (Crossfade, Ambient Sound, etc.)
+  async getSettings() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.SETTINGS);
+      return data ? JSON.parse(data) : { crossfadeSeconds: 0, ambientSoundType: null, ambientVolume: 0.5 };
+    } catch (e) {
+      return { crossfadeSeconds: 0, ambientSoundType: null, ambientVolume: 0.5 };
+    }
+  },
+
+  async saveSettings(settings) {
+    try {
+      await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+    } catch (e) {
+      console.log('Error saving settings:', e);
     }
   }
 };

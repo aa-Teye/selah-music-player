@@ -12,7 +12,11 @@ export default function EqualizerScreen({
   sleepTimerRemaining,
   onSetSleepTimer,
   playbackSpeed = 1.0,
-  onSetSpeed
+  onSetSpeed,
+  crossfadeSeconds = 0,
+  onSetCrossfade,
+  activeSoundscape,
+  onOpenAmbientSoundscapes
 }) {
   const [activePreset, setActivePreset] = useState('worship');
 
@@ -41,6 +45,13 @@ export default function EqualizerScreen({
   ];
 
   const speedPresets = [0.75, 1.0, 1.25, 1.5, 2.0];
+  const crossfadePresets = [
+    { label: 'Off', seconds: 0 },
+    { label: '3s', seconds: 3 },
+    { label: '6s', seconds: 6 },
+    { label: '9s', seconds: 9 },
+    { label: '12s', seconds: 12 }
+  ];
 
   const formatTime = (secs) => {
     if (!secs || isNaN(secs)) return '0:00';
@@ -52,7 +63,7 @@ export default function EqualizerScreen({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Sound &amp; Settings</Text>
-      <Text style={styles.subtitle}>Equalizer, Bedtime Timer, and Audio Tuning</Text>
+      <Text style={styles.subtitle}>Equalizer, Bedtime Timer, Crossfade, and Soundscapes</Text>
 
       {/* Bedtime Sleep Timer Card */}
       <View style={styles.settingCard}>
@@ -80,6 +91,66 @@ export default function EqualizerScreen({
               >
                 <Text style={[styles.miniPillText, isSelected && styles.miniPillTextActive]}>
                   {sp.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Bedtime Ambient Soundscapes Card */}
+      <View style={styles.settingCard}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="weather-night" size={20} color="#E5A93C" />
+          <Text style={styles.cardTitle}>Bedtime Ambient Soundscapes</Text>
+          {activeSoundscape && (
+            <View style={styles.timerBadge}>
+              <Text style={styles.timerBadgeText}>Active</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.cardSub}>
+          {activeSoundscape
+            ? `Playing soothing ${activeSoundscape.toUpperCase()} soundscape in the background`
+            : "Layer soft rain, cathedral pad, or river sounds behind worship"}
+        </Text>
+
+        <TouchableOpacity 
+          style={styles.actionCardBtn} 
+          onPress={onOpenAmbientSoundscapes}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="music-note-plus" size={16} color="#0A0D14" />
+          <Text style={styles.actionCardBtnText}>
+            {activeSoundscape ? "Change / Tune Soundscape" : "Choose Ambient Soundscape"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Audio Crossfade Card */}
+      <View style={styles.settingCard}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="swap-horizontal" size={20} color="#E5A93C" />
+          <Text style={styles.cardTitle}>Seamless Audio Crossfade</Text>
+          {crossfadeSeconds > 0 && (
+            <View style={styles.timerBadge}>
+              <Text style={styles.timerBadgeText}>{crossfadeSeconds}s Blend</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.cardSub}>Eliminates abrupt silence between consecutive songs</Text>
+
+        <View style={styles.pillsRow}>
+          {crossfadePresets.map((cf) => {
+            const isSelected = crossfadeSeconds === cf.seconds;
+            return (
+              <TouchableOpacity
+                key={cf.label}
+                style={[styles.miniPill, isSelected && styles.miniPillActive]}
+                onPress={() => onSetCrossfade && onSetCrossfade(cf.seconds)}
+              >
+                <Text style={[styles.miniPillText, isSelected && styles.miniPillTextActive]}>
+                  {cf.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -374,5 +445,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     flex: 1
+  },
+  actionCardBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#E5A93C',
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 6
+  },
+  actionCardBtnText: {
+    color: '#0A0D14',
+    fontSize: 13,
+    fontWeight: '800'
   }
 });

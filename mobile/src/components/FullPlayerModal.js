@@ -42,7 +42,11 @@ export default function FullPlayerModal({
   queue = [],
   onPlayTrack,
   onRemoveFromQueue,
-  onClearQueue
+  onClearQueue,
+  onOpenPrayerBookmarks,
+  onOpenAmbientSoundscapes,
+  activeSoundscape,
+  bookmarksCount = 0
 }) {
   const [activeTab, setActiveTab] = useState('player'); // 'player' | 'lyrics' | 'queue'
   const [showSleepModal, setShowSleepModal] = useState(false);
@@ -162,8 +166,9 @@ export default function FullPlayerModal({
         {/* Content Body */}
         {activeTab === 'player' ? (
           <View style={styles.playerContent}>
-            {/* Vinyl Record */}
+            {/* Vinyl Record with Dynamic Ambient Glow */}
             <View style={styles.vinylWrapper}>
+              {isPlaying && <View style={styles.ambientAura} />}
               <Animated.View style={[styles.largeDisc, { transform: [{ rotate: isPlaying ? spin : '0deg' }] }]}>
                 <Image
                   source={{ uri: currentTrack.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80' }}
@@ -333,6 +338,40 @@ export default function FullPlayerModal({
                 <Text style={styles.utilityPillText}>Cutter</Text>
               </TouchableOpacity>
             )}
+
+            {/* Prayer & Scripture Pin */}
+            {onOpenPrayerBookmarks && (
+              <TouchableOpacity 
+                style={[styles.utilityPill, bookmarksCount > 0 && styles.utilityPillActive]} 
+                onPress={onOpenPrayerBookmarks}
+              >
+                <MaterialCommunityIcons 
+                  name="book-cross" 
+                  size={15} 
+                  color={bookmarksCount > 0 ? "#0A0D14" : "#E5A93C"} 
+                />
+                <Text style={[styles.utilityPillText, bookmarksCount > 0 && styles.utilityPillTextActive]}>
+                  {bookmarksCount > 0 ? `${bookmarksCount} Pins` : 'Prayer Pin'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Ambient Soundscapes */}
+            {onOpenAmbientSoundscapes && (
+              <TouchableOpacity 
+                style={[styles.utilityPill, activeSoundscape && styles.utilityPillActive]} 
+                onPress={onOpenAmbientSoundscapes}
+              >
+                <MaterialCommunityIcons 
+                  name="weather-night" 
+                  size={15} 
+                  color={activeSoundscape ? "#0A0D14" : "#E5A93C"} 
+                />
+                <Text style={[styles.utilityPillText, activeSoundscape && styles.utilityPillTextActive]}>
+                  {activeSoundscape ? activeSoundscape.toUpperCase() : 'Ambience'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </View>
 
@@ -439,6 +478,18 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 2,
     borderColor: 'rgba(229, 169, 60, 0.2)'
+  },
+  ambientAura: {
+    position: 'absolute',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: 'rgba(229, 169, 60, 0.25)',
+    shadowColor: '#E5A93C',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 35,
+    elevation: 12
   },
   largeDisc: {
     width: 236,
