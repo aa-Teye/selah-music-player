@@ -1,4 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStoragePackage from '@react-native-async-storage/async-storage';
+const AsyncStorage = AsyncStoragePackage?.default || AsyncStoragePackage;
 
 const KEYS = {
   FAVORITES: '@selah_favorites',

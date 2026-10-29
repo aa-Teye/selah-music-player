@@ -355,6 +355,7 @@ export default function LocalLibraryScreen({
                       </Text>
                     </View>
 
+                    <View style={styles.songActions}>
                       {/* Edit Tags */}
                       {onOpenEditTags && (
                         <TouchableOpacity 
