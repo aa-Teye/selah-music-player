@@ -44,6 +44,7 @@ export default function OnboardingArtistsModal({
   onFinish,
   onComplete
 }) {
+  const [localDismissed, setLocalDismissed] = useState(false);
   const [selectedArtists, setSelectedArtists] = useState(['maverick', 'brandon', 'cece']);
   const [selectedVibe, setSelectedVibe] = useState('worship');
 
@@ -54,43 +55,56 @@ export default function OnboardingArtistsModal({
   };
 
   const handleFinish = () => {
+    setLocalDismissed(true);
     const chosen = ARTISTS.filter((a) => selectedArtists.includes(a.id)).map((a) => a.name);
     const finalArtists = chosen.length > 0 ? chosen : ['Brandon Lake', 'CeCe Winans', 'Maverick City Music'];
 
-    if (onFinish) {
-      onFinish(finalArtists);
-    }
-    if (onComplete) {
-      onComplete({
-        artists: finalArtists,
-        vibe: selectedVibe
-      });
-    }
-    if (onClose) {
-      onClose();
+    try {
+      if (onFinish) {
+        onFinish(finalArtists);
+      }
+      if (onComplete) {
+        onComplete({
+          artists: finalArtists,
+          vibe: selectedVibe
+        });
+      }
+      if (onClose) {
+        onClose();
+      }
+    } catch (err) {
+      console.log('Error completing onboarding:', err);
     }
   };
 
+  if (!visible || localDismissed) return null;
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible && !localDismissed} animationType="slide" transparent onRequestClose={handleFinish}>
       <View style={styles.overlay}>
         <View style={styles.card}>
           {/* Top Brand Header */}
           <View style={styles.header}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 8 }}>
               <View style={styles.logoBadge}>
                 <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0A0D14" />
               </View>
-              {onClose && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <TouchableOpacity 
-                  onPress={() => {
-                    handleFinish();
-                  }}
+                  style={styles.headerDoneBtn}
+                  onPress={handleFinish}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.headerDoneText}>Done</Text>
+                  <Ionicons name="checkmark" size={14} color="#0A0D14" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={handleFinish}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   <Ionicons name="close-circle" size={26} color="#9CA3AF" />
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
             <Text style={styles.title}>Welcome to Selah Player</Text>
             <Text style={styles.subtitle}>
@@ -98,7 +112,11 @@ export default function OnboardingArtistsModal({
             </Text>
           </View>
 
-          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.scroll} 
+            contentContainerStyle={{ paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Preferred Atmosphere Vibe */}
             <Text style={styles.sectionHeading}>1. SELECT YOUR DAILY ATMOSPHERE</Text>
             <View style={styles.vibesGrid}>
@@ -167,7 +185,11 @@ export default function OnboardingArtistsModal({
 
           {/* Action Button */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.submitBtn} onPress={handleFinish} activeOpacity={0.85}>
+            <TouchableOpacity 
+              style={styles.submitBtn} 
+              onPress={handleFinish} 
+              activeOpacity={0.8}
+            >
               <Text style={styles.submitBtnText}>
                 Start Listening ({selectedArtists.length} Selected)
               </Text>
@@ -190,52 +212,68 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxHeight: '90%',
+    height: '88%',
+    maxHeight: 720,
     backgroundColor: '#0F1420',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(229, 169, 60, 0.25)',
-    padding: 20,
+    padding: 18,
     shadowColor: '#E5A93C',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 25,
-    elevation: 20
+    elevation: 20,
+    justifyContent: 'space-between'
   },
   header: {
     alignItems: 'center',
-    marginBottom: 16
+    marginBottom: 8
+  },
+  headerDoneBtn: {
+    backgroundColor: '#E5A93C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4
+  },
+  headerDoneText: {
+    color: '#0A0D14',
+    fontSize: 12,
+    fontWeight: '800'
   },
   logoBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#E5A93C',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
     shadowColor: '#E5A93C',
     shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 6
+    shadowRadius: 8,
+    elevation: 4
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#F9FAFB',
     letterSpacing: 0.5,
-    marginBottom: 6,
+    marginBottom: 4,
     textAlign: 'center'
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 16,
     paddingHorizontal: 10
   },
   scroll: {
-    marginVertical: 4
+    flex: 1,
+    marginVertical: 6
   },
   sectionHeading: {
     fontSize: 11,
