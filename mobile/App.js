@@ -26,6 +26,7 @@ import EditTagsModal from './src/components/EditTagsModal';
 
 import { DAILY_DEVOTION, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
+import { ScannerService } from './src/services/scannerService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -116,6 +117,35 @@ export default function App() {
           setCurrentTrack(savedLocal[0]);
           setDuration(savedLocal[0].duration || 180);
         }
+
+        // Automatic background auto-scan for all phone MP3s & audio files
+        ScannerService.scanDeviceAudio(10, 100).then((scanResult) => {
+          if (scanResult && scanResult.success && scanResult.tracks.length > 0) {
+            const foundTracks = scanResult.tracks;
+            setLocalTracks((prev) => {
+              const existingUris = new Set(prev.map((t) => t.uri || t.id));
+              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
+              if (newFound.length > 0) {
+                const merged = [...newFound, ...prev];
+                StorageService.saveLocalTracks(merged);
+                setTracks((prevTracks) => [...newFound, ...prevTracks]);
+                return merged;
+              }
+              return prev;
+            });
+            // Automatically add discovered MP3s to recent tracks for instant visibility
+            setRecentTracks((prev) => {
+              const existingUris = new Set(prev.map((t) => t.uri || t.id));
+              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
+              if (newFound.length > 0) {
+                const updatedRecent = [...newFound, ...prev].slice(0, 50);
+                StorageService.saveRecentlyPlayed(updatedRecent);
+                return updatedRecent;
+              }
+              return prev;
+            });
+          }
+        }).catch((scanErr) => console.log('Auto-scan background notice:', scanErr));
       } catch (e) {
         console.log('Error initializing app storage:', e);
       }
@@ -388,19 +418,30 @@ export default function App() {
     setTracks((prev) => [newTrack, ...prev]);
   };
 
-  // Batch add local tracks (from auto-scan)
+  // Batch add local tracks (from auto-scan or multi-import)
   const handleBatchAddLocalTracks = (newTracks) => {
+    if (!newTracks || newTracks.length === 0) return;
     setLocalTracks((prev) => {
-      const existingIds = new Set(prev.map(t => t.id));
-      const fresh = newTracks.filter(t => !existingIds.has(t.id));
+      const existingIds = new Set(prev.map(t => t.id || t.uri));
+      const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
       const updated = [...fresh, ...prev];
       StorageService.saveLocalTracks(updated);
       return updated;
     });
     setTracks((prev) => {
-      const existingIds = new Set(prev.map(t => t.id));
-      const fresh = newTracks.filter(t => !existingIds.has(t.id));
+      const existingIds = new Set(prev.map(t => t.id || t.uri));
+      const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
       return [...fresh, ...prev];
+    });
+    setRecentTracks((prev) => {
+      const existingIds = new Set(prev.map(t => t.id || t.uri));
+      const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
+      if (fresh.length > 0) {
+        const updatedRecent = [...fresh, ...prev].slice(0, 50);
+        StorageService.saveRecentlyPlayed(updatedRecent);
+        return updatedRecent;
+      }
+      return prev;
     });
   };
 

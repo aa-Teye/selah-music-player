@@ -7,12 +7,14 @@ import {
   StyleSheet, 
   Alert,
   TextInput,
-  ActivityIndicator
+  ActivityIndicator,
+  Linking
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library/legacy';
 import { Id3Service } from '../services/id3Service';
+import { ScannerService } from '../services/scannerService';
 
 export default function LocalLibraryScreen({
   localTracks = [],
@@ -31,114 +33,61 @@ export default function LocalLibraryScreen({
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
+  // Auto-scan on component mount if no local tracks loaded yet
+  React.useEffect(() => {
+    if (localTracks.length === 0) {
+      handleAutoScanDevice(true);
+    }
+  }, []);
+
   // Auto-scan phone storage across all Android versions
-  const handleAutoScanDevice = async () => {
+  const handleAutoScanDevice = async (silent = false) => {
     try {
       setIsScanning(true);
+      const res = await ScannerService.scanDeviceAudio(10, 100);
 
-      // Check existing permission first across Android 10-15
-      let perm = await MediaLibrary.getPermissionsAsync();
-      if (!perm.granted) {
-        try {
-          perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
-        } catch (_) {
-          perm = await MediaLibrary.requestPermissionsAsync();
-        }
-      }
-
-      if (!perm.granted) {
-        // Fallback request
-        try {
-          perm = await MediaLibrary.requestPermissionsAsync();
-        } catch (_) {}
-      }
-
-      if (!perm.granted) {
-        Alert.alert(
-          "Audio Permission Needed",
-          "Selah needs permission to read music files on your phone. Please grant 'Music and audio' permission in your device Settings -> Apps -> Selah Music Player -> Permissions.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings && Linking.openSettings() }
-          ]
-        );
-        setIsScanning(false);
-        return;
-      }
-
-      // Fetch audio assets from phone storage (safe across all phone manufacturers)
-      const allDiscovered = [];
-      let hasNextPage = true;
-      let after = undefined;
-      let pageCount = 0;
-
-      while (hasNextPage && pageCount < 10) {
-        pageCount++;
-        const options = {
-          mediaType: [MediaLibrary.MediaType.audio],
-          first: 100
-        };
-        if (after) {
-          options.after = String(after);
-        }
-
-        const media = await MediaLibrary.getAssetsAsync(options);
-
-        if (media && media.assets && media.assets.length > 0) {
-          for (const asset of media.assets) {
-            allDiscovered.push(Id3Service.enrichAsset(asset));
-          }
-        }
-
-        hasNextPage = Boolean(media.hasNextPage && media.endCursor && media.endCursor !== after);
-        after = media.endCursor;
-        if (!media.assets || media.assets.length === 0) break;
-      }
-
-      // If audio query returned 0 files, check general media assets for audio extensions
-      if (allDiscovered.length === 0) {
-        try {
-          const fallback = await MediaLibrary.getAssetsAsync({ first: 200 });
-          if (fallback && fallback.assets) {
-            for (const asset of fallback.assets) {
-              const fname = (asset.filename || asset.uri || '').toLowerCase();
-              if (
-                fname.endsWith('.mp3') ||
-                fname.endsWith('.m4a') ||
-                fname.endsWith('.wav') ||
-                fname.endsWith('.aac') ||
-                fname.endsWith('.flac') ||
-                fname.endsWith('.ogg')
-              ) {
-                allDiscovered.push(Id3Service.enrichAsset(asset));
-              }
-            }
-          }
-        } catch (fallbackErr) {
-          console.log('Secondary media scan fallback notice:', fallbackErr);
-        }
-      }
-
-      if (allDiscovered.length > 0) {
+      if (res.success && res.tracks && res.tracks.length > 0) {
         if (onBatchAddLocalTracks) {
-          onBatchAddLocalTracks(allDiscovered);
+          onBatchAddLocalTracks(res.tracks);
         }
-        Alert.alert(
-          "Scan Complete! 🎵", 
-          `Found and added ${allDiscovered.length} actual music file${allDiscovered.length === 1 ? '' : 's'} from your phone.`
-        );
-      } else {
-        Alert.alert(
-          "No Audio Files Found", 
-          "No music files were detected in standard Android media folders. You can tap 'Import' to select your audio files directly from any folder."
-        );
+        if (!silent) {
+          Alert.alert(
+            "Scan Complete! 🎵", 
+            `Found and added ${res.tracks.length} music track${res.tracks.length === 1 ? '' : 's'} from your phone.`
+          );
+        }
+      } else if (!silent) {
+        if (res.error === 'Permission not granted') {
+          Alert.alert(
+            "Audio Permission Needed", 
+            "Selah needs permission to read music files on your phone. Please allow audio access in your device Settings to scan all MP3s.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { 
+                text: "Open Settings", 
+                onPress: () => {
+                  try {
+                    Linking.openSettings && Linking.openSettings();
+                  } catch (_) {}
+                } 
+              }
+            ]
+          );
+        } else {
+          Alert.alert(
+            "No Audio Files Found", 
+            "No audio files were detected in standard Android media folders. You can tap 'Import' to select your music files directly from any folder."
+          );
+        }
       }
     } catch (err) {
       console.log('Error scanning media:', err);
-      Alert.alert(
-        "Scan Notice", 
-        `Could not scan media: ${err?.message || 'Storage error'}.\n\nYou can use the "Import" button to pick music files directly.`
-      );
+      if (!silent) {
+        Alert.alert(
+          "Scan Notice", 
+          `Could not scan media: ${err?.message || 'Storage error'}.\n\nYou can use the "Import" button to pick music files directly.`
+        );
+      }
     } finally {
       setIsScanning(false);
     }

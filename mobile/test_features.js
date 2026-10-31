@@ -53,6 +53,19 @@ Module.prototype.require = function(id) {
   if (id.startsWith('@expo/vector-icons')) {
     return { Ionicons: () => null, MaterialCommunityIcons: () => null };
   }
+  if (id.startsWith('expo-media-library')) {
+    return {
+      MediaType: { audio: 'audio', photo: 'photo', video: 'video' },
+      getPermissionsAsync: async () => ({ granted: true }),
+      requestPermissionsAsync: async () => ({ granted: true }),
+      getAssetsAsync: async () => ({
+        assets: [
+          { id: 'scan-1', filename: 'Brandon Lake - Gratitude.mp3', uri: 'file:///Music/Gratitude.mp3', duration: 338 }
+        ],
+        hasNextPage: false
+      })
+    };
+  }
   return originalRequire.apply(this, arguments);
 };
 
@@ -166,6 +179,15 @@ async function runTests() {
   assert(extractVideoId('https://youtu.be/dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from youtu.be short link');
   assert(extractVideoId('https://www.youtube.com/shorts/dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from shorts URL');
   assert(extractVideoId('dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from raw 11-char ID');
+
+  // TEST 3.6: ScannerService
+  console.log('\n--- 3.6. Testing ScannerService Auto-Scan ---');
+  const { ScannerService } = require('./src/services/scannerService');
+  const permResult = await ScannerService.requestAudioPermissions();
+  assert(permResult === true, 'ScannerService: Verify audio permissions request returns true');
+  const scanResult = await ScannerService.scanDeviceAudio(2, 50);
+  assert(scanResult && scanResult.success && scanResult.tracks.length > 0, 'ScannerService: Auto-scan device discovers MP3 tracks');
+  assert(scanResult.tracks[0].title.includes('Gratitude'), 'ScannerService: Enriched track metadata has title');
 
   // TEST 4: Component Verification & Metro Bundling
   console.log('\n--- 4. Testing Component Definitions & Bundler Compilation ---');
