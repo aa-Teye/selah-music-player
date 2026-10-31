@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Selah Music Player",
+    "name": "Selah Player",
     "slug": "selah-music-player",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -57,8 +57,8 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Selah Music Player to access your music and audio files.",
-          "savePhotosPermission": "Allow Selah Music Player to manage music files.",
+          "photosPermission": "Allow Selah Player to access your music and audio files.",
+          "savePhotosPermission": "Allow Selah Player to manage music files.",
           "isAccessMediaLocationEnabled": false,
           "granularPermissions": ["audio", "photo"]
         }

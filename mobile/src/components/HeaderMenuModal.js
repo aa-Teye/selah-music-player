@@ -37,7 +37,7 @@ export default function HeaderMenuModal({
                   <Ionicons name="person" size={20} color="#E5A93C" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.profileName}>Selah Music Companion</Text>
+                  <Text style={styles.profileName}>Selah Player</Text>
                   <View style={styles.streakRow}>
                     <Ionicons name="flame" size={14} color="#F97316" />
                     <Text style={styles.streakText}>Day {streakDays} Worship Streak</Text>

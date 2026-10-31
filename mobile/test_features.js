@@ -71,7 +71,7 @@ Module.prototype.require = function(id) {
 
 async function runTests() {
   console.log('========================================');
-  console.log('🧪 SELAH MUSIC PLAYER - FEATURE TEST SUITE');
+  console.log('🧪 SELAH PLAYER - FEATURE TEST SUITE');
   console.log('========================================\n');
 
   let passed = 0;

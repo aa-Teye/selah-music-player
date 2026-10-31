@@ -13,8 +13,8 @@ export default function TopHeader({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.logoRow}>
-          <Text style={styles.brandTitle}>SELAH</Text>
-          <Text style={styles.goldText}>MUSIC PLAYER</Text>
+          <Text style={styles.brandTitle}>SELAH </Text>
+          <Text style={styles.goldText}>PLAYER</Text>
         </View>
 
         <View style={styles.actionsRow}>
