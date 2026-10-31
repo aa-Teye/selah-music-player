@@ -102,19 +102,44 @@ export default function LocalLibraryScreen({
   const handlePickAudio = async () => {
     try {
       const res = await DocumentPicker.getDocumentAsync({
-        type: ['audio/*'],
+        type: ['audio/*', '*/*'],
         multiple: true,
         copyToCacheDirectory: true
       });
 
       if (!res.canceled && res.assets && res.assets.length > 0) {
-        const importedTracks = res.assets.map((file, idx) => {
+        // Filter out non-audio files if user selected via wildcard
+        const audioAssets = res.assets.filter((file) => {
+          const name = (file.name || '').toLowerCase();
+          const mime = (file.mimeType || '').toLowerCase();
+          return (
+            mime.startsWith('audio/') ||
+            name.endsWith('.mp3') ||
+            name.endsWith('.m4a') ||
+            name.endsWith('.wav') ||
+            name.endsWith('.flac') ||
+            name.endsWith('.aac') ||
+            name.endsWith('.ogg') ||
+            name.endsWith('.opus') ||
+            name.endsWith('.wma') ||
+            name.endsWith('.aiff') ||
+            name.endsWith('.webm')
+          );
+        });
+
+        if (audioAssets.length === 0) {
+          Alert.alert("No Audio Selected", "Please select music files (.mp3, .m4a, .wav, .flac, .aac, .ogg, etc.).");
+          return;
+        }
+
+        const now = Date.now();
+        const importedTracks = audioAssets.map((file, idx) => {
           const rawName = file.name || 'Audio Track';
           const meta = Id3Service.parseFilenameMetadata(rawName);
           const cover = Id3Service.generateCuratedArtwork(meta.title, meta.artist);
 
           return {
-            id: `local-${Date.now()}-${idx}`,
+            id: `local-${now}-${idx}`,
             title: meta.title,
             artist: meta.artist,
             album: meta.album,
@@ -124,6 +149,8 @@ export default function LocalLibraryScreen({
             sourceType: "local",
             uri: file.uri,
             coverUrl: cover,
+            addedAt: now - idx * 1000,
+            scannedAt: now - idx * 1000,
             lyrics: `[Local Audio Track: ${file.name}]\nPlaying from your phone storage.`
           };
         });
@@ -132,12 +159,12 @@ export default function LocalLibraryScreen({
           if (onBatchAddLocalTracks) {
             onBatchAddLocalTracks(importedTracks);
           }
-          Alert.alert("Songs Imported", `Imported ${importedTracks.length} songs into your local library!`);
+          Alert.alert("Songs Imported! 🎵", `Imported ${importedTracks.length} songs into your local library!`);
         } else if (importedTracks.length === 1) {
           const singleTrack = importedTracks[0];
           onAddLocalTrack(singleTrack);
           onPlayTrack(singleTrack);
-          Alert.alert("Song Imported", `"${singleTrack.title}" added to your local library!`);
+          Alert.alert("Song Imported! 🎵", `"${singleTrack.title}" added to your local library!`);
         }
       }
     } catch (err) {

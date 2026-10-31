@@ -463,6 +463,11 @@ export default function App() {
       }
       return prev;
     });
+
+    if (newTracks.length > 0 && (!currentTrack || currentTrack.id === INITIAL_TRACKS[0]?.id)) {
+      setCurrentTrack(newTracks[0]);
+      setDuration(newTracks[0].duration || 180);
+    }
   };
 
   // Delete local track
@@ -664,7 +669,13 @@ export default function App() {
             currentTrack={currentTrack}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
-            onOpenFullPlayer={() => setIsFullPlayerVisible(true)}
+            onOpenFullPlayer={() => {
+              if (currentTrack?.sourceType === 'youtube' || currentTrack?.youtubeId) {
+                setActiveTab('youtube');
+              } else {
+                setIsFullPlayerVisible(true);
+              }
+            }}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
           />
         )}
@@ -685,14 +696,22 @@ export default function App() {
           />
         )}
 
-        {/* Keep YouTube player persistent across tabs so audio continues playing in background */}
-        <View style={{ flex: 1, display: activeTab === 'youtube' ? 'flex' : 'none' }}>
+        {/* Keep YouTube player persistent across tabs so audio continues playing in background without Android View.GONE pause */}
+        <View 
+          style={
+            activeTab === 'youtube'
+              ? { flex: 1 }
+              : { position: 'absolute', top: -99999, left: -99999, width: 1, height: 1, opacity: 0 }
+          }
+          pointerEvents={activeTab === 'youtube' ? 'auto' : 'none'}
+        >
           <YouTubeWatchScreen
             currentTrack={currentTrack}
             isPlaying={isPlaying}
             searchQuery={searchQuery}
             onPlayTrack={handlePlayTrack}
             onAddYouTubeTrack={handleAddYouTubeTrack}
+            onOpenAddToPlaylist={handleOpenAddToPlaylist}
           />
         </View>
 
@@ -740,7 +759,13 @@ export default function App() {
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
         onNext={handleNextTrack}
-        onOpenFullPlayer={() => setIsFullPlayerVisible(true)}
+        onOpenFullPlayer={() => {
+          if (currentTrack?.sourceType === 'youtube' || currentTrack?.youtubeId) {
+            setActiveTab('youtube');
+          } else {
+            setIsFullPlayerVisible(true);
+          }
+        }}
         currentPosition={currentPosition}
         duration={duration}
       />

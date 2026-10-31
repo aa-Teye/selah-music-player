@@ -273,48 +273,60 @@ export default function YouTubeWatchScreen({
           </View>
         </View>
 
-        {/* Player View Container */}
-        {playMode === 'video' ? (
-          <View style={styles.videoPlayerCard}>
+        {/* ── Single Persistent YouTube Player Container ── */}
+        <View style={styles.playerContainer}>
+          {/* Main YouTube Iframe Player (always kept mounted so audio stream is never interrupted when toggling modes) */}
+          <View 
+            style={
+              playMode === 'video' 
+                ? styles.videoPlayerCard 
+                : styles.hiddenVideoCard
+            }
+          >
             <YoutubePlayer
-              height={(width - 32) * (9 / 16)}
+              height={playMode === 'video' ? (width - 32) * (9 / 16) : 1}
               play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
               videoId={currentYtId}
+              onChangeState={(state) => {
+                if (state === 'ended') {
+                  const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+                  if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+                    handleSelectVideo(displayVideos[curIdx + 1]);
+                  } else if (displayVideos.length > 0) {
+                    handleSelectVideo(displayVideos[0]);
+                  }
+                }
+              }}
               webViewProps={{
-                allowsFullscreenVideo: true
+                allowsFullscreenVideo: true,
+                androidLayerType: 'hardware',
+                scrollEnabled: false
               }}
             />
           </View>
-        ) : (
-          /* MP3 / Audio Stream Mode */
-          <View style={styles.mp3PlayerCard}>
-            {/* Hidden player to keep pure audio playing */}
-            <View style={styles.hiddenPlayerWrap}>
-              <YoutubePlayer
-                height={1}
-                play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
-                videoId={currentYtId}
-              />
-            </View>
 
-            <View style={styles.mp3DiscWrap}>
-              <Image 
-                source={{ uri: currentTrack?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
-                style={styles.mp3DiscImage}
-              />
-              <View style={styles.mp3CenterSpindle} />
-            </View>
-
-            <View style={styles.mp3Info}>
-              <View style={styles.mp3Badge}>
-                <Ionicons name="radio" size={13} color="#E5A93C" />
-                <Text style={styles.mp3BadgeText}>STREAMING AS MP3 AUDIO</Text>
+          {/* MP3 Audio Stream Visualizer (displayed in Play as MP3 mode without interrupting playback) */}
+          {playMode === 'mp3' && (
+            <View style={styles.mp3PlayerCard}>
+              <View style={styles.mp3DiscWrap}>
+                <Image 
+                  source={{ uri: currentTrack?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
+                  style={styles.mp3DiscImage}
+                />
+                <View style={styles.mp3CenterSpindle} />
               </View>
-              <Text style={styles.mp3Title} numberOfLines={1}>{activeVideoTitle}</Text>
-              <Text style={styles.mp3Artist} numberOfLines={1}>{activeVideoArtist}</Text>
+
+              <View style={styles.mp3Info}>
+                <View style={styles.mp3Badge}>
+                  <Ionicons name="radio" size={13} color="#E5A93C" />
+                  <Text style={styles.mp3BadgeText}>STREAMING AS MP3 AUDIO</Text>
+                </View>
+                <Text style={styles.mp3Title} numberOfLines={1}>{activeVideoTitle}</Text>
+                <Text style={styles.mp3Artist} numberOfLines={1}>{activeVideoArtist}</Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
+        </View>
 
         {/* Now Playing Info Bar */}
         <View style={styles.playingBar}>
@@ -605,6 +617,10 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontWeight: '600'
   },
+  playerContainer: {
+    position: 'relative',
+    width: '100%'
+  },
   videoPlayerCard: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -615,6 +631,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 8
+  },
+  hiddenVideoCard: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 1,
+    height: 1,
+    opacity: 0.01,
+    overflow: 'hidden'
   },
   mp3PlayerCard: {
     height: (width - 32) * (9 / 16),

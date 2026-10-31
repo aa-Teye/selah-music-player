@@ -238,6 +238,33 @@ async function runTests() {
     assert(exists && content.length > 100 && hasDefaultExport, `Component validated: ${path.basename(compPath)}`);
   }
 
+  // App.js Persistence & YouTube Architecture Checks
+  const appContent = fs.readFileSync(path.join(__dirname, './App.js'), 'utf8');
+  assert(
+    appContent.includes("position: 'absolute'") && appContent.includes('pointerEvents'),
+    'App: Off-screen persistent YouTube background view configured'
+  );
+  assert(
+    appContent.includes("activeTab === 'youtube'") && appContent.includes('onOpenFullPlayer'),
+    'App: MiniPlayer and PlayerScreen route YouTube tracks to YouTube screen'
+  );
+
+  const ytContent = fs.readFileSync(path.join(__dirname, './src/screens/YouTubeWatchScreen.js'), 'utf8');
+  assert(
+    ytContent.includes('onChangeState') && ytContent.includes("'ended'"),
+    'YouTubeWatchScreen: Auto-advance to next song on track finish'
+  );
+  assert(
+    ytContent.includes('hiddenVideoCard') && ytContent.includes('STREAMING AS MP3 AUDIO'),
+    'YouTubeWatchScreen: Single persistent player seamlessly switches between video and MP3 mode'
+  );
+
+  const libContent = fs.readFileSync(path.join(__dirname, './src/screens/LocalLibraryScreen.js'), 'utf8');
+  assert(
+    libContent.includes("type: ['audio/*', '*/*']") && libContent.includes('.webm'),
+    'LocalLibraryScreen: Multi-format wildcard audio picker with extension filtering'
+  );
+
   // Metro Production Compilation Check
   console.log('\n--- 5. Testing Android Metro Production Compilation ---');
   try {
