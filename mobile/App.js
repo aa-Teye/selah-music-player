@@ -410,9 +410,15 @@ export default function App() {
     setTracks((prev) => prev.filter((t) => t.id !== trackId));
   };
 
-  // Add YouTube Track
+  // Add YouTube Track with duplicate check
   const handleAddYouTubeTrack = (newTrack) => {
-    setTracks((prev) => [newTrack, ...prev]);
+    if (!newTrack) return;
+    setTracks((prev) => {
+      if (prev.some((t) => t.id === newTrack.id || (newTrack.youtubeId && t.youtubeId === newTrack.youtubeId))) {
+        return prev;
+      }
+      return [newTrack, ...prev];
+    });
   };
 
   // Create new custom playlist
@@ -571,6 +577,11 @@ export default function App() {
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             recentTracks={recentTracks}
             onOpenStats={() => setIsStatsVisible(true)}
+            searchQuery={searchQuery}
+            onNavigateToYouTube={(query) => {
+              if (query) setSearchQuery(query);
+              setActiveTab('youtube');
+            }}
           />
         )}
 

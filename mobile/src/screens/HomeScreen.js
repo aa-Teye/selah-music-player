@@ -21,7 +21,9 @@ export default function HomeScreen({
   onOpenAi,
   onOpenAddToPlaylist,
   recentTracks = [],
-  onOpenStats
+  onOpenStats,
+  searchQuery = '',
+  onNavigateToYouTube
 }) {
   const filteredTracks = activeMood === 'all' 
     ? tracks 
@@ -125,55 +127,95 @@ export default function HomeScreen({
         })}
       </ScrollView>
 
+      {/* YouTube Direct Search Suggestion Banner when Searching */}
+      {searchQuery && onNavigateToYouTube ? (
+        <TouchableOpacity 
+          style={styles.searchYtCard}
+          onPress={() => onNavigateToYouTube(searchQuery)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.searchYtCardLeft}>
+            <View style={styles.ytIconWrap}>
+              <Ionicons name="logo-youtube" size={20} color="#EF4444" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.searchYtCardTitle}>Search "{searchQuery}" on YouTube Live</Text>
+              <Text style={styles.searchYtCardSub}>Tap to stream full video directly from YouTube</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#E5A93C" />
+        </TouchableOpacity>
+      ) : null}
+
       {/* Featured Tracks */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Featured Melodies</Text>
+        <Text style={styles.sectionTitle}>
+          {searchQuery ? `Search Results for "${searchQuery}"` : 'Featured Melodies'}
+        </Text>
         <Text style={styles.sectionSubtitle}>{filteredTracks.length} available</Text>
       </View>
 
-      <View style={styles.tracksGrid}>
-        {filteredTracks.map((track) => {
-          const isCurrent = currentTrack?.id === track.id;
-          return (
-            <TouchableOpacity
-              key={track.id}
-              style={[styles.trackCard, isCurrent && styles.activeTrackCard]}
-              onPress={() => onPlayTrack(track)}
-              activeOpacity={0.8}
+      {/* No local results empty state */}
+      {filteredTracks.length === 0 && searchQuery ? (
+        <View style={styles.noResultsBox}>
+          <Ionicons name="search-outline" size={38} color="#6B7280" />
+          <Text style={styles.noResultsTitle}>No local tracks found for "{searchQuery}"</Text>
+          <Text style={styles.noResultsSub}>Stream this song live from YouTube right now:</Text>
+          {onNavigateToYouTube && (
+            <TouchableOpacity 
+              style={styles.searchYtBannerBtn}
+              onPress={() => onNavigateToYouTube(searchQuery)}
             >
-              <View style={styles.cardCoverWrap}>
-                <Image source={{ uri: track.coverUrl }} style={styles.cardCover} />
-                <View style={styles.cardPlayBadge}>
-                  <Ionicons 
-                    name={isCurrent && isPlaying ? "pause" : "play"} 
-                    size={14} 
-                    color="#0A0D14" 
-                  />
-                </View>
-                {track.sourceType === 'youtube' && (
-                  <View style={styles.cardYtTag}>
-                    <Text style={styles.cardYtText}>YouTube</Text>
-                  </View>
-                )}
-                {onOpenAddToPlaylist && (
-                  <TouchableOpacity 
-                    style={styles.cardAddPlBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      onOpenAddToPlaylist(track);
-                    }}
-                  >
-                    <Ionicons name="bookmark-outline" size={13} color="#E5A93C" />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <Text style={styles.cardTitle} numberOfLines={1}>{track.title}</Text>
-              <Text style={styles.cardArtist} numberOfLines={1}>{track.artist}</Text>
+              <Ionicons name="logo-youtube" size={18} color="#EF4444" />
+              <Text style={styles.searchYtBannerBtnText}>Search YouTube for "{searchQuery}"</Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.tracksGrid}>
+          {filteredTracks.map((track) => {
+            const isCurrent = currentTrack?.id === track.id;
+            return (
+              <TouchableOpacity
+                key={track.id}
+                style={[styles.trackCard, isCurrent && styles.activeTrackCard]}
+                onPress={() => onPlayTrack(track)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.cardCoverWrap}>
+                  <Image source={{ uri: track.coverUrl }} style={styles.cardCover} />
+                  <View style={styles.cardPlayBadge}>
+                    <Ionicons 
+                      name={isCurrent && isPlaying ? "pause" : "play"} 
+                      size={14} 
+                      color="#0A0D14" 
+                    />
+                  </View>
+                  {track.sourceType === 'youtube' && (
+                    <View style={styles.cardYtTag}>
+                      <Text style={styles.cardYtText}>YouTube</Text>
+                    </View>
+                  )}
+                  {onOpenAddToPlaylist && (
+                    <TouchableOpacity 
+                      style={styles.cardAddPlBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        onOpenAddToPlaylist(track);
+                      }}
+                    >
+                      <Ionicons name="bookmark-outline" size={13} color="#E5A93C" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <Text style={styles.cardTitle} numberOfLines={1}>{track.title}</Text>
+                <Text style={styles.cardArtist} numberOfLines={1}>{track.artist}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -428,5 +470,83 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 10,
     marginTop: 2
+  },
+  searchYtCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#171D2C',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)'
+  },
+  searchYtCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    marginRight: 8
+  },
+  ytIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)'
+  },
+  searchYtCardTitle: {
+    color: '#F3F4F6',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  searchYtCardSub: {
+    color: '#E5A93C',
+    fontSize: 11,
+    marginTop: 2
+  },
+  noResultsBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#111622',
+    borderRadius: 16,
+    padding: 24,
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  noResultsTitle: {
+    color: '#F3F4F6',
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 12,
+    textAlign: 'center'
+  },
+  noResultsSub: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginTop: 6,
+    textAlign: 'center',
+    marginBottom: 16
+  },
+  searchYtBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F293D',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 8
+  },
+  searchYtBannerBtnText: {
+    color: '#F3F4F6',
+    fontSize: 13,
+    fontWeight: '700'
   }
 });

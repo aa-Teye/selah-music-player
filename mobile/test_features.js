@@ -159,6 +159,14 @@ async function runTests() {
   assert(Array.isArray(INITIAL_TRACKS) && INITIAL_TRACKS.length > 0, 'MockData: Initial tracks populated');
   assert(Array.isArray(MOOD_TAGS) && MOOD_TAGS.length > 0, 'MockData: Mood tags populated');
 
+  // TEST 3.5: YouTubeService
+  console.log('\n--- 3.5. Testing YouTubeService Methods ---');
+  const { extractVideoId } = require('./src/services/youtubeService');
+  assert(extractVideoId('https://www.youtube.com/watch?v=dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from full watch URL');
+  assert(extractVideoId('https://youtu.be/dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from youtu.be short link');
+  assert(extractVideoId('https://www.youtube.com/shorts/dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from shorts URL');
+  assert(extractVideoId('dQ3Cj8-7M3Y') === 'dQ3Cj8-7M3Y', 'YouTubeService: Extract from raw 11-char ID');
+
   // TEST 4: Component Verification & Metro Bundling
   console.log('\n--- 4. Testing Component Definitions & Bundler Compilation ---');
   const fs = require('fs');
