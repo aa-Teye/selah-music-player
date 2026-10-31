@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 
@@ -9,10 +9,12 @@ import MiniPlayerBar from './src/components/MiniPlayerBar';
 import FullPlayerModal from './src/components/FullPlayerModal';
 
 import HomeScreen from './src/screens/HomeScreen';
+import PlayerScreen from './src/screens/PlayerScreen';
 import LocalLibraryScreen from './src/screens/LocalLibraryScreen';
 import YouTubeWatchScreen from './src/screens/YouTubeWatchScreen';
 import PlaylistsScreen from './src/screens/PlaylistsScreen';
 import EqualizerScreen from './src/screens/EqualizerScreen';
+import HeaderMenuModal from './src/components/HeaderMenuModal';
 import AddToPlaylistModal from './src/components/AddToPlaylistModal';
 import SetRingtoneModal from './src/components/SetRingtoneModal';
 import AudioTrimmerModal from './src/components/AudioTrimmerModal';
@@ -43,6 +45,8 @@ export default function App() {
   const [activeSoundscape, setActiveSoundscape] = useState(null);
   const [ambientVolume, setAmbientVolume] = useState(0.5);
   const [crossfadeSeconds, setCrossfadeSeconds] = useState(0);
+  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
+  const [isEqVisible, setIsEqVisible] = useState(false);
   const [tagEditTrack, setTagEditTrack] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(INITIAL_TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -559,6 +563,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenAi={() => setActiveTab('ai')}
+        onOpenMenu={() => setIsHeaderMenuVisible(true)}
       />
 
       {/* Active Screen View */}
@@ -582,6 +587,21 @@ export default function App() {
               if (query) setSearchQuery(query);
               setActiveTab('youtube');
             }}
+          />
+        )}
+
+        {activeTab === 'player' && (
+          <PlayerScreen
+            tracks={tracks}
+            localTracks={localTracks}
+            recentTracks={recentTracks}
+            favorites={favorites}
+            playlists={playlists}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            onPlayTrack={handlePlayTrack}
+            onOpenFullPlayer={() => setIsFullPlayerVisible(true)}
+            onOpenAddToPlaylist={handleOpenAddToPlaylist}
           />
         )}
 
@@ -784,6 +804,40 @@ export default function App() {
         onClose={() => setTagEditTrack(null)}
         onSaveTrack={handleSaveEditedTrack}
       />
+
+      {/* Header Menu Drawer Modal */}
+      <HeaderMenuModal
+        visible={isHeaderMenuVisible}
+        onClose={() => setIsHeaderMenuVisible(false)}
+        onOpenEq={() => setIsEqVisible(true)}
+        onOpenStats={() => setIsStatsVisible(true)}
+        onOpenSleepTimer={() => setIsEqVisible(true)}
+        streakDays={streakData?.streakDays || 14}
+      />
+
+      {/* Equalizer & Sound Settings Modal */}
+      <Modal
+        visible={isEqVisible}
+        animationType="slide"
+        onRequestClose={() => setIsEqVisible(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0D14' }}>
+          <EqualizerScreen
+            onClose={() => setIsEqVisible(false)}
+            sleepTimerRemaining={sleepTimerRemaining}
+            onSetSleepTimer={handleSetSleepTimer}
+            playbackSpeed={playbackSpeed}
+            onSetSpeed={handleSetSpeed}
+            crossfadeSeconds={crossfadeSeconds}
+            onSetCrossfade={handleSetCrossfade}
+            activeSoundscape={activeSoundscape}
+            onOpenAmbientSoundscapes={() => {
+              setIsEqVisible(false);
+              setIsAmbientModalVisible(true);
+            }}
+          />
+        </SafeAreaView>
+      </Modal>
 
       {/* Bottom Navigation Tabs */}
       <BottomTabs 

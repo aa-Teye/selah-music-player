@@ -6,7 +6,8 @@ export default function TopHeader({
   streakDays,
   searchQuery,
   onSearchChange,
-  onOpenAi
+  onOpenAi,
+  onOpenMenu
 }) {
   return (
     <View style={styles.container}>
@@ -23,6 +24,13 @@ export default function TopHeader({
             <Text style={styles.streakText}>{streakDays}</Text>
             <Text style={styles.streakLabel}>DAYS</Text>
           </View>
+
+          {/* Hamburger Menu Drawer Button */}
+          {onOpenMenu && (
+            <TouchableOpacity onPress={onOpenMenu} style={styles.menuBtn} activeOpacity={0.7}>
+              <Ionicons name="menu" size={24} color="#F3F4F6" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -143,5 +151,13 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 4
+  },
+  menuBtn: {
+    padding: 6,
+    marginLeft: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   }
 });

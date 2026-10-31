@@ -9,6 +9,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function EqualizerScreen({
+  onClose,
   sleepTimerRemaining,
   onSetSleepTimer,
   playbackSpeed = 1.0,
@@ -62,8 +63,17 @@ export default function EqualizerScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Sound &amp; Settings</Text>
-      <Text style={styles.subtitle}>Equalizer, Bedtime Timer, Crossfade, and Soundscapes</Text>
+      <View style={styles.headerRow}>
+        {onClose && (
+          <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={24} color="#F3F4F6" />
+          </TouchableOpacity>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Sound &amp; Settings</Text>
+          <Text style={styles.subtitle}>Equalizer, Bedtime Timer, Crossfade, and Soundscapes</Text>
+        </View>
+      </View>
 
       {/* Bedtime Sleep Timer Card */}
       <View style={styles.settingCard}>
@@ -267,9 +277,22 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 120
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16
+  },
+  backBtn: {
+    padding: 6,
+    backgroundColor: '#171D2C',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)'
+  },
   title: {
     color: '#F3F4F6',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800'
   },
   subtitle: {

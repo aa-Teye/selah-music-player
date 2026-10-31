@@ -5,10 +5,10 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
   const tabs = [
     { id: 'home', label: 'Home', iconType: 'ion', icon: 'home-sharp' },
+    { id: 'player', label: 'Player', iconType: 'ion', icon: 'disc-outline' },
     { id: 'library', label: 'Library', iconType: 'ion', icon: 'musical-notes' },
     { id: 'youtube', label: 'YouTube', iconType: 'ion', icon: 'play-circle' },
-    { id: 'playlists', label: 'Playlists', iconType: 'ion', icon: 'albums-outline' },
-    { id: 'settings', label: 'EQ', iconType: 'ion', icon: 'options' }
+    { id: 'playlists', label: 'Playlists', iconType: 'ion', icon: 'albums-outline' }
   ];
 
   const handlePress = (tabId) => {

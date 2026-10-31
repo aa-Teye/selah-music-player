@@ -189,11 +189,13 @@ async function runTests() {
     './src/components/AmbientSoundscapesModal.js',
     './src/components/EditTagsModal.js',
     './src/screens/HomeScreen.js',
+    './src/screens/PlayerScreen.js',
     './src/screens/LocalLibraryScreen.js',
     './src/screens/YouTubeWatchScreen.js',
     './src/screens/PlaylistsScreen.js',
     './src/screens/EqualizerScreen.js',
-    './src/screens/AiDiscoveryScreen.js'
+    './src/screens/AiDiscoveryScreen.js',
+    './src/components/HeaderMenuModal.js'
   ];
 
   for (const compPath of components) {
