@@ -100,7 +100,7 @@ export default function ListeningStatsModal({
 
             {/* Encouragement Banner */}
             <View style={styles.encouragementBanner}>
-              <Ionicons name="sparkles" size={18} color="#FCD34D" />
+              <Ionicons name="sunny" size={18} color="#FCD34D" />
               <Text style={styles.encouragementText}>
                 Every melody lifted in faith strengthens the spirit and brings peace to your mind.
               </Text>

@@ -6,7 +6,6 @@ import {
   ExternalLink, 
   ShieldCheck, 
   Tv, 
-  Sparkles, 
   PlusCircle, 
   Film 
 } from './Icons';

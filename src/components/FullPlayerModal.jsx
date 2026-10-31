@@ -13,7 +13,6 @@ import {
   FileText, 
   ListMusic, 
   Sliders, 
-  Sparkles,
   Share2
 } from 'lucide-react';
 

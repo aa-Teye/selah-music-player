@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   Play, 
   Flame, 
-  Sparkles, 
   Share2, 
   Bookmark, 
   Clock, 
@@ -37,7 +36,7 @@ export default function HomeView({
       <section className="devotion-hero-card glass-panel">
         <div className="devotion-badge-row">
           <div className="devotion-pill">
-            <Sparkles size={14} className="text-gold" />
+            <Compass size={14} className="text-gold" />
             <span>VERSE OF THE DAY</span>
           </div>
           <div className="devotion-streak-pill">
@@ -81,7 +80,7 @@ export default function HomeView({
             className="action-pill-btn"
             onClick={onOpenAiDiscovery}
           >
-            <Sparkles size={16} />
+            <Compass size={16} />
             <span>AI Prayer & Music</span>
           </button>
         </div>

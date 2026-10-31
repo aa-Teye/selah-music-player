@@ -172,10 +172,6 @@
   box-shadow: 0 0 15px var(--accent-gold-glow);
 }
 
-.sparkle-icon {
-  color: var(--accent-gold);
-}
-
 .user-profile-badge {
   cursor: pointer;
 }

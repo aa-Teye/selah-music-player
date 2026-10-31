@@ -8,7 +8,6 @@ import {
   CheckCircle2, 
   X, 
   Volume2, 
-  Sparkles,
   Info
 } from 'lucide-react';
 

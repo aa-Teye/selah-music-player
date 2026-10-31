@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Play, Trash2, Music, Youtube, Sparkles } from './Icons';
+import { X, Play, Trash2, Music, Youtube } from './Icons';
 
 export default function QueueDrawer({
   isOpen,

@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 
 const PLAYER_CATEGORIES = [
-  { id: 'suggested', label: 'Suggested', icon: 'sparkles' },
+  { id: 'suggested', label: 'Suggested', icon: 'star' },
   { id: 'songs', label: 'Songs', icon: 'musical-notes' },
   { id: 'albums', label: 'Albums', icon: 'disc' },
   { id: 'artists', label: 'Artists', icon: 'people' },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Search, Bell, Sparkles, Compass } from 'lucide-react';
+import { Flame, Search, Bell, Compass } from 'lucide-react';
 
 export default function TopNavbar({ 
   searchQuery, 
@@ -55,7 +55,7 @@ export default function TopNavbar({
           onClick={onOpenAiDiscovery}
           title="Ask AI for Music Recommendations"
         >
-          <Sparkles size={16} className="sparkle-icon" />
+          <Compass size={16} className="text-gold" />
           <span>AI Search</span>
         </button>
 

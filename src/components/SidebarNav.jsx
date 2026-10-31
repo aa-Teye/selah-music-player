@@ -1,12 +1,12 @@
 import React from 'react';
-import { Home, Library, Youtube, Sparkles, Sliders, ShieldCheck, Heart, FolderPlus } from './Icons';
+import { Home, Library, Youtube, Compass, Sliders, ShieldCheck, Heart, FolderPlus } from './Icons';
 
 export default function SidebarNav({ activeTab, setActiveTab, libraryCount, favoritesCount }) {
   const navItems = [
     { id: 'home', label: 'Home & Daily', icon: Home, badge: null },
     { id: 'library', label: 'Local Library', icon: Library, badge: libraryCount > 0 ? libraryCount : null },
     { id: 'youtube', label: 'YouTube Watch', icon: Youtube, badge: 'Live' },
-    { id: 'ai', label: 'AI Music Finder', icon: Sparkles, badge: 'AI' },
+    { id: 'ai', label: 'AI Music Finder', icon: Compass, badge: 'AI' },
     { id: 'equalizer', label: 'EQ & Settings', icon: Sliders, badge: null },
   ];
 

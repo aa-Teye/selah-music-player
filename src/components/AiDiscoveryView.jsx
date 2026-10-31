@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, 
   Search, 
   Play, 
   Youtube, 
@@ -166,7 +165,7 @@ export default function AiDiscoveryView({
       <div className="ai-hero-card glass-panel">
         <div className="ai-badge-row">
           <div className="ai-badge gold-glow">
-            <Sparkles size={16} className="text-gold" />
+            <Compass size={16} className="text-gold" />
             <span>AI MUSIC DISCOVERY & SEARCH</span>
           </div>
           <span className="ai-powered-by">Powered by Intelligent Music Models</span>
@@ -206,7 +205,7 @@ export default function AiDiscoveryView({
               <span className="searching-spinner">Analyzing...</span>
             ) : (
               <>
-                <Sparkles size={16} />
+                <Search size={16} />
                 <span>Ask AI</span>
               </>
             )}

@@ -97,8 +97,8 @@ export default function EditTagsModal({
             <View style={styles.artworkActions}>
               <Text style={styles.artworkLabel}>Cover Artwork</Text>
               <TouchableOpacity style={styles.refreshArtBtn} onPress={handleRefreshArtwork}>
-                <Ionicons name="sparkles" size={14} color="#0A0D14" />
-                <Text style={styles.refreshArtText}>Smart Match Art</Text>
+                <Ionicons name="image" size={14} color="#0A0D14" />
+                <Text style={styles.refreshArtText}>Auto Match Art</Text>
               </TouchableOpacity>
             </View>
           </View>
