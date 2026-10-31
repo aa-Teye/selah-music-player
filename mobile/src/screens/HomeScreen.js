@@ -23,7 +23,10 @@ export default function HomeScreen({
   recentTracks = [],
   onOpenStats,
   searchQuery = '',
-  onNavigateToYouTube
+  onNavigateToYouTube,
+  favoriteArtists = [],
+  onNextDevotional,
+  onOpenDigitalLibraries
 }) {
   const filteredTracks = activeMood === 'all' 
     ? tracks 
@@ -40,18 +43,26 @@ export default function HomeScreen({
             <Ionicons name="book-outline" size={13} color="#E5A93C" />
             <Text style={styles.verseBadgeText}>VERSE OF THE DAY</Text>
           </View>
-          {onOpenStats ? (
-            <TouchableOpacity style={styles.streakBadge} onPress={onOpenStats}>
-              <Ionicons name="flame" size={14} color="#F97316" />
-              <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
-              <Ionicons name="chevron-forward" size={12} color="#F97316" />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.streakBadge}>
-              <Ionicons name="flame" size={14} color="#F97316" />
-              <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
-            </View>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {onNextDevotional && (
+              <TouchableOpacity style={styles.cycleBadge} onPress={onNextDevotional} activeOpacity={0.7}>
+                <Ionicons name="sync" size={12} color="#E5A93C" />
+                <Text style={styles.cycleBadgeText}>Next Verse</Text>
+              </TouchableOpacity>
+            )}
+            {onOpenStats ? (
+              <TouchableOpacity style={styles.streakBadge} onPress={onOpenStats}>
+                <Ionicons name="flame" size={14} color="#F97316" />
+                <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
+                <Ionicons name="chevron-forward" size={12} color="#F97316" />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.streakBadge}>
+                <Ionicons name="flame" size={14} color="#F97316" />
+                <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <Text style={styles.verseQuote}>{devotion.verse}</Text>
@@ -67,9 +78,19 @@ export default function HomeScreen({
             <Text style={styles.playAnthemText}>Play Devotional Anthem</Text>
           </TouchableOpacity>
 
+          {onOpenDigitalLibraries && (
+            <TouchableOpacity 
+              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
+              onPress={onOpenDigitalLibraries}
+            >
+              <Ionicons name="library-outline" size={16} color="#E5A93C" />
+              <Text style={[styles.playAnthemText, { color: '#E5A93C' }]}>Libraries</Text>
+            </TouchableOpacity>
+          )}
+
           {onOpenStats && (
             <TouchableOpacity 
-              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
+              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
               onPress={onOpenStats}
             >
               <Ionicons name="stats-chart" size={16} color="#E5A93C" />
@@ -78,6 +99,35 @@ export default function HomeScreen({
           )}
         </View>
       </View>
+
+      {/* Recommended For You Based on Favorite Artists */}
+      {favoriteArtists && favoriteArtists.length > 0 && (
+        <View style={styles.recommendedSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recommended For You</Text>
+            <Text style={styles.sectionSubtitle}>Based on your chosen worship leaders</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+            {favoriteArtists.map((artistName, idx) => (
+              <TouchableOpacity
+                key={`fav-art-${idx}`}
+                style={styles.artistRecCard}
+                onPress={() => onNavigateToYouTube && onNavigateToYouTube(artistName)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.artistRecAvatar}>
+                  <Ionicons name="person" size={20} color="#E5A93C" />
+                </View>
+                <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
+                <View style={styles.artistRecPlayRow}>
+                  <Ionicons name="play-circle" size={14} color="#E5A93C" />
+                  <Text style={styles.artistRecPlayText}>Listen</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Recently Played Horizontal Rail */}
       {recentTracks && recentTracks.length > 0 && (
@@ -548,5 +598,64 @@ const styles = StyleSheet.create({
     color: '#F3F4F6',
     fontSize: 13,
     fontWeight: '700'
+  },
+  cycleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4
+  },
+  cycleBadgeText: {
+    color: '#E5A93C',
+    fontSize: 11,
+    fontWeight: '700'
+  },
+  recommendedSection: {
+    marginBottom: 20
+  },
+  artistRecCard: {
+    width: 104,
+    marginRight: 12,
+    backgroundColor: '#111622',
+    borderRadius: 14,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.25)'
+  },
+  artistRecAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.3)'
+  },
+  artistRecName: {
+    color: '#F3F4F6',
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 6
+  },
+  artistRecPlayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4
+  },
+  artistRecPlayText: {
+    color: '#E5A93C',
+    fontSize: 10,
+    fontWeight: '800'
   }
 });

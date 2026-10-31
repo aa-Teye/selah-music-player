@@ -141,6 +141,14 @@ async function runTests() {
   const lyrics = await StorageService.getCustomLyrics('track-1');
   assert(lyrics.includes('Custom Saved Lyric Line'), 'StorageService: Custom Lyrics save & retrieve');
 
+  // Favorite Artists & Onboarding
+  await StorageService.saveFavoriteArtists(['CeCe Winans', 'Brandon Lake']);
+  const favArtists = await StorageService.getFavoriteArtists();
+  assert(favArtists.length === 2 && favArtists[0] === 'CeCe Winans', 'StorageService: Favorite Artists save & retrieve');
+  await StorageService.setHasOnboarded(true);
+  const onboarded = await StorageService.getHasOnboarded();
+  assert(onboarded === true, 'StorageService: Onboarded status save & retrieve');
+
   // TEST 2: Id3Service
   console.log('\n--- 2. Testing Id3Service Tag Cleaning & Metadata ---');
   const { Id3Service } = require('./src/services/id3Service');
@@ -218,7 +226,8 @@ async function runTests() {
     './src/screens/PlaylistsScreen.js',
     './src/screens/EqualizerScreen.js',
     './src/screens/AiDiscoveryScreen.js',
-    './src/components/HeaderMenuModal.js'
+    './src/components/HeaderMenuModal.js',
+    './src/components/OnboardingArtistsModal.js'
   ];
 
   for (const compPath of components) {

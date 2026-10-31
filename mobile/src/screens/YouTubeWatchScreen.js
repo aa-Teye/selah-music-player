@@ -10,22 +10,25 @@ import {
   Dimensions, 
   Alert,
   ActivityIndicator,
-  Keyboard
+  Keyboard,
+  Share,
+  Linking
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import YouTubeService, { extractVideoId, searchYouTube } from '../services/youtubeService';
 
 const { width } = Dimensions.get('window');
 
 const QUICK_SEARCH_CHIPS = [
-  { id: 'curated', label: 'Curated' },
+  { id: 'curated', label: 'Curated Praise' },
   { id: 'brandon-lake', label: 'Brandon Lake', query: 'Brandon Lake Live Worship' },
   { id: 'cece-winans', label: 'CeCe Winans', query: 'CeCe Winans Goodness of God' },
+  { id: 'maverick-city', label: 'Maverick City', query: 'Maverick City Music' },
   { id: 'dunsin-oyekan', label: 'Dunsin Oyekan', query: 'Dunsin Oyekan Worship' },
   { id: 'nathaniel-bassey', label: 'Nathaniel Bassey', query: 'Nathaniel Bassey Songs' },
-  { id: 'maverick-city', label: 'Maverick City', query: 'Maverick City Music' },
   { id: 'hillsong', label: 'Hillsong', query: 'Hillsong Worship' },
+  { id: 'elevation', label: 'Elevation Worship', query: 'Elevation Worship Live' },
   { id: 'instrumental-prayer', label: 'Prayer Piano', query: 'Instrumental Prayer Worship Piano' }
 ];
 
@@ -69,6 +72,16 @@ const DEFAULT_FEATURED = [
     durationFormatted: "4:15",
     sourceType: "youtube",
     coverUrl: "https://img.youtube.com/vi/x0vQyN3jQbg/hqdefault.jpg"
+  },
+  {
+    id: "yt-1Xf_bT7qO_I",
+    title: "Jireh - Elevation Worship & Maverick City",
+    artist: "Elevation Worship",
+    youtubeId: "1Xf_bT7qO_I",
+    duration: 599,
+    durationFormatted: "9:59",
+    sourceType: "youtube",
+    coverUrl: "https://img.youtube.com/vi/1Xf_bT7qO_I/hqdefault.jpg"
   }
 ];
 
@@ -77,15 +90,20 @@ export default function YouTubeWatchScreen({
   isPlaying,
   searchQuery = '',
   onPlayTrack,
-  onAddYouTubeTrack
+  onAddYouTubeTrack,
+  onOpenAddToPlaylist
 }) {
-  const [inputUrl, setInputUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [activeChip, setActiveChip] = useState('curated');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [playMode, setPlayMode] = useState('video'); // 'video' | 'mp3'
+  const [isCustomExpanded, setIsCustomExpanded] = useState(false);
+  const [inputUrl, setInputUrl] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+
+  const scrollRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
   // Synchronize when global searchQuery prop updates from TopHeader
@@ -142,13 +160,17 @@ export default function YouTubeWatchScreen({
     setActiveChip('curated');
   };
 
-  // Play a YouTube item
+  // Play a YouTube item and shift it to the TOP player
   const handleSelectVideo = (item) => {
     if (onAddYouTubeTrack) {
       onAddYouTubeTrack(item);
     }
     if (onPlayTrack) {
       onPlayTrack(item);
+    }
+    // Scroll directly up to the top player so user sees it playing immediately
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ y: 0, animated: true });
     }
   };
 
@@ -176,69 +198,170 @@ export default function YouTubeWatchScreen({
     handleSelectVideo(newTrack);
     setInputUrl('');
     setVideoTitle('');
+    setIsCustomExpanded(false);
   };
 
+  const handleShareVideo = (item) => {
+    if (!item?.youtubeId) return;
+    Share.share({
+      message: `Listen to "${item.title}" on Selah Player: https://www.youtube.com/watch?v=${item.youtubeId}`
+    });
+  };
+
+  // Determine current active YouTube ID
   const currentYtId = currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
     ? currentTrack.youtubeId 
-    : 'dQ3Cj8-7M3Y';
+    : (DEFAULT_FEATURED[0]?.youtubeId || 'dQ3Cj8-7M3Y');
 
   // Video list to display: search results if searched, otherwise default featured
   const displayVideos = hasSearched ? searchResults : DEFAULT_FEATURED;
 
+  const activeVideoTitle = currentTrack?.sourceType === 'youtube' 
+    ? currentTrack.title 
+    : "Gratitude (Live) - Brandon Lake";
+  const activeVideoArtist = currentTrack?.sourceType === 'youtube' 
+    ? currentTrack.artist 
+    : "Brandon Lake";
+
   return (
     <ScrollView 
+      ref={scrollRef}
       style={styles.container} 
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
-      {/* Header & Compliance Badge */}
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <Ionicons name="logo-youtube" size={24} color="#EF4444" />
-          <Text style={styles.title}>YouTube Watch &amp; Stream</Text>
-        </View>
-        <View style={styles.complianceBadge}>
-          <Ionicons name="shield-checkmark" size={12} color="#10B981" />
-          <Text style={styles.complianceText}>Play Store &amp; ToS Compliant</Text>
-        </View>
-      </View>
+      {/* ── 1. TOP HERO PLAYER AREA ─────────────────────────────────── */}
+      <View style={styles.heroPlayerSection}>
+        {/* Mode Switcher: Video vs MP3 Mode */}
+        <View style={styles.modeSwitchRow}>
+          <View style={styles.modeTabs}>
+            <TouchableOpacity 
+              style={[styles.modeTab, playMode === 'video' && styles.modeTabActive]}
+              onPress={() => setPlayMode('video')}
+              activeOpacity={0.8}
+            >
+              <Ionicons 
+                name="videocam" 
+                size={14} 
+                color={playMode === 'video' ? '#0A0D14' : '#9CA3AF'} 
+              />
+              <Text style={[styles.modeTabText, playMode === 'video' && styles.modeTabTextActive]}>
+                Video Mode
+              </Text>
+            </TouchableOpacity>
 
-      {/* Embedded YouTube Player */}
-      <View style={styles.playerWrapper}>
-        <YoutubePlayer
-          height={(width - 32) * (9 / 16)}
-          play={isPlaying && currentTrack?.sourceType === 'youtube'}
-          videoId={currentYtId}
-          webViewProps={{
-            allowsFullscreenVideo: true
-          }}
-        />
-      </View>
+            <TouchableOpacity 
+              style={[styles.modeTab, playMode === 'mp3' && styles.modeTabActive]}
+              onPress={() => setPlayMode('mp3')}
+              activeOpacity={0.8}
+            >
+              <Ionicons 
+                name="musical-notes" 
+                size={14} 
+                color={playMode === 'mp3' ? '#0A0D14' : '#9CA3AF'} 
+              />
+              <Text style={[styles.modeTabText, playMode === 'mp3' && styles.modeTabTextActive]}>
+                Play as MP3
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Now Playing Title */}
-      {currentTrack && currentTrack.sourceType === 'youtube' && (
-        <View style={styles.trackDetailsCard}>
-          <View style={styles.trackDetailsLeft}>
-            <View style={styles.nowPlayingDot} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.trackTitleText} numberOfLines={1}>{currentTrack.title}</Text>
-              <Text style={styles.trackArtistText} numberOfLines={1}>{currentTrack.artist}</Text>
+          <View style={styles.complianceBadge}>
+            <Ionicons name="shield-checkmark" size={12} color="#10B981" />
+            <Text style={styles.complianceText}>Official YouTube Player</Text>
+          </View>
+        </View>
+
+        {/* Player View Container */}
+        {playMode === 'video' ? (
+          <View style={styles.videoPlayerCard}>
+            <YoutubePlayer
+              height={(width - 32) * (9 / 16)}
+              play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
+              videoId={currentYtId}
+              webViewProps={{
+                allowsFullscreenVideo: true
+              }}
+            />
+          </View>
+        ) : (
+          /* MP3 / Audio Stream Mode */
+          <View style={styles.mp3PlayerCard}>
+            {/* Hidden player to keep pure audio playing */}
+            <View style={styles.hiddenPlayerWrap}>
+              <YoutubePlayer
+                height={1}
+                play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
+                videoId={currentYtId}
+              />
+            </View>
+
+            <View style={styles.mp3DiscWrap}>
+              <Image 
+                source={{ uri: currentTrack?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
+                style={styles.mp3DiscImage}
+              />
+              <View style={styles.mp3CenterSpindle} />
+            </View>
+
+            <View style={styles.mp3Info}>
+              <View style={styles.mp3Badge}>
+                <Ionicons name="radio" size={13} color="#E5A93C" />
+                <Text style={styles.mp3BadgeText}>STREAMING AS MP3 AUDIO</Text>
+              </View>
+              <Text style={styles.mp3Title} numberOfLines={1}>{activeVideoTitle}</Text>
+              <Text style={styles.mp3Artist} numberOfLines={1}>{activeVideoArtist}</Text>
             </View>
           </View>
-          <View style={styles.ytIdTag}>
-            <Ionicons name="logo-youtube" size={12} color="#EF4444" />
-            <Text style={styles.ytIdText}>{currentTrack.youtubeId}</Text>
+        )}
+
+        {/* Now Playing Info Bar */}
+        <View style={styles.playingBar}>
+          <View style={styles.playingBarLeft}>
+            <View style={styles.livePulseDot} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.playingTitle} numberOfLines={1}>{activeVideoTitle}</Text>
+              <Text style={styles.playingArtist} numberOfLines={1}>{activeVideoArtist}</Text>
+            </View>
+          </View>
+
+          <View style={styles.playingActions}>
+            {onOpenAddToPlaylist && (
+              <TouchableOpacity 
+                style={styles.actionIconBtn}
+                onPress={() => onOpenAddToPlaylist(currentTrack || DEFAULT_FEATURED[0])}
+                title="Add to Playlist"
+              >
+                <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity 
+              style={styles.actionIconBtn}
+              onPress={() => handleShareVideo(currentTrack || DEFAULT_FEATURED[0])}
+              title="Share"
+            >
+              <Ionicons name="share-social-outline" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionIconBtn}
+              onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${currentYtId}`)}
+              title="Watch on YouTube App"
+            >
+              <Ionicons name="logo-youtube" size={18} color="#EF4444" />
+            </TouchableOpacity>
           </View>
         </View>
-      )}
+      </View>
 
-      {/* Direct YouTube Live Search Bar */}
+      {/* ── 2. SEARCH BAR & QUICK CHIPS ─────────────────────────────── */}
       <View style={styles.searchSection}>
-        <Text style={styles.sectionTitle}>Search YouTube Live</Text>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#9CA3AF" style={styles.searchIcon} />
           <TextInput
-            placeholder="Search any song, artist, praise or hymn on YouTube..."
+            placeholder="Search YouTube worship, praise, songs..."
             placeholderTextColor="#6B7280"
             value={localSearch}
             onChangeText={(text) => {
@@ -279,10 +402,11 @@ export default function YouTubeWatchScreen({
             return (
               <TouchableOpacity
                 key={chip.id}
-                style={[styles.chipPill, isChipActive && styles.activeChipPill]}
+                style={[styles.chip, isChipActive && styles.chipActive]}
                 onPress={() => handleChipSelect(chip)}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, isChipActive && styles.activeChipText]}>
+                <Text style={[styles.chipText, isChipActive && styles.chipTextActive]}>
                   {chip.label}
                 </Text>
               </TouchableOpacity>
@@ -291,112 +415,131 @@ export default function YouTubeWatchScreen({
         </ScrollView>
       </View>
 
-      {/* Custom Link / Video ID Section */}
-      <View style={styles.inputCard}>
-        <View style={styles.inputCardHeader}>
-          <Ionicons name="link-outline" size={18} color="#E5A93C" />
-          <Text style={styles.inputCardTitle}>Paste YouTube Link or Video ID</Text>
+      {/* ── 3. RESULTS & UP NEXT SONGS (DIRECTLY BELOW PLAYING VIDEO) ─ */}
+      <View style={styles.resultsSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {hasSearched ? `Search Results (${displayVideos.length})` : 'Curated Songs & Up Next'}
+          </Text>
+          <Text style={styles.sectionSubtitle}>Tap any song to play at top</Text>
         </View>
-        <TextInput
-          placeholder="Paste URL (e.g. youtu.be/... or ID)"
-          placeholderTextColor="#6B7280"
-          value={inputUrl}
-          onChangeText={setInputUrl}
-          style={styles.textInput}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TextInput
-          placeholder="Optional Title (e.g. Sunday Service Worship)"
-          placeholderTextColor="#6B7280"
-          value={videoTitle}
-          onChangeText={setVideoTitle}
-          style={[styles.textInput, { marginTop: 8 }]}
-        />
-        <TouchableOpacity style={styles.watchNowBtn} onPress={handleLoadCustom}>
-          <Ionicons name="play" size={16} color="#0A0D14" />
-          <Text style={styles.watchNowText}>Play in Theatre</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Results Header */}
-      <View style={styles.sectionHeaderRow}>
-        <View>
-          <Text style={styles.resultsHeading}>
-            {hasSearched ? `YouTube Results for "${localSearch}"` : 'Curated Christian Worship'}
-          </Text>
-          <Text style={styles.resultsSubtitle}>
-            {hasSearched ? `${displayVideos.length} videos found on YouTube` : 'Official licensed streams'}
-          </Text>
-        </View>
-        {hasSearched && (
-          <TouchableOpacity onPress={handleClearSearch} style={styles.resetCuratedBtn}>
-            <Text style={styles.resetCuratedText}>Show Curated</Text>
-          </TouchableOpacity>
+        {isSearching && displayVideos.length === 0 ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#E5A93C" />
+            <Text style={styles.loadingText}>Searching YouTube live...</Text>
+          </View>
+        ) : displayVideos.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="musical-notes-outline" size={36} color="#6B7280" />
+            <Text style={styles.emptyTitle}>No songs found for "{localSearch}"</Text>
+            <Text style={styles.emptySub}>Try searching an artist like "Brandon Lake" or "CeCe Winans"</Text>
+          </View>
+        ) : (
+          <View style={styles.videoList}>
+            {displayVideos.map((video, idx) => {
+              const isSelected = currentTrack?.youtubeId === video.youtubeId || (!currentTrack && idx === 0);
+              return (
+                <TouchableOpacity
+                  key={`yt-${video.youtubeId || video.id}-${idx}`}
+                  style={[styles.videoCard, isSelected && styles.videoCardSelected]}
+                  onPress={() => handleSelectVideo(video)}
+                  activeOpacity={0.8}
+                >
+                  {/* Thumbnail with duration badge */}
+                  <View style={styles.thumbWrapper}>
+                    <Image 
+                      source={{ uri: video.coverUrl || `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg` }}
+                      style={styles.thumbImage}
+                    />
+                    <View style={styles.durationBadge}>
+                      <Text style={styles.durationText}>{video.durationFormatted || 'Music'}</Text>
+                    </View>
+                    {isSelected && isPlaying && (
+                      <View style={styles.playingOverlay}>
+                        <Ionicons name="volume-high" size={20} color="#E5A93C" />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Video Details */}
+                  <View style={styles.videoDetails}>
+                    <Text style={[styles.videoTitle, isSelected && styles.videoTitleSelected]} numberOfLines={2}>
+                      {video.title}
+                    </Text>
+                    <Text style={styles.videoArtist} numberOfLines={1}>
+                      {video.artist || 'YouTube Music'}
+                    </Text>
+                    {isSelected && (
+                      <View style={styles.nowPlayingTag}>
+                        <View style={styles.greenPulse} />
+                        <Text style={styles.nowPlayingTagText}>PLAYING AT TOP</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Play Action Icon */}
+                  <View style={styles.cardPlayBtn}>
+                    <Ionicons 
+                      name={isSelected && isPlaying ? "pause-circle" : "play-circle"} 
+                      size={28} 
+                      color={isSelected ? "#E5A93C" : "#6B7280"} 
+                    />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         )}
       </View>
 
-      {/* Loading state indicator */}
-      {isSearching && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#E5A93C" />
-          <Text style={styles.loadingText}>Searching YouTube directly...</Text>
-        </View>
-      )}
+      {/* ── 4. CUSTOM YOUTUBE LINK / ID COLLAPSIBLE ─────────────────── */}
+      <View style={styles.customSection}>
+        <TouchableOpacity 
+          style={styles.customHeader}
+          onPress={() => setIsCustomExpanded(!isCustomExpanded)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.customHeaderLeft}>
+            <Ionicons name="link-outline" size={18} color="#E5A93C" />
+            <Text style={styles.customHeaderText}>Paste Direct YouTube Link or ID</Text>
+          </View>
+          <Ionicons 
+            name={isCustomExpanded ? "chevron-up" : "chevron-down"} 
+            size={18} 
+            color="#9CA3AF" 
+          />
+        </TouchableOpacity>
 
-      {/* Empty Search Results */}
-      {!isSearching && hasSearched && displayVideos.length === 0 && (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="film-outline" size={44} color="#6B7280" />
-          <Text style={styles.emptyTitle}>No YouTube Videos Found</Text>
-          <Text style={styles.emptyText}>Try searching with different keywords, artist name, or paste the link directly.</Text>
-        </View>
-      )}
-
-      {/* Video Cards Grid */}
-      {!isSearching && displayVideos.map((item) => {
-        const isCurrent = currentTrack?.youtubeId === item.youtubeId;
-        return (
-          <TouchableOpacity
-            key={item.id}
-            style={[styles.videoRow, isCurrent && styles.activeVideoRow]}
-            onPress={() => handleSelectVideo(item)}
-            activeOpacity={0.8}
-          >
-            {/* Thumbnail with duration badge */}
-            <View style={styles.thumbWrapper}>
-              <Image source={{ uri: item.coverUrl }} style={styles.videoThumb} />
-              {item.durationFormatted ? (
-                <View style={styles.durationBadge}>
-                  <Text style={styles.durationText}>{item.durationFormatted}</Text>
-                </View>
-              ) : null}
-              <View style={styles.ytPill}>
-                <Ionicons name="logo-youtube" size={10} color="#EF4444" />
-              </View>
-            </View>
-
-            {/* Video Metadata */}
-            <View style={styles.videoInfo}>
-              <Text style={styles.videoTitle} numberOfLines={2}>{item.title}</Text>
-              <Text style={styles.videoArtist} numberOfLines={1}>{item.artist}</Text>
-              <View style={styles.metaRow}>
-                <Ionicons name="play-circle-outline" size={12} color="#E5A93C" />
-                <Text style={styles.metaSubText}>Tap to stream in HD</Text>
-              </View>
-            </View>
-
-            {/* Action Play Button */}
-            <View style={[styles.videoPlayBtn, isCurrent && styles.activePlayBtn]}>
-              <Ionicons 
-                name={isCurrent && isPlaying ? "pause" : "play"} 
-                size={14} 
-                color="#0A0D14" 
-              />
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+        {isCustomExpanded && (
+          <View style={styles.customBody}>
+            <TextInput
+              style={styles.customInput}
+              placeholder="e.g. https://www.youtube.com/watch?v=dQ3Cj8-7M3Y"
+              placeholderTextColor="#6B7280"
+              value={inputUrl}
+              onChangeText={setInputUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.customInput}
+              placeholder="Song title (optional)"
+              placeholderTextColor="#6B7280"
+              value={videoTitle}
+              onChangeText={setVideoTitle}
+            />
+            <TouchableOpacity 
+              style={[styles.loadBtn, !inputUrl.trim() && styles.btnDisabled]} 
+              onPress={handleLoadCustom}
+              disabled={!inputUrl.trim()}
+            >
+              <Ionicons name="play" size={16} color="#0A0D14" />
+              <Text style={styles.loadBtnText}>Load &amp; Play at Top</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -407,111 +550,206 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0D14'
   },
   content: {
-    padding: 16,
-    paddingBottom: 40
+    paddingBottom: 120
   },
-  header: {
+
+  /* Hero Player */
+  heroPlayerSection: {
+    backgroundColor: '#0F1420',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)'
+  },
+  modeSwitchRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14
+    marginBottom: 10
   },
-  titleRow: {
+  modeTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#161D2B',
+    borderRadius: 16,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  modeTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    gap: 4
   },
-  title: {
-    color: '#F3F4F6',
-    fontSize: 17,
-    fontWeight: '800'
+  modeTabActive: {
+    backgroundColor: '#E5A93C'
+  },
+  modeTabText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '700'
+  },
+  modeTabTextActive: {
+    color: '#0A0D14'
   },
   complianceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
     gap: 4
   },
   complianceText: {
-    color: '#34D399',
     fontSize: 10,
-    fontWeight: '700'
+    color: '#9CA3AF',
+    fontWeight: '600'
   },
-  playerWrapper: {
-    borderRadius: 14,
+  videoPlayerCard: {
+    borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#000',
-    marginBottom: 12
+    backgroundColor: '#000000',
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.25)',
+    shadowColor: '#E5A93C',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8
   },
-  trackDetailsCard: {
+  mp3PlayerCard: {
+    height: (width - 32) * (9 / 16),
+    backgroundColor: '#141A28',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.3)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  hiddenPlayerWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 1,
+    height: 1,
+    opacity: 0.01,
+    overflow: 'hidden'
+  },
+  mp3DiscWrap: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#0A0D14',
+    borderWidth: 2,
+    borderColor: '#E5A93C',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    shadowColor: '#E5A93C',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  mp3DiscImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40
+  },
+  mp3CenterSpindle: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#0A0D14',
+    borderWidth: 2,
+    borderColor: '#E5A93C'
+  },
+  mp3Info: {
+    flex: 1
+  },
+  mp3Badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6
+  },
+  mp3BadgeText: {
+    fontSize: 9,
+    color: '#E5A93C',
+    fontWeight: '800',
+    letterSpacing: 0.8
+  },
+  mp3Title: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F9FAFB',
+    marginBottom: 4
+  },
+  mp3Artist: {
+    fontSize: 13,
+    color: '#9CA3AF'
+  },
+  playingBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#171D2C',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.2)'
+    marginTop: 10
   },
-  trackDetailsLeft: {
+  playingBarLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     flex: 1,
-    marginRight: 8
+    marginRight: 12
   },
-  nowPlayingDot: {
+  livePulseDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981'
+    backgroundColor: '#10B981',
+    marginRight: 8
   },
-  trackTitleText: {
-    color: '#F3F4F6',
+  playingTitle: {
+    fontSize: 14,
     fontWeight: '700',
-    fontSize: 14
+    color: '#F3F4F6'
   },
-  trackArtistText: {
-    color: '#E5A93C',
+  playingArtist: {
     fontSize: 12,
-    marginTop: 2
+    color: '#9CA3AF'
   },
-  ytIdTag: {
+  playingActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4
+    gap: 6
   },
-  ytIdText: {
-    color: '#EF4444',
-    fontSize: 10,
-    fontWeight: '700'
+  actionIconBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#161D2B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
+
+  /* Search & Chips */
   searchSection: {
-    marginBottom: 20
-  },
-  sectionTitle: {
-    color: '#F3F4F6',
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 8
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 6
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111622',
+    backgroundColor: '#121824',
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 12,
-    height: 46
+    height: 44
   },
   searchIcon: {
     marginRight: 8
@@ -520,226 +758,235 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#F3F4F6',
     fontSize: 13,
-    paddingVertical: 0
+    height: '100%'
   },
   clearBtn: {
-    padding: 6
+    padding: 4
   },
   searchGoBtn: {
-    backgroundColor: '#E5A93C',
     width: 32,
     height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: '#E5A93C',
     justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 6
   },
   chipsScroll: {
     marginTop: 10
   },
-  chipPill: {
-    backgroundColor: '#171D2C',
+  chip: {
+    backgroundColor: '#161D2B',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginRight: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    marginRight: 8
   },
-  activeChipPill: {
-    backgroundColor: 'rgba(229, 169, 60, 0.18)',
+  chipActive: {
+    backgroundColor: '#E5A93C',
     borderColor: '#E5A93C'
   },
   chipText: {
-    color: '#9CA3AF',
     fontSize: 12,
+    color: '#9CA3AF',
     fontWeight: '600'
   },
-  activeChipText: {
-    color: '#E5A93C',
-    fontWeight: '700'
+  chipTextActive: {
+    color: '#0A0D14',
+    fontWeight: '800'
   },
-  inputCard: {
-    backgroundColor: '#111622',
+
+  /* Results / Up Next */
+  resultsSection: {
+    paddingHorizontal: 16,
+    paddingTop: 10
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#F3F4F6',
+    letterSpacing: 0.3
+  },
+  sectionSubtitle: {
+    fontSize: 11,
+    color: '#6B7280'
+  },
+  loadingBox: {
+    alignItems: 'center',
+    paddingVertical: 30
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginTop: 10
+  },
+  emptyBox: {
+    alignItems: 'center',
+    paddingVertical: 35
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#D1D5DB',
+    marginTop: 10
+  },
+  emptySub: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4
+  },
+  videoList: {
+    gap: 8
+  },
+  videoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#121824',
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 20,
+    padding: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
-  inputCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10
-  },
-  inputCardTitle: {
-    color: '#F3F4F6',
-    fontSize: 13,
-    fontWeight: '700'
-  },
-  textInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
-    color: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 13
-  },
-  watchNowBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E5A93C',
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 10,
-    gap: 6
-  },
-  watchNowText: {
-    color: '#0A0D14',
-    fontWeight: '800',
-    fontSize: 13
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 12
-  },
-  resultsHeading: {
-    color: '#F3F4F6',
-    fontSize: 15,
-    fontWeight: '800'
-  },
-  resultsSubtitle: {
-    color: '#9CA3AF',
-    fontSize: 11,
-    marginTop: 2
-  },
-  resetCuratedBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)'
-  },
-  resetCuratedText: {
-    color: '#E5A93C',
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  loadingContainer: {
-    paddingVertical: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10
-  },
-  loadingText: {
-    color: '#9CA3AF',
-    fontSize: 13
-  },
-  emptyContainer: {
-    paddingVertical: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20
-  },
-  emptyTitle: {
-    color: '#F3F4F6',
-    fontSize: 15,
-    fontWeight: '700',
-    marginTop: 12
-  },
-  emptyText: {
-    color: '#9CA3AF',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 6
-  },
-  videoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#111622',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-    gap: 12
-  },
-  activeVideoRow: {
-    borderColor: '#EF4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)'
+  videoCardSelected: {
+    borderColor: '#E5A93C',
+    backgroundColor: 'rgba(229, 169, 60, 0.08)'
   },
   thumbWrapper: {
-    position: 'relative',
     width: 90,
-    height: 58,
-    borderRadius: 8,
+    height: 56,
+    borderRadius: 10,
     overflow: 'hidden',
-    backgroundColor: '#1A2234'
+    position: 'relative',
+    backgroundColor: '#000'
   },
-  videoThumb: {
+  thumbImage: {
     width: '100%',
     height: '100%'
   },
   durationBadge: {
     position: 'absolute',
-    bottom: 4,
-    right: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+    bottom: 3,
+    right: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
     borderRadius: 4
   },
   durationText: {
-    color: '#FFFFFF',
+    color: '#FFF',
     fontSize: 9,
     fontWeight: '700'
   },
-  ytPill: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 2,
-    borderRadius: 4
+  playingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  videoInfo: {
-    flex: 1
+  videoDetails: {
+    flex: 1,
+    paddingHorizontal: 10
   },
   videoTitle: {
-    color: '#F3F4F6',
     fontSize: 13,
     fontWeight: '700',
+    color: '#F3F4F6',
     lineHeight: 17
   },
+  videoTitleSelected: {
+    color: '#E5A93C'
+  },
   videoArtist: {
-    color: '#9CA3AF',
     fontSize: 11,
+    color: '#9CA3AF',
     marginTop: 3
   },
-  metaRow: {
+  nowPlayingTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 4
   },
-  metaSubText: {
-    color: '#6B7280',
-    fontSize: 10
+  greenPulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981'
   },
-  videoPlayBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#E5A93C',
+  nowPlayingTagText: {
+    fontSize: 9,
+    color: '#10B981',
+    fontWeight: '800',
+    letterSpacing: 0.5
+  },
+  cardPlayBtn: {
+    paddingHorizontal: 4
+  },
+
+  /* Custom Link Section */
+  customSection: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    backgroundColor: '#121824',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    overflow: 'hidden'
+  },
+  customHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'space-between',
+    padding: 14
   },
-  activePlayBtn: {
-    backgroundColor: '#EF4444'
+  customHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  customHeaderText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#D1D5DB'
+  },
+  customBody: {
+    padding: 14,
+    paddingTop: 0,
+    gap: 10
+  },
+  customInput: {
+    backgroundColor: '#161D2B',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#F3F4F6',
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  loadBtn: {
+    backgroundColor: '#E5A93C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 11,
+    borderRadius: 10,
+    gap: 6
+  },
+  loadBtnText: {
+    color: '#0A0D14',
+    fontSize: 13,
+    fontWeight: '800'
+  },
+  btnDisabled: {
+    opacity: 0.5
   }
 });

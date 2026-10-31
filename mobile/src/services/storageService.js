@@ -9,7 +9,9 @@ const KEYS = {
   RECENTLY_PLAYED: '@selah_recent_tracks',
   RECENT_TRACKS: '@selah_recent_tracks',
   BOOKMARKS: '@selah_bookmarks',
-  SETTINGS: '@selah_settings'
+  SETTINGS: '@selah_settings',
+  FAV_ARTISTS: '@selah_fav_artists',
+  HAS_ONBOARDED: '@selah_has_onboarded'
 };
 
 export const StorageService = {
@@ -235,6 +237,42 @@ export const StorageService = {
       await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
     } catch (e) {
       console.log('Error saving settings:', e);
+    }
+  },
+
+  // Onboarding & Favorite Artists
+  async getFavoriteArtists() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.FAV_ARTISTS);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.log('Error getting favorite artists:', e);
+      return [];
+    }
+  },
+
+  async saveFavoriteArtists(artists) {
+    try {
+      await AsyncStorage.setItem(KEYS.FAV_ARTISTS, JSON.stringify(artists));
+    } catch (e) {
+      console.log('Error saving favorite artists:', e);
+    }
+  },
+
+  async getHasOnboarded() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.HAS_ONBOARDED);
+      return data === 'true';
+    } catch (e) {
+      return false;
+    }
+  },
+
+  async setHasOnboarded(status = true) {
+    try {
+      await AsyncStorage.setItem(KEYS.HAS_ONBOARDED, status ? 'true' : 'false');
+    } catch (e) {
+      console.log('Error setting onboarded state:', e);
     }
   }
 };

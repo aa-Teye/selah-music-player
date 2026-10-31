@@ -32,6 +32,7 @@ export default function LocalLibraryScreen({
   const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [filterQuery, setFilterQuery] = useState('');
 
   // Auto-scan on component mount if no local tracks loaded yet
   React.useEffect(() => {
@@ -75,8 +76,12 @@ export default function LocalLibraryScreen({
           );
         } else {
           Alert.alert(
-            "No Audio Files Found", 
-            "No audio files were detected in standard Android media folders. You can tap 'Import' to select your music files directly from any folder."
+            "No Media Found in Audio Library", 
+            "No audio tracks were found in the standard system media folders. Would you like to select your music files directly from your Downloads or Files app?",
+            [
+              { text: "Later", style: "cancel" },
+              { text: "Select Files Directly", onPress: handlePickAudio }
+            ]
           );
         }
       }

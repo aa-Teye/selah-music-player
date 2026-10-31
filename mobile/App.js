@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
+import { Ionicons } from '@expo/vector-icons';
 
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
@@ -23,8 +24,9 @@ import ListeningStatsModal from './src/components/ListeningStatsModal';
 import PrayerBookmarksModal from './src/components/PrayerBookmarksModal';
 import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
 import EditTagsModal from './src/components/EditTagsModal';
+import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 
-import { DAILY_DEVOTION, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
+import { DAILY_DEVOTION, DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
 import { ScannerService } from './src/services/scannerService';
 
@@ -62,6 +64,10 @@ export default function App() {
   const [streakData, setStreakData] = useState({ streakDays: 14 });
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
+  const [favoriteArtists, setFavoriteArtists] = useState([]);
+  const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
+  const [devotionalIndex, setDevotionalIndex] = useState(0);
+  const [isDigitalLibrariesVisible, setIsDigitalLibrariesVisible] = useState(false);
 
   const soundRef = useRef(null);
   const statusSubRef = useRef(null);
@@ -89,7 +95,7 @@ export default function App() {
         }
 
         // Load saved favorites, local tracks, streak, playlists, recent tracks, stats, bookmarks & settings
-        const [savedFavs, savedLocal, savedStreak, savedPlaylists, savedRecent, savedStats, savedBookmarks, savedSettings] = await Promise.all([
+        const [savedFavs, savedLocal, savedStreak, savedPlaylists, savedRecent, savedStats, savedBookmarks, savedSettings, savedHasOnboarded, savedFavArtists] = await Promise.all([
           StorageService.getFavorites(),
           StorageService.getLocalTracks(),
           StorageService.recordDailyStreak(),
@@ -97,7 +103,9 @@ export default function App() {
           StorageService.getRecentlyPlayed(),
           StorageService.getListeningStats(),
           StorageService.getBookmarks(),
-          StorageService.getSettings()
+          StorageService.getSettings(),
+          StorageService.getHasOnboarded(),
+          StorageService.getFavoriteArtists()
         ]);
 
         if (savedFavs) setFavorites(savedFavs);
@@ -106,6 +114,12 @@ export default function App() {
         if (savedRecent) setRecentTracks(savedRecent);
         if (savedStats) setListeningStats(savedStats);
         if (savedBookmarks) setBookmarks(savedBookmarks);
+        if (savedHasOnboarded === false) {
+          setIsOnboardingVisible(true);
+        }
+        if (savedFavArtists && savedFavArtists.length > 0) {
+          setFavoriteArtists(savedFavArtists);
+        }
         if (savedSettings) {
           if (typeof savedSettings.crossfadeSeconds === 'number') setCrossfadeSeconds(savedSettings.crossfadeSeconds);
           if (savedSettings.ambientSoundType) setActiveSoundscape(savedSettings.ambientSoundType);
@@ -203,6 +217,12 @@ export default function App() {
         soundRef.current.remove();
       } catch (_) {}
       soundRef.current = null;
+    }
+
+    // If it's a YouTube track, activate YouTube streaming engine
+    if (track.sourceType === 'youtube' || track.youtubeId) {
+      setActiveTab('youtube');
+      return;
     }
 
     // Play immediately if audio source exists (bundled asset or streaming/file URI)
@@ -611,7 +631,7 @@ export default function App() {
       <View style={styles.mainContent}>
         {activeTab === 'home' && (
           <HomeScreen
-            devotion={{ ...DAILY_DEVOTION, streakDays: streakData.streakDays || 14 }}
+            devotion={{ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 14 }}
             tracks={visibleTracks}
             currentTrack={currentTrack}
             isPlaying={isPlaying}
@@ -628,6 +648,9 @@ export default function App() {
               if (query) setSearchQuery(query);
               setActiveTab('youtube');
             }}
+            favoriteArtists={favoriteArtists}
+            onNextDevotional={() => setDevotionalIndex((prev) => (prev + 1) % DEVOTIONAL_COLLECTION.length)}
+            onOpenDigitalLibraries={() => setIsDigitalLibrariesVisible(true)}
           />
         )}
 
@@ -662,7 +685,8 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'youtube' && (
+        {/* Keep YouTube player persistent across tabs so audio continues playing in background */}
+        <View style={{ flex: 1, display: activeTab === 'youtube' ? 'flex' : 'none' }}>
           <YouTubeWatchScreen
             currentTrack={currentTrack}
             isPlaying={isPlaying}
@@ -670,7 +694,7 @@ export default function App() {
             onPlayTrack={handlePlayTrack}
             onAddYouTubeTrack={handleAddYouTubeTrack}
           />
-        )}
+        </View>
 
         {activeTab === 'playlists' && (
           <PlaylistsScreen
@@ -880,6 +904,62 @@ export default function App() {
         </SafeAreaView>
       </Modal>
 
+      {/* Digital Libraries & Hymnal Resources Modal */}
+      <Modal
+        visible={isDigitalLibrariesVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsDigitalLibrariesVisible(false)}
+      >
+        <View style={styles.libModalOverlay}>
+          <View style={styles.libModalContent}>
+            <View style={styles.libModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="library" size={22} color="#E5A93C" />
+                <Text style={styles.libModalTitle}>Digital Libraries</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsDigitalLibrariesVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.libModalSub}>Connect with global Christian libraries, public-domain hymnals, and scripture study tools.</Text>
+
+            <ScrollView style={{ marginTop: 12 }}>
+              {DIGITAL_LIBRARIES.map((lib) => (
+                <View key={lib.id} style={styles.libCard}>
+                  <View style={styles.libIconBox}>
+                    <Ionicons name={lib.icon || 'book'} size={22} color="#E5A93C" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.libName}>{lib.name}</Text>
+                    <Text style={styles.libDesc}>{lib.description}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.libOpenBtn} 
+                    onPress={() => Linking.openURL(lib.url).catch(() => Alert.alert("Notice", "Could not open browser."))}
+                  >
+                    <Text style={styles.libOpenText}>Open</Text>
+                    <Ionicons name="open-outline" size={14} color="#0A0D14" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* First-Time Onboarding Favorite Artists Modal */}
+      <OnboardingArtistsModal
+        visible={isOnboardingVisible}
+        onClose={() => setIsOnboardingVisible(false)}
+        onFinish={(selectedArtists) => {
+          setFavoriteArtists(selectedArtists);
+          StorageService.saveFavoriteArtists(selectedArtists);
+          StorageService.setHasOnboarded(true);
+          setIsOnboardingVisible(false);
+        }}
+      />
+
       {/* Bottom Navigation Tabs */}
       <BottomTabs 
         activeTab={activeTab} 
@@ -898,5 +978,79 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1
+  },
+  libModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'flex-end'
+  },
+  libModalContent: {
+    backgroundColor: '#121824',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: 'rgba(229, 169, 60, 0.25)'
+  },
+  libModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  libModalTitle: {
+    color: '#F9FAFB',
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  libModalSub: {
+    color: '#9CA3AF',
+    fontSize: 13,
+    lineHeight: 18
+  },
+  libCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#171D2C',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    gap: 12
+  },
+  libIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  libName: {
+    color: '#F9FAFB',
+    fontSize: 14,
+    fontWeight: '700'
+  },
+  libDesc: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15
+  },
+  libOpenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E5A93C',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    gap: 4
+  },
+  libOpenText: {
+    color: '#0A0D14',
+    fontWeight: '800',
+    fontSize: 12
   }
 });
