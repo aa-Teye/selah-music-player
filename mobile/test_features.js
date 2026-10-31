@@ -188,6 +188,7 @@ async function runTests() {
   const scanResult = await ScannerService.scanDeviceAudio(2, 50);
   assert(scanResult && scanResult.success && scanResult.tracks.length > 0, 'ScannerService: Auto-scan device discovers MP3 tracks');
   assert(scanResult.tracks[0].title.includes('Gratitude'), 'ScannerService: Enriched track metadata has title');
+  assert(typeof scanResult.tracks[0].addedAt === 'number' && typeof scanResult.tracks[0].scannedAt === 'number', 'ScannerService: Auto-scan attaches addedAt and scannedAt timestamps for Last Added sorting');
 
   // TEST 4: Component Verification & Metro Bundling
   console.log('\n--- 4. Testing Component Definitions & Bundler Compilation ---');

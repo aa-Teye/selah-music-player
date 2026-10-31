@@ -48,9 +48,10 @@ export default function PlayerScreen({
   const lastAddedTracks = useMemo(() => {
     const list = [...allTracks];
     list.sort((a, b) => {
-      const timeA = a.scannedAt || a.addedAt || a.id;
-      const timeB = b.scannedAt || b.addedAt || b.id;
-      return String(timeB).localeCompare(String(timeA));
+      const timeA = Number(a.scannedAt || a.addedAt || 0);
+      const timeB = Number(b.scannedAt || b.addedAt || 0);
+      if (timeA && timeB) return timeB - timeA;
+      return String(b.id || '').localeCompare(String(a.id || ''));
     });
     return list.slice(0, 20);
   }, [allTracks]);

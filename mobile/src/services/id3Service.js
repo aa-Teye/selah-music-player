@@ -91,6 +91,7 @@ export const Id3Service = {
     }
 
     const coverUrl = this.generateCuratedArtwork(parsed.title, parsed.artist);
+    const addedTime = asset.modificationTime ? asset.modificationTime * 1000 : Date.now();
 
     return {
       id: `local-scan-${asset.id}`,
@@ -103,6 +104,8 @@ export const Id3Service = {
       sourceType: "local",
       uri: asset.uri,
       coverUrl: coverUrl,
+      addedAt: addedTime,
+      scannedAt: Date.now(),
       lyrics: `[Device Audio: ${parsed.title}]\nArtist: ${parsed.artist}\nStored in: ${folderName}\nOffline playback from your phone.`
     };
   }
