@@ -976,10 +976,25 @@ export default function App() {
       {/* First-Time Onboarding Favorite Artists Modal */}
       <OnboardingArtistsModal
         visible={isOnboardingVisible}
-        onClose={() => setIsOnboardingVisible(false)}
+        onClose={() => {
+          setIsOnboardingVisible(false);
+          StorageService.setHasOnboarded(true);
+        }}
         onFinish={(selectedArtists) => {
-          setFavoriteArtists(selectedArtists);
-          StorageService.saveFavoriteArtists(selectedArtists);
+          const list = Array.isArray(selectedArtists) 
+            ? selectedArtists 
+            : (selectedArtists?.artists || []);
+          setFavoriteArtists(list);
+          StorageService.saveFavoriteArtists(list);
+          StorageService.setHasOnboarded(true);
+          setIsOnboardingVisible(false);
+        }}
+        onComplete={(res) => {
+          const list = Array.isArray(res) 
+            ? res 
+            : (res?.artists || []);
+          setFavoriteArtists(list);
+          StorageService.saveFavoriteArtists(list);
           StorageService.setHasOnboarded(true);
           setIsOnboardingVisible(false);
         }}

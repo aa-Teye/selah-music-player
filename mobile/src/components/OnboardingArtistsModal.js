@@ -40,6 +40,8 @@ const VIBES = [
 
 export default function OnboardingArtistsModal({
   visible,
+  onClose,
+  onFinish,
   onComplete
 }) {
   const [selectedArtists, setSelectedArtists] = useState(['maverick', 'brandon', 'cece']);
@@ -53,22 +55,42 @@ export default function OnboardingArtistsModal({
 
   const handleFinish = () => {
     const chosen = ARTISTS.filter((a) => selectedArtists.includes(a.id)).map((a) => a.name);
+    const finalArtists = chosen.length > 0 ? chosen : ['Brandon Lake', 'CeCe Winans', 'Maverick City Music'];
+
+    if (onFinish) {
+      onFinish(finalArtists);
+    }
     if (onComplete) {
       onComplete({
-        artists: chosen,
+        artists: finalArtists,
         vibe: selectedVibe
       });
+    }
+    if (onClose) {
+      onClose();
     }
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.card}>
           {/* Top Brand Header */}
           <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0A0D14" />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 10 }}>
+              <View style={styles.logoBadge}>
+                <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0A0D14" />
+              </View>
+              {onClose && (
+                <TouchableOpacity 
+                  onPress={() => {
+                    handleFinish();
+                  }}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Ionicons name="close-circle" size={26} color="#9CA3AF" />
+                </TouchableOpacity>
+              )}
             </View>
             <Text style={styles.title}>Welcome to Selah Player</Text>
             <Text style={styles.subtitle}>
