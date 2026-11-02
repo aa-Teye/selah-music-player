@@ -544,7 +544,7 @@ export default function LocalLibraryScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D14'
+    backgroundColor: '#080A0F'
   },
   content: {
     padding: 16,
@@ -559,11 +559,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   subtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   actionBtns: {
@@ -600,17 +600,17 @@ const styles = StyleSheet.create({
     gap: 4
   },
   importBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800',
     fontSize: 12
   },
   emptyCard: {
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     marginTop: 10
   },
   iconCircle: {
@@ -625,12 +625,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     marginBottom: 6
   },
   emptySub: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   heroScanBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800',
     fontSize: 14
   },
@@ -661,9 +661,9 @@ const styles = StyleSheet.create({
     gap: 8,
     width: '100%',
     justifyContent: 'center',
-    backgroundColor: '#1A2234',
+    backgroundColor: '#151B28',
     borderWidth: 1,
-    borderColor: '#374151'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   heroImportBtnText: {
     color: '#E5A93C',
@@ -673,23 +673,23 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 8
   },
   searchInput: {
     flex: 1,
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     fontSize: 13
   },
   subTabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 12,
     padding: 3,
     marginBottom: 14
@@ -706,10 +706,10 @@ const styles = StyleSheet.create({
   subTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#9CA3AF'
+    color: '#A0A6B5'
   },
   subTabTextActive: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800'
   },
   songsList: {
@@ -718,11 +718,11 @@ const styles = StyleSheet.create({
   songCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12
   },
   songCardActive: {
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#1A2234',
+    backgroundColor: '#151B28',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -743,14 +743,14 @@ const styles = StyleSheet.create({
   songTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   songTitleActive: {
     color: '#E5A93C'
   },
   songArtist: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   cardActions: {
@@ -770,11 +770,11 @@ const styles = StyleSheet.create({
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12
   },
   folderIconBox: {
@@ -791,11 +791,11 @@ const styles = StyleSheet.create({
   folderName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   folderCount: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   folderBackBtn: {
@@ -812,22 +812,22 @@ const styles = StyleSheet.create({
   folderHeaderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     marginBottom: 12,
     gap: 12
   },
   folderHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   folderHeaderSub: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   playFolderBtn: {
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
     gap: 4
   },
   playFolderText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '700',
     fontSize: 12
   },
@@ -850,11 +850,11 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12
   },
   artistAvatar: {
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
   artistInitial: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0A0D14'
+    color: '#080A0F'
   },
   artistDetails: {
     flex: 1
@@ -876,12 +876,12 @@ const styles = StyleSheet.create({
   artistNameText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     marginBottom: 2
   },
   artistCountText: {
     fontSize: 12,
-    color: '#9CA3AF'
+    color: '#A0A6B5'
   },
   artistPlayBtn: {
     width: 36,

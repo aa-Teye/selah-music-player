@@ -118,16 +118,16 @@ export default function HeaderMenuModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(5, 7, 11, 0.75)',
     justifyContent: 'flex-start',
     alignItems: 'flex-end'
   },
   menuDrawer: {
     width: Math.min(width * 0.82, 340),
     height: '100%',
-    backgroundColor: '#111622',
+    backgroundColor: '#10141E',
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(255, 255, 255, 0.08)',
+    borderLeftColor: 'rgba(229, 169, 60, 0.2)',
     paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 30
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(229, 169, 60, 0.3)'
   },
   profileName: {
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     fontSize: 14,
     fontWeight: '800'
   },
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171D2C',
+    backgroundColor: '#151B28',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)'
+    borderColor: 'rgba(255, 255, 255, 0.07)'
   },
   menuIconWrap: {
     width: 38,
@@ -191,12 +191,12 @@ const styles = StyleSheet.create({
     marginRight: 12
   },
   menuTitle: {
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     fontSize: 13,
     fontWeight: '700'
   },
   menuSub: {
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontSize: 10,
     marginTop: 2
   },

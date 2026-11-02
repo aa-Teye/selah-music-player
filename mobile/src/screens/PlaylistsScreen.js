@@ -352,7 +352,7 @@ export default function PlaylistsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D14'
+    backgroundColor: '#080A0F'
   },
   content: {
     padding: 16,
@@ -367,11 +367,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   subtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   createBtn: {
@@ -384,13 +384,13 @@ const styles = StyleSheet.create({
     gap: 4
   },
   createBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800',
     fontSize: 12
   },
   createBox: {
     flexDirection: 'row',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 10,
     borderRadius: 14,
     marginBottom: 16,
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   createInput: {
     flex: 1,
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     fontSize: 14,
     paddingHorizontal: 8
   },
@@ -412,18 +412,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   saveBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '700',
     fontSize: 13
   },
   favCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     marginBottom: 20,
     gap: 14
   },
@@ -441,11 +441,11 @@ const styles = StyleSheet.create({
   favTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   favSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   favPlayBtn: {
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     textTransform: 'uppercase',
     letterSpacing: 0.5
   },
@@ -474,11 +474,11 @@ const styles = StyleSheet.create({
   userPlaylistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12
   },
   userPlIconCircle: {
@@ -495,11 +495,11 @@ const styles = StyleSheet.create({
   userPlTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   userPlSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   userPlActions: {
@@ -520,23 +520,23 @@ const styles = StyleSheet.create({
     padding: 4
   },
   emptyPlaylistsCard: {
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     alignItems: 'center',
     marginBottom: 24
   },
   emptyPlaylistsTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     marginTop: 8
   },
   emptyPlaylistsSub: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     textAlign: 'center',
     marginTop: 4,
     lineHeight: 18,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   emptyCreateBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '700',
     fontSize: 12
   },
@@ -563,11 +563,11 @@ const styles = StyleSheet.create({
   playlistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12,
     marginTop: 8
   },
@@ -585,11 +585,11 @@ const styles = StyleSheet.create({
   plTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   plDesc: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   plPlayArrow: {
@@ -616,11 +616,11 @@ const styles = StyleSheet.create({
   detailHero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 18,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     marginBottom: 16,
     gap: 14
   },
@@ -638,11 +638,11 @@ const styles = StyleSheet.create({
   detailTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   detailSubtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   detailDeleteBtn: {
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   playAllBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800',
     fontSize: 14
   },
@@ -669,11 +669,11 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1F2937'
+    borderColor: 'rgba(255, 255, 255, 0.07)'
   },
   trackRowActive: {
     borderColor: 'rgba(229, 169, 60, 0.5)',
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#1A2234',
+    backgroundColor: '#151B28',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -699,14 +699,14 @@ const styles = StyleSheet.create({
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FBFBFC'
   },
   trackTitleActive: {
     color: '#E5A93C'
   },
   trackArtist: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   removeTrackBtn: {
@@ -715,21 +715,21 @@ const styles = StyleSheet.create({
   emptyDetailBox: {
     alignItems: 'center',
     padding: 30,
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#1F2937',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     marginTop: 10
   },
   emptyDetailTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     marginTop: 12
   },
   emptyDetailSub: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18

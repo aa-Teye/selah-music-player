@@ -1014,18 +1014,18 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D14'
+    backgroundColor: '#080A0F'
   },
   mainContent: {
     flex: 1
   },
   libModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(5, 7, 11, 0.85)',
     justifyContent: 'flex-end'
   },
   libModalContent: {
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -1040,24 +1040,24 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   libModalTitle: {
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     fontSize: 18,
     fontWeight: '800'
   },
   libModalSub: {
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontSize: 13,
     lineHeight: 18
   },
   libCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171D2C',
+    backgroundColor: '#151B28',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     gap: 12
   },
   libIconBox: {
@@ -1069,12 +1069,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   libName: {
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     fontSize: 14,
     fontWeight: '700'
   },
   libDesc: {
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15
@@ -1089,7 +1089,7 @@ const styles = StyleSheet.create({
     gap: 4
   },
   libOpenText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800',
     fontSize: 12
   }

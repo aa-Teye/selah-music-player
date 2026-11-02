@@ -559,7 +559,7 @@ export default function YouTubeWatchScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D14'
+    backgroundColor: '#080A0F'
   },
   content: {
     paddingBottom: 120
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)'
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)'
   },
   modeSwitchRow: {
     flexDirection: 'row',
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   },
   modeTabs: {
     flexDirection: 'row',
-    backgroundColor: '#161D2B',
+    backgroundColor: '#151B28',
     borderRadius: 16,
     padding: 3,
     borderWidth: 1,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   },
   modeTabText: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontWeight: '700'
   },
   modeTabTextActive: {
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
   },
   complianceText: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontWeight: '600'
   },
   playerContainer: {
@@ -643,10 +643,10 @@ const styles = StyleSheet.create({
   },
   mp3PlayerCard: {
     height: (width - 32) * (9 / 16),
-    backgroundColor: '#141A28',
+    backgroundColor: '#10141E',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
+    borderColor: 'rgba(229, 169, 60, 0.28)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#080A0F',
     borderWidth: 2,
     borderColor: '#E5A93C',
     justifyContent: 'center',
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#080A0F',
     borderWidth: 2,
     borderColor: '#E5A93C'
   },
@@ -709,12 +709,12 @@ const styles = StyleSheet.create({
   mp3Title: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     marginBottom: 4
   },
   mp3Artist: {
     fontSize: 13,
-    color: '#9CA3AF'
+    color: '#A0A6B5'
   },
   playingBar: {
     flexDirection: 'row',
@@ -738,11 +738,11 @@ const styles = StyleSheet.create({
   playingTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F3F4F6'
+    color: '#FBFBFC'
   },
   playingArtist: {
     fontSize: 12,
-    color: '#9CA3AF'
+    color: '#A0A6B5'
   },
   playingActions: {
     flexDirection: 'row',
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#161D2B',
+    backgroundColor: '#151B28',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#151B28',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     fontSize: 13,
     height: '100%'
   },
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   chip: {
-    backgroundColor: '#161D2B',
+    backgroundColor: '#151B28',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     fontWeight: '600'
   },
   chipTextActive: {
@@ -837,12 +837,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     letterSpacing: 0.3
   },
   sectionSubtitle: {
     fontSize: 11,
-    color: '#6B7280'
+    color: '#687182'
   },
   loadingBox: {
     alignItems: 'center',
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 10
   },
   emptyBox: {
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   },
   emptySub: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#687182',
     marginTop: 4
   },
   videoList: {
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
   videoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 14,
     padding: 8,
     borderWidth: 1,
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#F3F4F6',
+    color: '#FBFBFC',
     lineHeight: 17
   },
   videoTitleSelected: {
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
   },
   videoArtist: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 3
   },
   nowPlayingTag: {
@@ -960,7 +960,7 @@ const styles = StyleSheet.create({
   customSection: {
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: '#121824',
+    backgroundColor: '#10141E',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',

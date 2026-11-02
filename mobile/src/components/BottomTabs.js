@@ -20,7 +20,7 @@ export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
     <View style={styles.container}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
-        const color = isActive ? '#E5A93C' : '#9CA3AF';
+        const color = isActive ? '#F5B74F' : '#7E8799';
 
         return (
           <TouchableOpacity
@@ -34,7 +34,7 @@ export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
             ) : (
               <MaterialCommunityIcons name={tab.icon} size={22} color={color} />
             )}
-            <Text style={[styles.tabLabel, { color }]}>{tab.label}</Text>
+            <Text style={[styles.tabLabel, { color, fontWeight: isActive ? '800' : '600' }]}>{tab.label}</Text>
             {isActive && <View style={styles.activeDot} />}
           </TouchableOpacity>
         );
@@ -47,9 +47,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: 64,
-    backgroundColor: '#111622',
+    backgroundColor: '#0B0E16',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingBottom: 4
@@ -63,15 +63,19 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '600',
     marginTop: 2
   },
   activeDot: {
     position: 'absolute',
     bottom: 4,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E5A93C'
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#F5B74F',
+    shadowColor: '#E5A93C',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+    elevation: 4
   }
 });

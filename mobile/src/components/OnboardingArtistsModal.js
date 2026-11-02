@@ -175,7 +175,7 @@ export default function OnboardingArtistsModal({
                       <Text style={styles.artistGenre}>{artist.genre}</Text>
                     </View>
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                      {isSelected && <Ionicons name="checkmark" size={14} color="#0A0D14" />}
+                      {isSelected && <Ionicons name="checkmark" size={14} color="#080A0F" />}
                     </View>
                   </TouchableOpacity>
                 );
@@ -193,7 +193,7 @@ export default function OnboardingArtistsModal({
               <Text style={styles.submitBtnText}>
                 Start Listening ({selectedArtists.length} Selected)
               </Text>
-              <Ionicons name="arrow-forward" size={18} color="#0A0D14" />
+              <Ionicons name="arrow-forward" size={18} color="#080A0F" />
             </TouchableOpacity>
           </View>
         </View>
@@ -205,7 +205,7 @@ export default function OnboardingArtistsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 11, 0.92)',
+    backgroundColor: 'rgba(5, 7, 11, 0.94)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '88%',
     maxHeight: 720,
-    backgroundColor: '#0F1420',
+    backgroundColor: '#10141E',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(229, 169, 60, 0.25)',
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 4
   },
   headerDoneText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -259,14 +259,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#F9FAFB',
+    color: '#FBFBFC',
     letterSpacing: 0.5,
     marginBottom: 4,
     textAlign: 'center'
   },
   subtitle: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 10
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   sectionHint: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#A0A6B5',
     marginBottom: 12
   },
   vibesGrid: {
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   vibePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#161D2B',
+    backgroundColor: '#151B28',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -308,11 +308,11 @@ const styles = StyleSheet.create({
   },
   vibeText: {
     fontSize: 12,
-    color: '#D1D5DB',
+    color: '#FBFBFC',
     fontWeight: '600'
   },
   vibeTextActive: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontWeight: '800'
   },
   artistsGrid: {
@@ -321,11 +321,11 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#161D2B',
+    backgroundColor: '#151B28',
     padding: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.07)'
   },
   artistCardSelected: {
     borderColor: 'rgba(229, 169, 60, 0.6)',
@@ -349,14 +349,14 @@ const styles = StyleSheet.create({
   artistName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F3F4F6'
+    color: '#FBFBFC'
   },
   artistNameSelected: {
     color: '#E5A93C'
   },
   artistGenre: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#A0A6B5',
     marginTop: 2
   },
   checkbox: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: '#4B5563',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     elevation: 4
   },
   submitBtnText: {
-    color: '#0A0D14',
+    color: '#080A0F',
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.3

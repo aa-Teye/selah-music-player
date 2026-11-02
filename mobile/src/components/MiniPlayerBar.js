@@ -119,9 +119,9 @@ export default function MiniPlayerBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#171D2C',
+    backgroundColor: '#0F1420',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(229, 169, 60, 0.2)',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     width: '100%'
   },
   progressBarFill: {
