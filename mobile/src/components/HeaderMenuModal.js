@@ -34,13 +34,13 @@ export default function HeaderMenuModal({
               {/* Header Profile Brand */}
               <View style={styles.drawerHeader}>
                 <View style={styles.profileAvatar}>
-                  <Ionicons name="person" size={20} color="#E0B86C" />
+                  <Ionicons name="person" size={20} color="#34D399" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.profileName}>Selah</Text>
                   <View style={styles.streakRow}>
-                    <Ionicons name="flame" size={14} color="#F97316" />
-                    <Text style={styles.streakText}>Day {streakDays} Worship Streak</Text>
+                    <Ionicons name="sparkles-outline" size={13} color="#34D399" />
+                    <Text style={styles.streakText}>Day {streakDays} Daily Worship</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -58,8 +58,8 @@ export default function HeaderMenuModal({
                   if (onOpenEq) onOpenEq();
                 }}
               >
-                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(224, 184, 108, 0.15)' }]}>
-                  <Ionicons name="options" size={20} color="#E0B86C" />
+                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
+                  <Ionicons name="options" size={20} color="#34D399" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Sound Equalizer &amp; Presets</Text>
@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
   menuDrawer: {
     width: Math.min(width * 0.82, 340),
     height: '100%',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(224, 184, 108, 0.2)',
+    borderLeftColor: 'rgba(52, 211, 153, 0.2)',
     paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 30
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.3)'
+    borderColor: 'rgba(52, 211, 153, 0.3)'
   },
   profileName: {
     color: '#FFFFFF',
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   streakText: {
-    color: '#F97316',
+    color: '#34D399',
     fontSize: 11,
     fontWeight: '700'
   },
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,

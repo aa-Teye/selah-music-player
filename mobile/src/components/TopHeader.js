@@ -17,17 +17,10 @@ export default function TopHeader({
         </View>
 
         <View style={styles.actionsRow}>
-          {/* YouVersion Streak Flame */}
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={18} color="#F97316" />
-            <Text style={styles.streakText}>{streakDays}</Text>
-            <Text style={styles.streakLabel}>DAYS</Text>
-          </View>
-
           {/* Hamburger Menu Drawer Button */}
           {onOpenMenu && (
             <TouchableOpacity onPress={onOpenMenu} style={styles.menuBtn} activeOpacity={0.7}>
-              <Ionicons name="menu" size={24} color="#F3F4F6" />
+              <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           )}
         </View>
@@ -35,10 +28,10 @@ export default function TopHeader({
 
       {/* Global Search Bar */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#9CA3AF" style={styles.searchIcon} />
+        <Ionicons name="search" size={16} color="#94A3B8" style={styles.searchIcon} />
         <TextInput
           placeholder="Search songs, scriptures, or YouTube..."
-          placeholderTextColor="#6B7280"
+          placeholderTextColor="#64748B"
           value={searchQuery}
           onChangeText={onSearchChange}
           style={styles.searchInput}
@@ -46,7 +39,7 @@ export default function TopHeader({
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => onSearchChange('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+            <Ionicons name="close-circle" size={16} color="#94A3B8" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -59,7 +52,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-    backgroundColor: '#0C0D11',
+    backgroundColor: '#08090C',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)'
   },
@@ -74,9 +67,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
-    color: '#E0B86C',
+    color: '#FFFFFF',
     letterSpacing: 0.5
   },
   actionsRow: {
@@ -84,51 +77,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8
   },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#181A23',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
-    gap: 5
-  },
-  streakText: {
-    color: '#E0B86C',
-    fontWeight: '800',
-    fontSize: 13
-  },
-  streakLabel: {
-    color: '#9CA3AF',
-    fontWeight: '700',
-    fontSize: 10,
-    letterSpacing: 0.5
-  },
-  aiButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#181A23',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.22)',
-    gap: 4
-  },
-  aiButtonText: {
-    color: '#E0B86C',
-    fontWeight: '800',
-    fontSize: 12
-  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 12,
     height: 42
   },
@@ -145,11 +100,10 @@ const styles = StyleSheet.create({
     padding: 4
   },
   menuBtn: {
-    padding: 7,
-    marginLeft: 4,
-    backgroundColor: '#14161E',
+    padding: 8,
+    backgroundColor: '#121318',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   }
 });

@@ -71,7 +71,7 @@ export default function SetRingtoneModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="phone-incoming" size={22} color="#E0B86C" />
+              <MaterialCommunityIcons name="phone-incoming" size={22} color="#34D399" />
               <Text style={styles.title}>Set Caller Tune & Ringtone</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -81,7 +81,7 @@ export default function SetRingtoneModal({
 
           {/* Track Preview Box */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#E0B86C" />
+            <Ionicons name="musical-note" size={20} color="#34D399" />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Audio'}</Text>
@@ -99,7 +99,7 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="call" size={22} color="#E0B86C" />
+                <Ionicons name="call" size={22} color="#34D399" />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Phone Caller Ringtone</Text>
@@ -115,7 +115,7 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="notifications" size={22} color="#E0B86C" />
+                <Ionicons name="notifications" size={22} color="#34D399" />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Message & Notification Tone</Text>
@@ -131,7 +131,7 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="alarm" size={22} color="#E0B86C" />
+                <Ionicons name="alarm" size={22} color="#34D399" />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Morning Devotion Alarm</Text>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -187,13 +187,13 @@ const styles = StyleSheet.create({
   trackCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#E0B86C'
+    borderLeftColor: '#34D399'
   },
   trackTitle: {
     fontSize: 14,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     justifyContent: 'center',
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#1C1E28'
+    backgroundColor: '#1A1C23'
   },
   cancelBtnText: {
     color: '#9CA3AF',

@@ -642,7 +642,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0C0D11" />
+        <StatusBar barStyle="light-content" backgroundColor="#08090C" />
 
       {/* Top Header */}
       <TopHeader
@@ -939,7 +939,7 @@ export default function App() {
         animationType="slide"
         onRequestClose={() => setIsEqVisible(false)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#0C0D11' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#08090C' }}>
           <EqualizerScreen
             onClose={() => setIsEqVisible(false)}
             sleepTimerRemaining={sleepTimerRemaining}
@@ -968,7 +968,7 @@ export default function App() {
           <View style={styles.libModalContent}>
             <View style={styles.libModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="library" size={22} color="#E0B86C" />
+                <Ionicons name="library" size={22} color="#34D399" />
                 <Text style={styles.libModalTitle}>Digital Libraries</Text>
               </View>
               <TouchableOpacity onPress={() => setIsDigitalLibrariesVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -981,7 +981,7 @@ export default function App() {
               {DIGITAL_LIBRARIES.map((lib) => (
                 <View key={lib.id} style={styles.libCard}>
                   <View style={styles.libIconBox}>
-                    <Ionicons name={lib.icon || 'book'} size={22} color="#E0B86C" />
+                    <Ionicons name={lib.icon || 'book'} size={22} color="#34D399" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.libName}>{lib.name}</Text>
@@ -992,7 +992,7 @@ export default function App() {
                     onPress={() => Linking.openURL(lib.url).catch(() => Alert.alert("Notice", "Could not open browser."))}
                   >
                     <Text style={styles.libOpenText}>Open</Text>
-                    <Ionicons name="open-outline" size={14} color="#0C0D11" />
+                    <Ionicons name="open-outline" size={14} color="#08090C" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -1042,7 +1042,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0D11'
+    backgroundColor: '#08090C'
   },
   mainContent: {
     flex: 1
@@ -1053,13 +1053,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   libModalContent: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.2)'
+    borderColor: 'rgba(52, 211, 153, 0.2)'
   },
   libModalHeader: {
     flexDirection: 'row',
@@ -1080,7 +1080,7 @@ const styles = StyleSheet.create({
   libCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
@@ -1092,7 +1092,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
@@ -1112,14 +1112,14 @@ const styles = StyleSheet.create({
   libOpenBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
     gap: 4
   },
   libOpenText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800',
     fontSize: 12
   }

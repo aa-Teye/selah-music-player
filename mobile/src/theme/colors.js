@@ -1,47 +1,57 @@
 // ═════════════════════════════════════════════════════════════════════════
-//  SELAH MUSIC PLAYER — SLEEK CHAMPAGNE & STUDIO CHARCOAL THEME
-//  (Apple Music / Tidal Studio Aesthetic)
+//  SELAH MUSIC PLAYER — LIQUID OBSIDIAN & IRIDESCENT MINT THEME
+//  (Inspired by Minimalist Studio Glass Aesthetic)
 // ═════════════════════════════════════════════════════════════════════════
 
 export const COLORS = {
-  // Backgrounds: Deep Studio Charcoal & Pure Obsidian (Zero cheap blue tint)
-  bgApp: '#0C0D11',
-  bgCard: '#14161E',
-  bgCardElevated: '#1C1E28',
-  bgCardHover: '#232634',
-  bgOverlay: 'rgba(10, 11, 15, 0.94)',
+  // Backgrounds: Deep Liquid Obsidian & Smoked Glass
+  bgApp: '#08090C',
+  bgCard: '#121318',
+  bgCardElevated: '#1A1C23',
+  bgCardHover: '#22252F',
+  bgOverlay: 'rgba(8, 9, 12, 0.94)',
 
-  // Accents: Sleek Champagne Gold (Refined metallic finish)
-  goldPrimary: '#E0B86C',
-  goldRadiant: '#F0CA82',
-  goldSoft: '#F6DEC0',
-  goldDark: '#9E7836',
-  goldGlow: 'rgba(224, 184, 108, 0.15)',
-  goldGlowStrong: 'rgba(224, 184, 108, 0.25)',
-  goldBorder: 'rgba(224, 184, 108, 0.22)',
+  // Accents: Luminous Liquid Mint / Emerald Glass
+  accentPrimary: '#34D399',
+  accentRadiant: '#6EE7B7',
+  accentSoft: '#A7F3D0',
+  accentDark: '#059669',
+  accentGlow: 'rgba(52, 211, 153, 0.15)',
+  accentGlowStrong: 'rgba(52, 211, 153, 0.25)',
+  accentBorder: 'rgba(52, 211, 153, 0.22)',
+
+  // Backward-compatibility aliases
+  goldPrimary: '#34D399',
+  goldRadiant: '#6EE7B7',
+  goldSoft: '#A7F3D0',
+  goldDark: '#059669',
+  goldGlow: 'rgba(52, 211, 153, 0.15)',
+  goldGlowStrong: 'rgba(52, 211, 153, 0.25)',
+  goldBorder: 'rgba(52, 211, 153, 0.22)',
 
   // Neutrals & Surfaces
-  borderSubtle: 'rgba(255, 255, 255, 0.06)',
-  borderLight: 'rgba(255, 255, 255, 0.10)',
+  borderSubtle: 'rgba(255, 255, 255, 0.08)',
+  borderLight: 'rgba(255, 255, 255, 0.12)',
 
   // Typography
   textPrimary: '#FFFFFF',
-  textSecondary: '#9CA3AF',
-  textMuted: '#6B7280',
-  textGold: '#E0B86C',
-  textDark: '#0C0D11',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  textAccent: '#34D399',
+  textGold: '#34D399',
+  textDark: '#08090C',
 
   // Status & Badges
   statusSuccess: '#10B981',
   statusLive: '#EF4444',
-  chipActive: '#E0B86C',
-  chipInactive: '#181A23',
+  chipActive: '#34D399',
+  chipInactive: '#16171E',
 
   // Navigation & Bars
-  navBg: '#101117',
-  navBorder: 'rgba(255, 255, 255, 0.06)',
-  miniPlayerBg: '#13151D',
-  miniPlayerBorder: 'rgba(224, 184, 108, 0.18)'
+  navBg: '#0E0F14',
+  navBorder: 'rgba(255, 255, 255, 0.08)',
+  miniPlayerBg: '#13141A',
+  miniPlayerBorder: 'rgba(255, 255, 255, 0.10)'
 };
 
 export default COLORS;

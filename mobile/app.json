@@ -6,11 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#0C0D11",
+    "backgroundColor": "#08090C",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0C0D11"
+      "backgroundColor": "#08090C"
     },
     "ios": {
       "supportsTablet": true,
@@ -26,7 +26,7 @@
       "package": "com.selah.musicplayer",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#0C0D11",
+        "backgroundColor": "#08090C",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": [

@@ -32,7 +32,7 @@ const ARTISTS = [
 const VIBES = [
   { id: 'worship', label: 'Deep Worship', icon: 'heart' },
   { id: 'peace', label: 'Morning Peace', icon: 'leaf' },
-  { id: 'praise', label: 'Joyful Praise', icon: 'flame' },
+  { id: 'praise', label: 'Joyful Praise', icon: 'sunny' },
   { id: 'acoustic', label: 'Acoustic Guitar', icon: 'musical-notes' },
   { id: 'prayer', label: 'Prayer & Stillness', icon: 'book' },
   { id: 'study', label: 'Focus & Study', icon: 'headset' }
@@ -87,7 +87,7 @@ export default function OnboardingArtistsModal({
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 8 }}>
               <View style={styles.logoBadge}>
-                <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0C0D11" />
+                <MaterialCommunityIcons name="music-clef-treble" size={26} color="#08090C" />
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <TouchableOpacity 
@@ -96,7 +96,7 @@ export default function OnboardingArtistsModal({
                   activeOpacity={0.8}
                 >
                   <Text style={styles.headerDoneText}>Done</Text>
-                  <Ionicons name="checkmark" size={14} color="#0C0D11" />
+                  <Ionicons name="checkmark" size={14} color="#08090C" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={handleFinish}
@@ -132,7 +132,7 @@ export default function OnboardingArtistsModal({
                     <Ionicons
                       name={v.icon}
                       size={15}
-                      color={isActive ? '#0C0D11' : '#E0B86C'}
+                      color={isActive ? '#08090C' : '#34D399'}
                       style={{ marginRight: 6 }}
                     />
                     <Text style={[styles.vibeText, isActive && styles.vibeTextActive]}>
@@ -165,7 +165,7 @@ export default function OnboardingArtistsModal({
                       <Ionicons
                         name="person"
                         size={18}
-                        color={isSelected ? '#0C0D11' : '#E0B86C'}
+                        color={isSelected ? '#08090C' : '#34D399'}
                       />
                     </View>
                     <View style={styles.artistInfo}>
@@ -175,7 +175,7 @@ export default function OnboardingArtistsModal({
                       <Text style={styles.artistGenre}>{artist.genre}</Text>
                     </View>
                     <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                      {isSelected && <Ionicons name="checkmark" size={14} color="#0C0D11" />}
+                      {isSelected && <Ionicons name="checkmark" size={14} color="#08090C" />}
                     </View>
                   </TouchableOpacity>
                 );
@@ -193,7 +193,7 @@ export default function OnboardingArtistsModal({
               <Text style={styles.submitBtnText}>
                 Start Listening ({selectedArtists.length} Selected)
               </Text>
-              <Ionicons name="arrow-forward" size={18} color="#0C0D11" />
+              <Ionicons name="arrow-forward" size={18} color="#08090C" />
             </TouchableOpacity>
           </View>
         </View>
@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '88%',
     maxHeight: 720,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.25)',
+    borderColor: 'rgba(52, 211, 153, 0.25)',
     padding: 18,
-    shadowColor: '#E0B86C',
+    shadowColor: '#34D399',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 25,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   headerDoneBtn: {
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     gap: 4
   },
   headerDoneText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -248,10 +248,10 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#E0B86C',
+    shadowColor: '#34D399',
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 4
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#E0B86C',
+    color: '#34D399',
     letterSpacing: 1,
     marginBottom: 10
   },
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   vibePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -303,8 +303,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   vibePillActive: {
-    backgroundColor: '#E0B86C',
-    borderColor: '#E0B86C'
+    backgroundColor: '#34D399',
+    borderColor: '#34D399'
   },
   vibeText: {
     fontSize: 12,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   vibeTextActive: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800'
   },
   artistsGrid: {
@@ -321,21 +321,21 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     padding: 10,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   artistCardSelected: {
-    borderColor: 'rgba(224, 184, 108, 0.5)',
-    backgroundColor: '#14161E'
+    borderColor: 'rgba(52, 211, 153, 0.5)',
+    backgroundColor: '#121318'
   },
   artistAvatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     justifyContent: 'center',
@@ -343,8 +343,8 @@ const styles = StyleSheet.create({
     marginRight: 12
   },
   artistAvatarSelected: {
-    backgroundColor: '#E0B86C',
-    borderColor: '#E0B86C'
+    backgroundColor: '#34D399',
+    borderColor: '#34D399'
   },
   artistInfo: {
     flex: 1
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF'
   },
   artistNameSelected: {
-    color: '#E0B86C'
+    color: '#34D399'
   },
   artistGenre: {
     fontSize: 11,
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   checkboxSelected: {
-    backgroundColor: '#E0B86C',
-    borderColor: '#E0B86C'
+    backgroundColor: '#34D399',
+    borderColor: '#34D399'
   },
   footer: {
     paddingTop: 14,
@@ -381,20 +381,20 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.08)'
   },
   submitBtn: {
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8,
-    shadowColor: '#E0B86C',
+    shadowColor: '#34D399',
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4
   },
   submitBtnText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.3

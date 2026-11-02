@@ -31,7 +31,7 @@ export default function ListeningStatsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Ionicons name="stats-chart" size={22} color="#E0B86C" />
+              <Ionicons name="stats-chart" size={22} color="#34D399" />
               <Text style={styles.title}>My Worship Journey</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -49,7 +49,7 @@ export default function ListeningStatsModal({
               {/* Daily Streak */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="flame" size={24} color="#F97316" />
+                  <Ionicons name="sparkles" size={24} color="#34D399" />
                   <Text style={styles.badge}>ACTIVE</Text>
                 </View>
                 <Text style={styles.statNumber}>{streakDays}</Text>
@@ -59,7 +59,7 @@ export default function ListeningStatsModal({
               {/* Total Worship Minutes */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="time" size={24} color="#E0B86C" />
+                  <Ionicons name="time" size={24} color="#34D399" />
                   <Text style={styles.badge}>TIME</Text>
                 </View>
                 <Text style={styles.statNumber}>
@@ -91,7 +91,7 @@ export default function ListeningStatsModal({
 
             {/* Motivational Scripture Card */}
             <View style={styles.scriptureCard}>
-              <MaterialCommunityIcons name="book-open-page-variant" size={22} color="#E0B86C" />
+              <MaterialCommunityIcons name="book-open-page-variant" size={22} color="#34D399" />
               <Text style={styles.scriptureVerse}>
                 "I will sing to the Lord as long as I live; I will sing praise to my God while I have being."
               </Text>
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -197,11 +197,11 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   scriptureCard: {
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.25)',
+    borderColor: 'rgba(52, 211, 153, 0.25)',
     marginBottom: 14,
     gap: 8
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     lineHeight: 22
   },
   scriptureRef: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 12,
     fontWeight: '700',
     textAlign: 'right'
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     padding: 14,
     borderRadius: 14,
     marginBottom: 20
@@ -234,13 +234,13 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   doneBtn: {
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center'
   },
   doneBtnText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 15,
     fontWeight: '800'
   }

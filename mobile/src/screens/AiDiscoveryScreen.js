@@ -113,7 +113,7 @@ export default function AiDiscoveryScreen({
           onPress={onBack}
           activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={20} color="#E0B86C" />
+          <Ionicons name="arrow-back" size={20} color="#34D399" />
           <Text style={styles.backButtonText}>Back to Home</Text>
         </TouchableOpacity>
       )}
@@ -121,7 +121,7 @@ export default function AiDiscoveryScreen({
       {/* AI Hero Banner */}
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
-          <MaterialCommunityIcons name="creation" size={14} color="#E0B86C" />
+          <MaterialCommunityIcons name="creation" size={14} color="#34D399" />
           <Text style={styles.heroBadgeText}>AI MUSIC DISCOVERY</Text>
         </View>
         <Text style={styles.heroTitle}>Find Music for Any Mood or Scripture</Text>
@@ -145,9 +145,9 @@ export default function AiDiscoveryScreen({
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#0C0D11" size="small" />
+              <ActivityIndicator color="#08090C" size="small" />
             ) : (
-              <MaterialCommunityIcons name="creation" size={18} color="#0C0D11" />
+              <MaterialCommunityIcons name="creation" size={18} color="#08090C" />
             )}
           </TouchableOpacity>
         </View>
@@ -198,7 +198,7 @@ export default function AiDiscoveryScreen({
                   style={styles.playNowBtn}
                   onPress={() => onPlayTrack(track)}
                 >
-                  <Ionicons name="play" size={16} color="#0C0D11" />
+                  <Ionicons name="play" size={16} color="#08090C" />
                   <Text style={styles.playNowText}>Play on YouTube</Text>
                 </TouchableOpacity>
               </View>
@@ -213,17 +213,17 @@ export default function AiDiscoveryScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0D11'
+    backgroundColor: '#08090C'
   },
   content: {
     padding: 16,
     paddingBottom: 40
   },
   heroCard: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.25)',
+    borderColor: 'rgba(52, 211, 153, 0.25)',
     padding: 20,
     marginBottom: 20
   },
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   heroBadgeText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontWeight: '800',
     fontSize: 11,
     letterSpacing: 0.8
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#0C0D11',
+    backgroundColor: '#08090C',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 20,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   promptPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 10,
@@ -303,12 +303,12 @@ const styles = StyleSheet.create({
     marginTop: 8
   },
   resultHeader: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     padding: 14,
     borderRadius: 12,
     marginBottom: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#E0B86C'
+    borderLeftColor: '#34D399'
   },
   resultTheme: {
     color: '#FFFFFF',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     lineHeight: 17
   },
   trackCard: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -330,8 +330,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   activeCard: {
-    borderColor: '#E0B86C',
-    backgroundColor: '#1C1E28'
+    borderColor: '#34D399',
+    backgroundColor: '#1A1C23'
   },
   cardHeader: {
     flexDirection: 'row',
@@ -345,31 +345,31 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   cardArtist: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 12,
     marginTop: 2
   },
   genrePill: {
-    backgroundColor: 'rgba(224, 184, 108, 0.12)',
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10
   },
   genreText: {
-    color: '#F0CA82',
+    color: '#6EE7B7',
     fontSize: 10,
     fontWeight: '700'
   },
   reasonBox: {
-    backgroundColor: '#0C0D11',
+    backgroundColor: '#08090C',
     padding: 8,
     borderRadius: 8,
     marginBottom: 12,
     borderLeftWidth: 2,
-    borderLeftColor: '#E0B86C'
+    borderLeftColor: '#34D399'
   },
   reasonLabel: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 10,
     fontWeight: '800'
   },
@@ -383,13 +383,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingVertical: 9,
     borderRadius: 10,
     gap: 6
   },
   playNowText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800',
     fontSize: 12
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   backButtonText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontWeight: '700',
     fontSize: 14
   }

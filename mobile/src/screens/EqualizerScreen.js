@@ -78,7 +78,7 @@ export default function EqualizerScreen({
       {/* Bedtime Sleep Timer Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color="#E0B86C" />
+          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color="#34D399" />
           <Text style={styles.cardTitle}>Bedtime Sleep Timer</Text>
           {sleepTimerRemaining ? (
             <View style={styles.timerBadge}>
@@ -111,7 +111,7 @@ export default function EqualizerScreen({
       {/* Bedtime Ambient Soundscapes Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="weather-night" size={20} color="#E0B86C" />
+          <MaterialCommunityIcons name="weather-night" size={20} color="#34D399" />
           <Text style={styles.cardTitle}>Bedtime Ambient Soundscapes</Text>
           {activeSoundscape && (
             <View style={styles.timerBadge}>
@@ -130,7 +130,7 @@ export default function EqualizerScreen({
           onPress={onOpenAmbientSoundscapes}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="music-note-plus" size={16} color="#0C0D11" />
+          <MaterialCommunityIcons name="music-note-plus" size={16} color="#08090C" />
           <Text style={styles.actionCardBtnText}>
             {activeSoundscape ? "Change / Tune Soundscape" : "Choose Ambient Soundscape"}
           </Text>
@@ -140,7 +140,7 @@ export default function EqualizerScreen({
       {/* Audio Crossfade Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="swap-horizontal" size={20} color="#E0B86C" />
+          <Ionicons name="swap-horizontal" size={20} color="#34D399" />
           <Text style={styles.cardTitle}>Seamless Audio Crossfade</Text>
           {crossfadeSeconds > 0 && (
             <View style={styles.timerBadge}>
@@ -171,7 +171,7 @@ export default function EqualizerScreen({
       {/* Audio Playback Speed Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="speedometer-outline" size={20} color="#E0B86C" />
+          <Ionicons name="speedometer-outline" size={20} color="#34D399" />
           <Text style={styles.cardTitle}>Playback Speed</Text>
         </View>
         <Text style={styles.cardSub}>Great for audiobooks, sermons, and acoustic study</Text>
@@ -197,7 +197,7 @@ export default function EqualizerScreen({
       {/* 5-Band Equalizer */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="options-outline" size={20} color="#E0B86C" />
+          <Ionicons name="options-outline" size={20} color="#34D399" />
           <Text style={styles.cardTitle}>5-Band Graphic Equalizer</Text>
         </View>
         <Text style={styles.cardSub}>Tailored audio profiles for worship and headphones</Text>
@@ -271,7 +271,7 @@ export default function EqualizerScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0D11'
+    backgroundColor: '#08090C'
   },
   content: {
     padding: 16,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 6,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   settingCard: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 18,
     padding: 18,
     marginBottom: 16,
@@ -327,15 +327,15 @@ const styles = StyleSheet.create({
     marginBottom: 14
   },
   timerBadge: {
-    backgroundColor: 'rgba(224, 184, 108, 0.12)',
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E0B86C'
+    borderColor: '#34D399'
   },
   timerBadgeText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -348,13 +348,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   miniPillActive: {
-    backgroundColor: '#E0B86C',
-    borderColor: '#E0B86C'
+    backgroundColor: '#34D399',
+    borderColor: '#34D399'
   },
   miniPillText: {
     color: '#9CA3AF',
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   miniPillTextActive: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800'
   },
   presetsRow: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   presetBtn: {
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   activePresetBtn: {
-    backgroundColor: '#E0B86C',
-    borderColor: '#E0B86C'
+    backgroundColor: '#34D399',
+    borderColor: '#34D399'
   },
   presetText: {
     color: '#9CA3AF',
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activePresetText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800'
   },
   bandsGrid: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   gainText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 11,
     fontWeight: '700'
   },
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   sliderFill: {
     width: '100%',
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     borderRadius: 3
   },
   sliderThumb: {
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     fontSize: 9
   },
   complianceCard: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 18,
     padding: 16,
     borderLeftWidth: 3,
@@ -474,13 +474,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingVertical: 10,
     borderRadius: 12,
     marginTop: 6
   },
   actionCardBtnText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 13,
     fontWeight: '800'
   }

@@ -97,7 +97,7 @@ export default function MiniPlayerBar({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={20} 
-              color="#0C0D11" 
+              color="#08090C" 
               style={{ marginLeft: isPlaying ? 0 : 2 }}
             />
           </TouchableOpacity>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#13151D',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(224, 184, 108, 0.18)',
+    borderTopColor: 'rgba(52, 211, 153, 0.18)',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#E0B86C'
+    backgroundColor: '#34D399'
   },
   innerContent: {
     flexDirection: 'row',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E0B86C'
+    borderColor: '#34D399'
   },
   discImage: {
     width: '100%',
@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0C0D11',
+    backgroundColor: '#08090C',
     borderWidth: 1.5,
-    borderColor: '#E0B86C'
+    borderColor: '#34D399'
   },
   infoContainer: {
     flex: 1,
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localBadge: {
-    backgroundColor: 'rgba(224, 184, 108, 0.15)',
+    backgroundColor: 'rgba(52, 211, 153, 0.15)',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4
   },
   localBadgeText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 9,
     fontWeight: '800'
   },
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     alignItems: 'center',
     justifyContent: 'center'
   },

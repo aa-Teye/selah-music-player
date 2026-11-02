@@ -75,7 +75,7 @@ export default function PrayerBookmarksModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="book-cross" size={24} color="#E0B86C" />
+              <MaterialCommunityIcons name="book-cross" size={24} color="#34D399" />
               <View>
                 <Text style={styles.title}>Prayer & Scripture Pins</Text>
                 <Text style={styles.subtitle}>Devotional Audio Moments</Text>
@@ -91,7 +91,7 @@ export default function PrayerBookmarksModal({
             <View style={styles.newPinCard}>
               <View style={styles.pinTimeHeader}>
                 <View style={styles.timeBadge}>
-                  <Ionicons name="time" size={13} color="#0C0D11" />
+                  <Ionicons name="time" size={13} color="#08090C" />
                   <Text style={styles.timeBadgeText}>Pin at {formatTime(currentPosition)}</Text>
                 </View>
                 <Text style={styles.trackLabel} numberOfLines={1}>
@@ -117,7 +117,7 @@ export default function PrayerBookmarksModal({
               />
 
               <TouchableOpacity style={styles.savePinBtn} onPress={handleSavePin}>
-                <Ionicons name="bookmark" size={16} color="#0C0D11" />
+                <Ionicons name="bookmark" size={16} color="#08090C" />
                 <Text style={styles.savePinBtnText}>Save Prayer Moment</Text>
               </TouchableOpacity>
             </View>
@@ -167,7 +167,7 @@ export default function PrayerBookmarksModal({
                 >
                   <View style={styles.bmHeader}>
                     <View style={styles.bmTimePill}>
-                      <Ionicons name="play" size={10} color="#0C0D11" />
+                      <Ionicons name="play" size={10} color="#08090C" />
                       <Text style={styles.bmTimeText}>{formatTime(bm.timestamp)}</Text>
                     </View>
                     <Text style={styles.bmTrackTitle} numberOfLines={1}>
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -242,11 +242,11 @@ const styles = StyleSheet.create({
     padding: 6
   },
   newPinCard: {
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.25)',
+    borderColor: 'rgba(52, 211, 153, 0.25)',
     marginBottom: 14
   },
   pinTimeHeader: {
@@ -259,13 +259,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8
   },
   timeBadgeText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 11,
     fontWeight: '800'
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     marginLeft: 8
   },
   textInput: {
-    backgroundColor: '#0C0D11',
+    backgroundColor: '#08090C',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 8,
@@ -296,13 +296,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingVertical: 9,
     borderRadius: 8,
     marginTop: 4
   },
   savePinBtnText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontWeight: '800',
     fontSize: 13
   },
@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   filterPillActive: {
-    backgroundColor: 'rgba(224, 184, 108, 0.12)',
-    borderColor: '#E0B86C'
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    borderColor: '#34D399'
   },
   filterPillText: {
     color: '#9CA3AF',
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   filterPillTextActive: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontWeight: '800'
   },
   scrollList: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     maxWidth: 240
   },
   bookmarkCard: {
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
@@ -374,13 +374,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E0B86C',
+    backgroundColor: '#34D399',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6
   },
   bmTimeText: {
-    color: '#0C0D11',
+    color: '#08090C',
     fontSize: 10,
     fontWeight: '800'
   },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     padding: 4
   },
   bmScripture: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 2

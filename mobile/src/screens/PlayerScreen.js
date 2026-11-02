@@ -168,7 +168,7 @@ export default function PlayerScreen({
           <Ionicons
             name={isCurrent && isPlaying ? 'pause' : 'play'}
             size={14}
-            color={isCurrent ? '#0C0D11' : '#E0B86C'}
+            color={isCurrent ? '#08090C' : '#34D399'}
           />
         </View>
 
@@ -208,7 +208,7 @@ export default function PlayerScreen({
                 <Ionicons
                   name={cat.icon}
                   size={14}
-                  color={isActive ? '#0C0D11' : '#9CA3AF'}
+                  color={isActive ? '#08090C' : '#9CA3AF'}
                   style={{ marginRight: 6 }}
                 />
                 <Text style={[styles.categoryText, isActive && styles.activeCategoryText]}>
@@ -254,7 +254,7 @@ export default function PlayerScreen({
               <Ionicons
                 name={isPlaying ? 'pause-circle' : 'play-circle'}
                 size={38}
-                color="#E0B86C"
+                color="#34D399"
               />
             </View>
           </TouchableOpacity>
@@ -393,7 +393,7 @@ export default function PlayerScreen({
             {playlists.map((pl) => (
               <View key={pl.id} style={styles.playlistRow}>
                 <View style={styles.playlistIcon}>
-                  <Ionicons name="musical-notes" size={20} color="#E0B86C" />
+                  <Ionicons name="musical-notes" size={20} color="#34D399" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.playlistName}>{pl.name}</Text>
@@ -420,7 +420,7 @@ export default function PlayerScreen({
                 style={styles.folderRow}
                 onPress={() => fld.tracks[0] && onPlayTrack(fld.tracks[0])}
               >
-                <Ionicons name="folder-outline" size={24} color="#E0B86C" style={{ marginRight: 12 }} />
+                <Ionicons name="folder-outline" size={24} color="#34D399" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.folderName}>{fld.name}</Text>
                   <Text style={styles.folderCount}>{fld.count} audio tracks</Text>
@@ -463,7 +463,7 @@ export default function PlayerScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0C0D11'
+    backgroundColor: '#08090C'
   },
   categoryBarWrap: {
     backgroundColor: '#101117',
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   },
   activeCategoryPill: {
     backgroundColor: '#1E202C',
-    borderColor: '#E0B86C'
+    borderColor: '#34D399'
   },
   categoryText: {
     color: '#9CA3AF',
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activeCategoryText: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontWeight: '800'
   },
   scrollBody: {
@@ -508,12 +508,12 @@ const styles = StyleSheet.create({
   nowPlayingHero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 16,
     padding: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(224, 184, 108, 0.22)',
+    borderColor: 'rgba(52, 211, 153, 0.22)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   heroArtist: {
-    color: '#E0B86C',
+    color: '#34D399',
     fontSize: 12,
     marginTop: 1
   },
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
@@ -614,8 +614,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   activeTrackRow: {
-    borderColor: '#E0B86C',
-    backgroundColor: 'rgba(224, 184, 108, 0.06)'
+    borderColor: '#34D399',
+    backgroundColor: 'rgba(52, 211, 153, 0.06)'
   },
   trackThumb: {
     width: 44,
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activeTrackText: {
-    color: '#E0B86C'
+    color: '#34D399'
   },
   trackArtist: {
     color: '#9CA3AF',
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 6,
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: (width - 44) / 2,
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   artistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     marginRight: 12,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
   playlistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -734,7 +734,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#1C1E28',
+    backgroundColor: '#1A1C23',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   folderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#14161E',
+    backgroundColor: '#121318',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,

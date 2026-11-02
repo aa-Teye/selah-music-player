@@ -20,7 +20,7 @@ export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
     <View style={styles.container}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
-        const color = isActive ? '#E0B86C' : '#757C8E';
+        const color = isActive ? '#34D399' : '#757C8E';
 
         return (
           <TouchableOpacity
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E0B86C',
-    shadowColor: '#E0B86C',
+    backgroundColor: '#34D399',
+    shadowColor: '#34D399',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
