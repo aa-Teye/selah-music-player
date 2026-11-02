@@ -230,7 +230,7 @@ export default function App() {
     }
 
     // If it's a YouTube track, activate YouTube streaming engine
-    if (track.sourceType === 'youtube' || track.youtubeId) {
+    if (track.sourceType === 'youtube') {
       setActiveTab('youtube');
       return;
     }

@@ -34,26 +34,6 @@ const QUICK_SEARCH_CHIPS = [
 
 const DEFAULT_FEATURED = [
   {
-    id: "yt-dQ3Cj8-7M3Y",
-    title: "Gratitude (Live) - Brandon Lake",
-    artist: "Brandon Lake",
-    youtubeId: "dQ3Cj8-7M3Y",
-    duration: 338,
-    durationFormatted: "5:38",
-    sourceType: "youtube",
-    coverUrl: "https://img.youtube.com/vi/dQ3Cj8-7M3Y/hqdefault.jpg"
-  },
-  {
-    id: "yt-6XX7d_jX6Z8",
-    title: "Oceans (Where Feet May Fail) - Hillsong",
-    artist: "Hillsong UNITED",
-    youtubeId: "6XX7d_jX6Z8",
-    duration: 536,
-    durationFormatted: "8:56",
-    sourceType: "youtube",
-    coverUrl: "https://img.youtube.com/vi/6XX7d_jX6Z8/hqdefault.jpg"
-  },
-  {
     id: "yt-9sE5kEnitqE",
     title: "Goodness of God (Live) - CeCe Winans",
     artist: "CeCe Winans",
@@ -64,24 +44,44 @@ const DEFAULT_FEATURED = [
     coverUrl: "https://img.youtube.com/vi/9sE5kEnitqE/hqdefault.jpg"
   },
   {
-    id: "yt-x0vQyN3jQbg",
-    title: "House of the Lord - Phil Wickham",
-    artist: "Phil Wickham",
-    youtubeId: "x0vQyN3jQbg",
-    duration: 255,
-    durationFormatted: "4:15",
+    id: "yt-nQWFzMvCfLE",
+    title: "What A Beautiful Name - Hillsong Worship",
+    artist: "Hillsong Worship",
+    youtubeId: "nQWFzMvCfLE",
+    duration: 338,
+    durationFormatted: "5:38",
     sourceType: "youtube",
-    coverUrl: "https://img.youtube.com/vi/x0vQyN3jQbg/hqdefault.jpg"
+    coverUrl: "https://img.youtube.com/vi/nQWFzMvCfLE/hqdefault.jpg"
   },
   {
-    id: "yt-1Xf_bT7qO_I",
-    title: "Jireh - Elevation Worship & Maverick City",
-    artist: "Elevation Worship",
-    youtubeId: "1Xf_bT7qO_I",
+    id: "yt-8TkS5TdCr-I",
+    title: "Powerful Worship Songs for Prayer",
+    artist: "Nonstop Gospel Worship",
+    youtubeId: "8TkS5TdCr-I",
+    duration: 536,
+    durationFormatted: "8:56",
+    sourceType: "youtube",
+    coverUrl: "https://img.youtube.com/vi/8TkS5TdCr-I/hqdefault.jpg"
+  },
+  {
+    id: "yt-8YKJVx4qxcs",
+    title: "Best Hillsong Worship Songs of All Time",
+    artist: "Hillsong UNITED",
+    youtubeId: "8YKJVx4qxcs",
     duration: 599,
     durationFormatted: "9:59",
     sourceType: "youtube",
-    coverUrl: "https://img.youtube.com/vi/1Xf_bT7qO_I/hqdefault.jpg"
+    coverUrl: "https://img.youtube.com/vi/8YKJVx4qxcs/hqdefault.jpg"
+  },
+  {
+    id: "yt-t9FnJSY_EsQ",
+    title: "Oceans (Where Feet May Fail) - Worship Music",
+    artist: "Christian Worship",
+    youtubeId: "t9FnJSY_EsQ",
+    duration: 536,
+    durationFormatted: "8:56",
+    sourceType: "youtube",
+    coverUrl: "https://img.youtube.com/vi/t9FnJSY_EsQ/hqdefault.jpg"
   }
 ];
 
@@ -304,7 +304,7 @@ export default function YouTubeWatchScreen({
   // Determine current active YouTube ID
   const currentYtId = currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
     ? currentTrack.youtubeId 
-    : (DEFAULT_FEATURED[0]?.youtubeId || 'dQ3Cj8-7M3Y');
+    : (DEFAULT_FEATURED[0]?.youtubeId || '9sE5kEnitqE');
 
   // Video list to display: search results if searched, otherwise default featured
   const displayVideos = hasSearched ? searchResults : DEFAULT_FEATURED;

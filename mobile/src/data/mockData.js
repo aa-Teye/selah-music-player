@@ -93,7 +93,6 @@ export const INITIAL_TRACKS = [
     sourceType: "local",
     asset: require('../../assets/selah_anthem.m4a'),
     uri: "https://cdn.jsdelivr.net/gh/rafaelreis-hotmart/Audio-Sample-files@master/sample.mp3",
-    youtubeId: "dQ3Cj8-7M3Y",
     coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
     lyrics: `All my words fall short\nI got nothing new\nHow could I express\nAll my gratitude?\n\nSo I throw up my hands\nAnd praise You again and again\n'Cause all that I have is a hallelujah, hallelujah\nAnd I know it's not much\nBut I've nothing else fit for a King\nExcept for a heart singing hallelujah`
   },
@@ -107,7 +106,6 @@ export const INITIAL_TRACKS = [
     sourceType: "local",
     asset: require('../../assets/selah_anthem.m4a'),
     uri: "https://cdn.jsdelivr.net/gh/rafaelreis-hotmart/Audio-Sample-files@master/sample2.mp3",
-    youtubeId: "6XX7d_jX6Z8",
     coverUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
     lyrics: `You call me out upon the waters\nThe great unknown where feet may fail\nAnd there I find You in the mystery\nIn oceans deep, my faith will stand\n\nAnd I will call upon Your name\nAnd keep my eyes above the waves\nWhen oceans rise, my soul will rest in Your embrace\nFor I am Yours and You are mine`
   },
@@ -120,7 +118,6 @@ export const INITIAL_TRACKS = [
     category: "lofi",
     sourceType: "stream",
     uri: "https://cdn.jsdelivr.net/gh/rafaelreis-hotmart/Audio-Sample-files@master/sample.wav",
-    youtubeId: "jfKfPfyJRdk",
     coverUrl: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=600&q=80",
     lyrics: `[Peaceful Instrumental Lo-Fi Melody]\nWarm vinyl crackle with calming Rhodes chords for Bible study, meditation, and focused work.`
   },
@@ -133,7 +130,6 @@ export const INITIAL_TRACKS = [
     category: "worship",
     sourceType: "stream",
     uri: "https://cdn.jsdelivr.net/gh/rafaelreis-hotmart/Audio-Sample-files@master/sample.mp3",
-    youtubeId: "9sE5kEnitqE",
     coverUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=600&q=80",
     lyrics: `I love You, Lord\nFor Your mercy never fails me\nAll my days, I've been held in Your hands\nFrom the moment that I wake up\nUntil I lay my head\nOh, I will sing of the goodness of God`
   },
@@ -146,7 +142,6 @@ export const INITIAL_TRACKS = [
     category: "joy",
     sourceType: "stream",
     uri: "https://cdn.jsdelivr.net/gh/rafaelreis-hotmart/Audio-Sample-files@master/sample2.mp3",
-    youtubeId: "x0vQyN3jQbg",
     coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
     lyrics: `We sing to the God who heals\nWe sing to the God who saves\nWe sing to the God who always makes a way\n\n'Cause He hang the stars up in the sky\nAnd He has the power to raise the dead`
   }
