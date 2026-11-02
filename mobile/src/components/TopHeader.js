@@ -13,8 +13,7 @@ export default function TopHeader({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.logoRow}>
-          <Text style={styles.brandTitle}>SELAH </Text>
-          <Text style={styles.goldText}>PLAYER</Text>
+          <Text style={styles.brandTitle}>SELAH</Text>
         </View>
 
         <View style={styles.actionsRow}>
@@ -75,17 +74,10 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   brandTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.8
-  },
-  goldText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '900',
     color: '#E0B86C',
-    letterSpacing: 0.8,
-    marginLeft: 4
+    letterSpacing: 2
   },
   actionsRow: {
     flexDirection: 'row',
