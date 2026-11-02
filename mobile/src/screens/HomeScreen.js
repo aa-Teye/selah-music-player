@@ -36,68 +36,40 @@ export default function HomeScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* YouVersion Verse of the Day Hero Banner */}
-      <View style={styles.heroCard}>
-        <View style={styles.badgeRow}>
-          <View style={styles.verseBadge}>
-            <Ionicons name="book-outline" size={13} color="#34D399" />
-            <Text style={styles.verseBadgeText}>VERSE OF THE DAY</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            {onNextDevotional && (
-              <TouchableOpacity style={styles.cycleBadge} onPress={onNextDevotional} activeOpacity={0.7}>
-                <Ionicons name="sync" size={12} color="#34D399" />
-                <Text style={styles.cycleBadgeText}>Next Verse</Text>
-              </TouchableOpacity>
-            )}
-            {onOpenStats ? (
-              <TouchableOpacity style={styles.streakBadge} onPress={onOpenStats}>
-                <Ionicons name="sparkles-outline" size={13} color="#34D399" />
-                <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
-                <Ionicons name="chevron-forward" size={12} color="#94A3B8" />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.streakBadge}>
-                <Ionicons name="sparkles-outline" size={13} color="#34D399" />
-                <Text style={styles.streakBadgeText}>Day {devotion.streakDays}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        <Text style={styles.verseQuote}>{devotion.verse}</Text>
-        <Text style={styles.verseRef}>— {devotion.reference}</Text>
-        <Text style={styles.verseReflection}>{devotion.reflection}</Text>
-
-        <View style={styles.actionRow}>
+      {/* Sleek Frosted Glass Quick Access Bar */}
+      <View style={styles.quickBarRow}>
+        {onOpenDigitalLibraries && (
           <TouchableOpacity 
-            style={styles.playAnthemBtn}
-            onPress={() => featuredTrack && onPlayTrack && onPlayTrack(featuredTrack)}
+            style={styles.quickBarBtn} 
+            onPress={onOpenDigitalLibraries}
+            activeOpacity={0.8}
           >
-            <Ionicons name="play" size={18} color="#08090C" />
-            <Text style={styles.playAnthemText}>Play Devotional Anthem</Text>
+            <Ionicons name="library-outline" size={15} color="#34D399" />
+            <Text style={styles.quickBarText}>Libraries</Text>
           </TouchableOpacity>
+        )}
 
-          {onOpenDigitalLibraries && (
-            <TouchableOpacity 
-              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}
-              onPress={onOpenDigitalLibraries}
-            >
-              <Ionicons name="library-outline" size={16} color="#34D399" />
-              <Text style={[styles.playAnthemText, { color: '#34D399' }]}>Libraries</Text>
-            </TouchableOpacity>
-          )}
+        {onOpenStats && (
+          <TouchableOpacity 
+            style={styles.quickBarBtn} 
+            onPress={onOpenStats}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="stats-chart-outline" size={15} color="#34D399" />
+            <Text style={styles.quickBarText}>My Devotion</Text>
+          </TouchableOpacity>
+        )}
 
-          {onOpenStats && (
-            <TouchableOpacity 
-              style={[styles.playAnthemBtn, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}
-              onPress={onOpenStats}
-            >
-              <Ionicons name="stats-chart" size={16} color="#34D399" />
-              <Text style={[styles.playAnthemText, { color: '#34D399' }]}>My Stats</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        {onOpenAi && (
+          <TouchableOpacity 
+            style={styles.quickBarBtn} 
+            onPress={onOpenAi}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="sparkles-outline" size={15} color="#34D399" />
+            <Text style={styles.quickBarText}>AI Discovery</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Recommended For You Based on Favorite Artists */}
@@ -273,110 +245,34 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08090C'
+    backgroundColor: 'transparent'
   },
   content: {
     padding: 16,
     paddingBottom: 40
   },
-  heroCard: {
-    backgroundColor: '#121318',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.22)',
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  verseBadge: {
+  quickBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4
+    gap: 10,
+    marginBottom: 20
   },
-  verseBadgeText: {
-    color: '#34D399',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.8
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#16171E',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    gap: 4
-  },
-  streakBadgeText: {
-    color: '#34D399',
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  verseQuote: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontStyle: 'italic',
-    lineHeight: 26,
-    marginBottom: 8,
-    fontWeight: '600'
-  },
-  verseRef: {
-    color: '#34D399',
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8
-  },
-  verseReflection: {
-    color: '#9CA3AF',
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 16
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10
-  },
-  playAnthemBtn: {
+  quickBarBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#34D399',
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6
-  },
-  playAnthemText: {
-    color: '#08090C',
-    fontWeight: '800',
-    fontSize: 13
-  },
-  aiPromptBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#16171E',
+    backgroundColor: 'rgba(18, 19, 24, 0.72)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    gap: 4
+    paddingVertical: 10,
+    borderRadius: 14,
+    gap: 6
   },
-  aiPromptText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 12
+  quickBarText: {
+    color: '#E5E7EB',
+    fontSize: 12,
+    fontWeight: '700'
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -399,9 +295,9 @@ const styles = StyleSheet.create({
   moodPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#161822',
+    backgroundColor: 'rgba(26, 28, 35, 0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -409,7 +305,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   activeMoodPill: {
-    backgroundColor: '#1E202C',
+    backgroundColor: 'rgba(52, 211, 153, 0.18)',
     borderColor: '#34D399'
   },
   moodIcon: {
@@ -431,15 +327,15 @@ const styles = StyleSheet.create({
   },
   trackCard: {
     width: '48%',
-    backgroundColor: '#121318',
+    backgroundColor: 'rgba(18, 19, 24, 0.72)',
     borderRadius: 14,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   activeTrackCard: {
     borderColor: '#34D399',
-    backgroundColor: 'rgba(52, 211, 153, 0.06)'
+    backgroundColor: 'rgba(52, 211, 153, 0.12)'
   },
   cardCoverWrap: {
     width: '100%',
@@ -504,11 +400,11 @@ const styles = StyleSheet.create({
   recentItemCard: {
     width: 110,
     marginRight: 12,
-    backgroundColor: '#121318',
+    backgroundColor: 'rgba(18, 19, 24, 0.72)',
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   recentCover: {
     width: '100%',
@@ -530,12 +426,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#121318',
+    backgroundColor: 'rgba(18, 19, 24, 0.75)',
     borderRadius: 14,
     padding: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   searchYtCardLeft: {
     flexDirection: 'row',
@@ -624,12 +520,12 @@ const styles = StyleSheet.create({
   artistRecCard: {
     width: 104,
     marginRight: 12,
-    backgroundColor: '#121318',
+    backgroundColor: 'rgba(18, 19, 24, 0.72)',
     borderRadius: 14,
     padding: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   artistRecAvatar: {
     width: 48,

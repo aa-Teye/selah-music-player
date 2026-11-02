@@ -119,9 +119,9 @@ export default function MiniPlayerBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#13151D',
+    backgroundColor: 'rgba(18, 19, 24, 0.88)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(52, 211, 153, 0.18)',
+    borderTopColor: 'rgba(52, 211, 153, 0.25)',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },

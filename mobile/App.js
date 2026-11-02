@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView, Image } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
@@ -644,6 +644,16 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#08090C" />
 
+        {/* Studio Iridescent Liquid Glass Sphere Background */}
+        <View style={styles.bgWrapper} pointerEvents="none">
+          <Image
+            source={require('./assets/glass_sphere_bg.jpg')}
+            style={styles.bgSphereImage}
+            resizeMode="cover"
+          />
+          <View style={styles.bgDarkOverlay} />
+        </View>
+
       {/* Top Header */}
       <TopHeader
         streakDays={streakData.streakDays || 14}
@@ -1043,6 +1053,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#08090C'
+  },
+  bgWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    backgroundColor: '#08090C'
+  },
+  bgSphereImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.36
+  },
+  bgDarkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 9, 12, 0.40)'
   },
   mainContent: {
     flex: 1
