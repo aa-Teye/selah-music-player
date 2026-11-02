@@ -346,6 +346,8 @@ export default function App() {
     }
   };
 
+  const handleTogglePlayPause = handleTogglePlay;
+
   // Interactive Audio Seeking (Scrubber)
   const handleSeek = (targetSeconds) => {
     setCurrentPosition(targetSeconds);
@@ -729,7 +731,7 @@ export default function App() {
             isPlaying={isPlaying}
             searchQuery={searchQuery}
             onPlayTrack={handlePlayTrack}
-            onTogglePlayPause={handleTogglePlayPause}
+            onTogglePlayPause={handleTogglePlay}
             onAddYouTubeTrack={handleAddYouTubeTrack}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             isShuffle={isShuffle}
