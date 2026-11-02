@@ -123,7 +123,7 @@ export default function AddToPlaylistModal({
                     </View>
 
                     <View style={[styles.checkbox, isInPlaylist && styles.checkboxActive]}>
-                      {isInPlaylist && <Ionicons name="checkmark" size={16} color="#0A0D14" />}
+                      {isInPlaylist && <Ionicons name="checkmark" size={16} color="#0C0D11" />}
                     </View>
                   </TouchableOpacity>
                 );

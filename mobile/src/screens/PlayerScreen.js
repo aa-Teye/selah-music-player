@@ -208,7 +208,7 @@ export default function PlayerScreen({
                 <Ionicons
                   name={cat.icon}
                   size={14}
-                  color={isActive ? '#0A0D14' : '#9CA3AF'}
+                  color={isActive ? '#0C0D11' : '#9CA3AF'}
                   style={{ marginRight: 6 }}
                 />
                 <Text style={[styles.categoryText, isActive && styles.activeCategoryText]}>

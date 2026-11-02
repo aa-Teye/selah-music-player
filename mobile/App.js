@@ -939,7 +939,7 @@ export default function App() {
         animationType="slide"
         onRequestClose={() => setIsEqVisible(false)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0D14' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0C0D11' }}>
           <EqualizerScreen
             onClose={() => setIsEqVisible(false)}
             sleepTimerRemaining={sleepTimerRemaining}
@@ -992,7 +992,7 @@ export default function App() {
                     onPress={() => Linking.openURL(lib.url).catch(() => Alert.alert("Notice", "Could not open browser."))}
                   >
                     <Text style={styles.libOpenText}>Open</Text>
-                    <Ionicons name="open-outline" size={14} color="#0A0D14" />
+                    <Ionicons name="open-outline" size={14} color="#0C0D11" />
                   </TouchableOpacity>
                 </View>
               ))}

@@ -117,7 +117,7 @@ export default function PrayerBookmarksModal({
               />
 
               <TouchableOpacity style={styles.savePinBtn} onPress={handleSavePin}>
-                <Ionicons name="bookmark" size={16} color="#0A0D14" />
+                <Ionicons name="bookmark" size={16} color="#0C0D11" />
                 <Text style={styles.savePinBtnText}>Save Prayer Moment</Text>
               </TouchableOpacity>
             </View>
@@ -167,7 +167,7 @@ export default function PrayerBookmarksModal({
                 >
                   <View style={styles.bmHeader}>
                     <View style={styles.bmTimePill}>
-                      <Ionicons name="play" size={10} color="#0A0D14" />
+                      <Ionicons name="play" size={10} color="#0C0D11" />
                       <Text style={styles.bmTimeText}>{formatTime(bm.timestamp)}</Text>
                     </View>
                     <Text style={styles.bmTrackTitle} numberOfLines={1}>

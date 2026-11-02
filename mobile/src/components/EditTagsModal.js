@@ -158,7 +158,7 @@ export default function EditTagsModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Ionicons name="checkmark" size={16} color="#0A0D14" />
+              <Ionicons name="checkmark" size={16} color="#0C0D11" />
               <Text style={styles.saveText}>Save Tags</Text>
             </TouchableOpacity>
           </View>

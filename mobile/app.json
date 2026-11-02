@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Selah Player",
+    "name": "Selah",
     "slug": "selah-music-player",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#0A0D14",
+    "backgroundColor": "#0C0D11",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0D14"
+      "backgroundColor": "#0C0D11"
     },
     "ios": {
       "supportsTablet": true,
@@ -26,7 +26,7 @@
       "package": "com.selah.musicplayer",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#0A0D14",
+        "backgroundColor": "#0C0D11",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": [

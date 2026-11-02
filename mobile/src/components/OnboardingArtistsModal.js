@@ -87,7 +87,7 @@ export default function OnboardingArtistsModal({
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 8 }}>
               <View style={styles.logoBadge}>
-                <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0A0D14" />
+                <MaterialCommunityIcons name="music-clef-treble" size={26} color="#0C0D11" />
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <TouchableOpacity 
@@ -96,7 +96,7 @@ export default function OnboardingArtistsModal({
                   activeOpacity={0.8}
                 >
                   <Text style={styles.headerDoneText}>Done</Text>
-                  <Ionicons name="checkmark" size={14} color="#0A0D14" />
+                  <Ionicons name="checkmark" size={14} color="#0C0D11" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={handleFinish}

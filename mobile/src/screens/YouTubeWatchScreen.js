@@ -337,7 +337,7 @@ export default function YouTubeWatchScreen({
               <Ionicons 
                 name="videocam" 
                 size={14} 
-                color={playMode === 'video' ? '#0A0D14' : '#9CA3AF'} 
+                color={playMode === 'video' ? '#0C0D11' : '#9CA3AF'} 
               />
               <Text style={[styles.modeTabText, playMode === 'video' && styles.modeTabTextActive]}>
                 Video Mode
@@ -352,7 +352,7 @@ export default function YouTubeWatchScreen({
               <Ionicons 
                 name="musical-notes" 
                 size={14} 
-                color={playMode === 'mp3' ? '#0A0D14' : '#9CA3AF'} 
+                color={playMode === 'mp3' ? '#0C0D11' : '#9CA3AF'} 
               />
               <Text style={[styles.modeTabText, playMode === 'mp3' && styles.modeTabTextActive]}>
                 Play as MP3
