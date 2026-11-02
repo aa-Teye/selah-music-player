@@ -13,7 +13,7 @@ export default function TopHeader({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.logoRow}>
-          <Text style={styles.brandTitle}>SELAH</Text>
+          <Text style={styles.brandTitle}>Selah</Text>
         </View>
 
         <View style={styles.actionsRow}>
@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   brandTitle: {
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#E0B86C',
-    letterSpacing: 2
+    letterSpacing: 0.5
   },
   actionsRow: {
     flexDirection: 'row',

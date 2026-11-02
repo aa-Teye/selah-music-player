@@ -106,7 +106,7 @@ export default function OnboardingArtistsModal({
                 </TouchableOpacity>
               </View>
             </View>
-            <Text style={styles.title}>Welcome to Selah Player</Text>
+            <Text style={styles.title}>Welcome to Selah</Text>
             <Text style={styles.subtitle}>
               Personalize your daily atmosphere. Select your favorite worship leaders and spiritual vibes.
             </Text>

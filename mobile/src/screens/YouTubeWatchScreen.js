@@ -243,7 +243,7 @@ export default function YouTubeWatchScreen({
   const handleShareVideo = (item) => {
     if (!item?.youtubeId) return;
     Share.share({
-      message: `Listen to "${item.title}" on Selah Player: https://www.youtube.com/watch?v=${item.youtubeId}`
+      message: `Listen to "${item.title}" on Selah: https://www.youtube.com/watch?v=${item.youtubeId}`
     });
   };
 
