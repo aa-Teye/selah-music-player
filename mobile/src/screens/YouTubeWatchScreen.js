@@ -110,6 +110,25 @@ export default function YouTubeWatchScreen({
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [repeatMode, setRepeatMode] = useState(isRepeat ? 'all' : 'off'); // 'off' | 'all' | 'one'
+  const [selectedYtVideo, setSelectedYtVideo] = useState(
+    currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
+      ? currentTrack 
+      : DEFAULT_FEATURED[0]
+  );
+  const [isYtPlaying, setIsYtPlaying] = useState(false);
+
+  // Synchronize when currentTrack prop updates to a YouTube track
+  useEffect(() => {
+    if (currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId) {
+      setSelectedYtVideo(currentTrack);
+      setIsYtPlaying(isPlaying);
+    }
+  }, [currentTrack]);
+
+  // Synchronize when parent isPlaying prop changes
+  useEffect(() => {
+    setIsYtPlaying(isPlaying);
+  }, [isPlaying]);
 
   const scrollRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -201,6 +220,8 @@ export default function YouTubeWatchScreen({
 
   // Play a YouTube item and shift it to the TOP player
   const handleSelectVideo = (item) => {
+    setSelectedYtVideo(item);
+    setIsYtPlaying(true);
     if (onAddYouTubeTrack) {
       onAddYouTubeTrack(item);
     }
@@ -295,26 +316,68 @@ export default function YouTubeWatchScreen({
         playerRef.current.seekTo(0, true);
       }
     } catch (_) {}
-    const cur = displayVideos.find(v => (v.youtubeId || v.id) === currentYtId) || currentTrack;
-    if (cur && onPlayTrack) {
-      onPlayTrack(cur);
+    setIsYtPlaying(true);
+    if (onTogglePlayPause) {
+      onTogglePlayPause(true);
+    }
+  };
+
+  // Direct toggle play/pause for master button
+  const handleTogglePlayBtn = () => {
+    setIsYtPlaying((prev) => {
+      const next = !prev;
+      if (onTogglePlayPause) {
+        onTogglePlayPause(next);
+      }
+      return next;
+    });
+  };
+
+  // Callback when YouTube player state changes inside the iframe
+  const handlePlayerStateChange = (state) => {
+    if (state === 'playing') {
+      setIsYtPlaying(true);
+      if (onTogglePlayPause && !isPlaying) {
+        onTogglePlayPause(true);
+      }
+    } else if (state === 'paused') {
+      setIsYtPlaying(false);
+      if (onTogglePlayPause && isPlaying) {
+        onTogglePlayPause(false);
+      }
+    } else if (state === 'ended') {
+      setIsYtPlaying(false);
+      if (onTogglePlayPause && isPlaying) {
+        onTogglePlayPause(false);
+      }
+      if (repeatMode === 'one') {
+        handleReplayCurrent();
+      } else if (isShuffle) {
+        handlePlayRandomVideo();
+      } else if (repeatMode === 'all') {
+        const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+        if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+          handleSelectVideo(displayVideos[curIdx + 1]);
+        } else if (displayVideos.length > 0) {
+          handleSelectVideo(displayVideos[0]);
+        }
+      } else {
+        const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+        if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+          handleSelectVideo(displayVideos[curIdx + 1]);
+        }
+      }
     }
   };
 
   // Determine current active YouTube ID
-  const currentYtId = currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
-    ? currentTrack.youtubeId 
-    : (DEFAULT_FEATURED[0]?.youtubeId || '9sE5kEnitqE');
+  const currentYtId = selectedYtVideo?.youtubeId || (DEFAULT_FEATURED[0]?.youtubeId || '9sE5kEnitqE');
 
   // Video list to display: search results if searched, otherwise default featured
   const displayVideos = hasSearched ? searchResults : DEFAULT_FEATURED;
 
-  const activeVideoTitle = currentTrack?.sourceType === 'youtube' 
-    ? currentTrack.title 
-    : "Gratitude (Live) - Brandon Lake";
-  const activeVideoArtist = currentTrack?.sourceType === 'youtube' 
-    ? currentTrack.artist 
-    : "Brandon Lake";
+  const activeVideoTitle = selectedYtVideo?.title || DEFAULT_FEATURED[0].title;
+  const activeVideoArtist = selectedYtVideo?.artist || DEFAULT_FEATURED[0].artist;
 
   return (
     <ScrollView 
@@ -368,40 +431,14 @@ export default function YouTubeWatchScreen({
 
         {/* ── Single Persistent YouTube Player Container ── */}
         <View style={styles.playerContainer}>
-          {/* Main YouTube Iframe Player (always kept mounted so audio stream is never interrupted when toggling modes) */}
-          <View 
-            style={
-              playMode === 'video' 
-                ? styles.videoPlayerCard 
-                : styles.hiddenVideoCard
-            }
-          >
+          {/* Main YouTube Iframe Player (always kept mounted with full 16:9 dimensions so audio stream is never paused by OS) */}
+          <View style={styles.videoPlayerCard}>
             <YoutubePlayer
               ref={playerRef}
-              height={playMode === 'video' ? (width - 32) * (9 / 16) : 1}
-              play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
+              height={(width - 32) * (9 / 16)}
+              play={isYtPlaying}
               videoId={currentYtId}
-              onChangeState={(state) => {
-                if (state === 'ended') {
-                  if (repeatMode === 'one') {
-                    handleReplayCurrent();
-                  } else if (isShuffle) {
-                    handlePlayRandomVideo();
-                  } else if (repeatMode === 'all') {
-                    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
-                    if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
-                      handleSelectVideo(displayVideos[curIdx + 1]);
-                    } else if (displayVideos.length > 0) {
-                      handleSelectVideo(displayVideos[0]);
-                    }
-                  } else {
-                    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
-                    if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
-                      handleSelectVideo(displayVideos[curIdx + 1]);
-                    }
-                  }
-                }
-              }}
+              onChangeState={handlePlayerStateChange}
               webViewProps={{
                 allowsFullscreenVideo: true,
                 androidLayerType: 'hardware',
@@ -412,10 +449,10 @@ export default function YouTubeWatchScreen({
 
           {/* MP3 Audio Stream Visualizer (displayed in Play as MP3 mode without interrupting playback) */}
           {playMode === 'mp3' && (
-            <View style={styles.mp3PlayerCard}>
+            <View style={styles.mp3PlayerOverlay}>
               <View style={styles.mp3DiscWrap}>
                 <Image 
-                  source={{ uri: currentTrack?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
+                  source={{ uri: selectedYtVideo?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
                   style={styles.mp3DiscImage}
                 />
                 <View style={styles.mp3CenterSpindle} />
@@ -500,14 +537,14 @@ export default function YouTubeWatchScreen({
           {/* Master Play/Pause */}
           <TouchableOpacity 
             style={styles.ctrlPlayBtn}
-            onPress={() => onTogglePlayPause && onTogglePlayPause()}
+            onPress={handleTogglePlayBtn}
             activeOpacity={0.8}
           >
             <Ionicons 
-              name={isPlaying ? "pause" : "play"} 
+              name={isYtPlaying ? "pause" : "play"} 
               size={22} 
               color="#0C0D11" 
-              style={!isPlaying ? { marginLeft: 2 } : null}
+              style={!isYtPlaying ? { marginLeft: 2 } : null}
             />
           </TouchableOpacity>
 
@@ -814,6 +851,21 @@ const styles = StyleSheet.create({
     height: 1,
     opacity: 0.01,
     overflow: 'hidden'
+  },
+  mp3PlayerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#14161E',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 184, 108, 0.22)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    zIndex: 10
   },
   mp3PlayerCard: {
     height: (width - 32) * (9 / 16),

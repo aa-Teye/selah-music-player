@@ -328,19 +328,19 @@ export default function App() {
   }, [currentPosition, tracks, currentTrack, handlePlayTrack]);
 
   // Toggle Play / Pause
-  const handleTogglePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-      if (soundRef.current) {
-        try {
-          soundRef.current.pause();
-        } catch (_) {}
-      }
-    } else {
-      setIsPlaying(true);
+  const handleTogglePlay = (explicitState) => {
+    const nextState = typeof explicitState === 'boolean' ? explicitState : !isPlaying;
+    setIsPlaying(nextState);
+    if (nextState) {
       if (soundRef.current) {
         try {
           soundRef.current.play();
+        } catch (_) {}
+      }
+    } else {
+      if (soundRef.current) {
+        try {
+          soundRef.current.pause();
         } catch (_) {}
       }
     }
