@@ -90,8 +90,15 @@ export default function YouTubeWatchScreen({
   isPlaying,
   searchQuery = '',
   onPlayTrack,
+  onTogglePlayPause,
   onAddYouTubeTrack,
-  onOpenAddToPlaylist
+  onOpenAddToPlaylist,
+  isShuffle = false,
+  onToggleShuffle,
+  isRepeat = false,
+  onToggleRepeat,
+  onPrevTrack,
+  onNextTrack
 }) {
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [activeChip, setActiveChip] = useState('curated');
@@ -102,9 +109,41 @@ export default function YouTubeWatchScreen({
   const [isCustomExpanded, setIsCustomExpanded] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
+  const [repeatMode, setRepeatMode] = useState(isRepeat ? 'all' : 'off'); // 'off' | 'all' | 'one'
 
   const scrollRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const playerRef = useRef(null);
+
+  // Sync external repeat prop with local repeat mode
+  useEffect(() => {
+    if (isRepeat && repeatMode === 'off') {
+      setRepeatMode('all');
+    } else if (!isRepeat && repeatMode !== 'off') {
+      setRepeatMode('off');
+    }
+  }, [isRepeat]);
+
+  const cycleRepeatMode = () => {
+    setRepeatMode((prev) => {
+      let next = 'off';
+      if (prev === 'off') next = 'all';
+      else if (prev === 'all') next = 'one';
+      else next = 'off';
+
+      if (onToggleRepeat) {
+        if (next !== 'off' && !isRepeat) onToggleRepeat();
+        else if (next === 'off' && isRepeat) onToggleRepeat();
+      }
+      return next;
+    });
+  };
+
+  const toggleShuffleMode = () => {
+    if (onToggleShuffle) {
+      onToggleShuffle();
+    }
+  };
 
   // Synchronize when global searchQuery prop updates from TopHeader
   useEffect(() => {
@@ -208,6 +247,60 @@ export default function YouTubeWatchScreen({
     });
   };
 
+  // Next video in list
+  const handleNextVideo = (allowWrap = true) => {
+    if (displayVideos.length === 0) return;
+    if (isShuffle) {
+      handlePlayRandomVideo();
+      return;
+    }
+    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+    if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+      handleSelectVideo(displayVideos[curIdx + 1]);
+    } else if (allowWrap && displayVideos.length > 0) {
+      handleSelectVideo(displayVideos[0]);
+    }
+  };
+
+  // Previous video in list
+  const handlePrevVideo = () => {
+    if (displayVideos.length === 0) return;
+    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+    if (curIdx > 0) {
+      handleSelectVideo(displayVideos[curIdx - 1]);
+    } else if (displayVideos.length > 0) {
+      handleSelectVideo(displayVideos[displayVideos.length - 1]);
+    }
+  };
+
+  // Play random video for shuffle mode
+  const handlePlayRandomVideo = () => {
+    if (displayVideos.length === 0) return;
+    if (displayVideos.length === 1) {
+      handleSelectVideo(displayVideos[0]);
+      return;
+    }
+    let randIdx = Math.floor(Math.random() * displayVideos.length);
+    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+    if (randIdx === curIdx) {
+      randIdx = (randIdx + 1) % displayVideos.length;
+    }
+    handleSelectVideo(displayVideos[randIdx]);
+  };
+
+  // Replay current video for single-track loop mode
+  const handleReplayCurrent = () => {
+    try {
+      if (playerRef.current && typeof playerRef.current.seekTo === 'function') {
+        playerRef.current.seekTo(0, true);
+      }
+    } catch (_) {}
+    const cur = displayVideos.find(v => (v.youtubeId || v.id) === currentYtId) || currentTrack;
+    if (cur && onPlayTrack) {
+      onPlayTrack(cur);
+    }
+  };
+
   // Determine current active YouTube ID
   const currentYtId = currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
     ? currentTrack.youtubeId 
@@ -284,16 +377,28 @@ export default function YouTubeWatchScreen({
             }
           >
             <YoutubePlayer
+              ref={playerRef}
               height={playMode === 'video' ? (width - 32) * (9 / 16) : 1}
               play={isPlaying && (currentTrack?.sourceType === 'youtube' || !currentTrack)}
               videoId={currentYtId}
               onChangeState={(state) => {
                 if (state === 'ended') {
-                  const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
-                  if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
-                    handleSelectVideo(displayVideos[curIdx + 1]);
-                  } else if (displayVideos.length > 0) {
-                    handleSelectVideo(displayVideos[0]);
+                  if (repeatMode === 'one') {
+                    handleReplayCurrent();
+                  } else if (isShuffle) {
+                    handlePlayRandomVideo();
+                  } else if (repeatMode === 'all') {
+                    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+                    if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+                      handleSelectVideo(displayVideos[curIdx + 1]);
+                    } else if (displayVideos.length > 0) {
+                      handleSelectVideo(displayVideos[0]);
+                    }
+                  } else {
+                    const curIdx = displayVideos.findIndex(v => (v.youtubeId || v.id) === currentYtId);
+                    if (curIdx !== -1 && curIdx < displayVideos.length - 1) {
+                      handleSelectVideo(displayVideos[curIdx + 1]);
+                    }
                   }
                 }
               }}
@@ -365,6 +470,75 @@ export default function YouTubeWatchScreen({
               <Ionicons name="logo-youtube" size={18} color="#EF4444" />
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Playback Controls Row: Shuffle, Prev, Master Play/Pause, Next, Loop */}
+        <View style={styles.controlsRow}>
+          {/* Shuffle Toggle */}
+          <TouchableOpacity 
+            style={[styles.ctrlBtn, isShuffle && styles.ctrlBtnActive]}
+            onPress={toggleShuffleMode}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name="shuffle" 
+              size={20} 
+              color={isShuffle ? "#E0B86C" : "#9CA3AF"} 
+            />
+            {isShuffle && <View style={styles.ctrlActiveDot} />}
+          </TouchableOpacity>
+
+          {/* Prev Track */}
+          <TouchableOpacity 
+            style={styles.ctrlSkipBtn}
+            onPress={handlePrevVideo}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="play-skip-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Master Play/Pause */}
+          <TouchableOpacity 
+            style={styles.ctrlPlayBtn}
+            onPress={() => onTogglePlayPause && onTogglePlayPause()}
+            activeOpacity={0.8}
+          >
+            <Ionicons 
+              name={isPlaying ? "pause" : "play"} 
+              size={22} 
+              color="#0C0D11" 
+              style={!isPlaying ? { marginLeft: 2 } : null}
+            />
+          </TouchableOpacity>
+
+          {/* Next Track */}
+          <TouchableOpacity 
+            style={styles.ctrlSkipBtn}
+            onPress={() => handleNextVideo(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="play-skip-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {/* Loop/Repeat Mode Toggle */}
+          <TouchableOpacity 
+            style={[styles.ctrlBtn, repeatMode !== 'off' && styles.ctrlBtnActive]}
+            onPress={cycleRepeatMode}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons 
+              name={repeatMode === 'one' ? "repeat-once" : "repeat"} 
+              size={22} 
+              color={repeatMode !== 'off' ? "#E0B86C" : "#9CA3AF"} 
+            />
+            {repeatMode !== 'off' && (
+              <View style={styles.repeatBadge}>
+                <Text style={styles.repeatBadgeText}>
+                  {repeatMode === 'one' ? '1' : 'ALL'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -758,6 +932,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#14161E',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  ctrlBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1C1E28',
+    position: 'relative'
+  },
+  ctrlBtnActive: {
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(224, 184, 108, 0.4)'
+  },
+  ctrlActiveDot: {
+    position: 'absolute',
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0B86C'
+  },
+  ctrlSkipBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  ctrlPlayBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#E0B86C',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#E0B86C',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4
+  },
+  repeatBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#E0B86C',
+    borderRadius: 6,
+    paddingHorizontal: 3,
+    paddingVertical: 1
+  },
+  repeatBadgeText: {
+    color: '#0C0D11',
+    fontSize: 8,
+    fontWeight: '900'
   },
 
   /* Search & Chips */

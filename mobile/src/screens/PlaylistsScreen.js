@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   TextInput,
-  Alert 
+  Alert,
+  Modal
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -25,6 +26,8 @@ export default function PlaylistsScreen({
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
+  const [isAddSongsVisible, setIsAddSongsVisible] = useState(false);
+  const [songSearchQuery, setSongSearchQuery] = useState('');
 
   // Favorite tracks list
   const favoriteTracks = tracks.filter((t) => favorites.includes(t.id));
@@ -36,6 +39,16 @@ export default function PlaylistsScreen({
   const selectedPlaylistTracks = selectedPlaylist
     ? tracks.filter((t) => (selectedPlaylist.trackIds || []).includes(t.id))
     : [];
+
+  // Tracks available for adding
+  const filteredAvailableTracks = tracks.filter((t) => {
+    if (!songSearchQuery.trim()) return true;
+    const q = songSearchQuery.toLowerCase();
+    return (
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.artist && t.artist.toLowerCase().includes(q))
+    );
+  });
 
   // Create playlist
   const handleCreate = () => {
@@ -118,17 +131,28 @@ export default function PlaylistsScreen({
           </TouchableOpacity>
         </View>
 
-        {/* Play All Button */}
-        {selectedPlaylistTracks.length > 0 && (
+        {/* Actions Row */}
+        <View style={styles.detailActionRow}>
+          {selectedPlaylistTracks.length > 0 && (
+            <TouchableOpacity 
+              style={styles.playAllBtn}
+              onPress={() => handlePlayAll(selectedPlaylistTracks)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play" size={18} color="#0C0D11" />
+              <Text style={styles.playAllBtnText}>Play All Songs</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity 
-            style={styles.playAllBtn}
-            onPress={() => handlePlayAll(selectedPlaylistTracks)}
+            style={[styles.addSongsPillBtn, selectedPlaylistTracks.length === 0 && styles.addSongsPillBtnFull]}
+            onPress={() => setIsAddSongsVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="play" size={18} color="#0C0D11" />
-            <Text style={styles.playAllBtnText}>Play All Songs</Text>
+            <Ionicons name="add" size={18} color="#E0B86C" />
+            <Text style={styles.addSongsPillBtnText}>Add Songs</Text>
           </TouchableOpacity>
-        )}
+        </View>
 
         {/* Songs in this playlist */}
         <View style={styles.tracksSection}>
@@ -175,11 +199,106 @@ export default function PlaylistsScreen({
               <Ionicons name="musical-notes-outline" size={40} color="#4B5563" />
               <Text style={styles.emptyDetailTitle}>This playlist is empty</Text>
               <Text style={styles.emptyDetailSub}>
-                Tap the "+ Add to Playlist" button on any track in your Local Library or Home screen to add songs here.
+                Add songs from your device library, imported music, or curated devotions.
               </Text>
+              <TouchableOpacity 
+                style={styles.emptyAddBtn}
+                onPress={() => setIsAddSongsVisible(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add" size={18} color="#0C0D11" />
+                <Text style={styles.emptyAddBtnText}>Select Songs to Add</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
+
+        {/* Add Songs Multi-Select Modal */}
+        <Modal
+          visible={isAddSongsVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setIsAddSongsVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>Add Songs to Playlist</Text>
+                  <Text style={styles.modalSub}>{selectedPlaylist.name} • {selectedPlaylistTracks.length} song{selectedPlaylistTracks.length === 1 ? '' : 's'} included</Text>
+                </View>
+                <TouchableOpacity onPress={() => setIsAddSongsVisible(false)} style={styles.modalCloseBtn}>
+                  <Ionicons name="close" size={22} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Search Bar inside Modal */}
+              <View style={styles.modalSearchBox}>
+                <Ionicons name="search" size={16} color="#9CA3AF" />
+                <TextInput
+                  placeholder="Filter songs by title or artist..."
+                  placeholderTextColor="#6B7280"
+                  value={songSearchQuery}
+                  onChangeText={setSongSearchQuery}
+                  style={styles.modalSearchInput}
+                />
+                {songSearchQuery ? (
+                  <TouchableOpacity onPress={() => setSongSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Songs List */}
+              <ScrollView style={styles.modalSongsList}>
+                {filteredAvailableTracks.length > 0 ? (
+                  filteredAvailableTracks.map((item) => {
+                    const isIn = (selectedPlaylist.trackIds || []).includes(item.id);
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[styles.modalSongRow, isIn && styles.modalSongRowActive]}
+                        onPress={() => onToggleTrackInPlaylist && onToggleTrackInPlaylist(selectedPlaylist.id, item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.modalSongIcon, isIn && styles.modalSongIconActive]}>
+                          <Ionicons 
+                            name={isIn ? "musical-notes" : "musical-note-outline"} 
+                            size={18} 
+                            color={isIn ? "#E0B86C" : "#9CA3AF"} 
+                          />
+                        </View>
+                        <View style={styles.modalSongInfo}>
+                          <Text style={[styles.modalSongTitle, isIn && styles.modalSongTitleActive]} numberOfLines={1}>
+                            {item.title}
+                          </Text>
+                          <Text style={styles.modalSongArtist} numberOfLines={1}>
+                            {item.artist || 'Device Track'}
+                          </Text>
+                        </View>
+                        <View style={[styles.modalCheckbox, isIn && styles.modalCheckboxActive]}>
+                          {isIn && <Ionicons name="checkmark" size={16} color="#0C0D11" />}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <View style={{ padding: 20, alignItems: 'center' }}>
+                    <Text style={{ color: '#9CA3AF', fontSize: 13 }}>No songs matching search.</Text>
+                  </View>
+                )}
+              </ScrollView>
+
+              <TouchableOpacity 
+                style={styles.modalDoneBtn}
+                onPress={() => setIsAddSongsVisible(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalDoneBtnText}>Done ({selectedPlaylistTracks.length} Songs in Playlist)</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     );
   }
@@ -658,20 +777,46 @@ const styles = StyleSheet.create({
   detailDeleteBtn: {
     padding: 8
   },
+  detailActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20
+  },
   playAllBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#E0B86C',
     paddingVertical: 12,
     borderRadius: 12,
-    marginBottom: 20,
     gap: 8
   },
   playAllBtnText: {
     color: '#0C0D11',
     fontWeight: '800',
     fontSize: 14
+  },
+  addSongsPillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1C1E28',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 184, 108, 0.4)',
+    gap: 6
+  },
+  addSongsPillBtnFull: {
+    flex: 1
+  },
+  addSongsPillBtnText: {
+    color: '#E0B86C',
+    fontWeight: '700',
+    fontSize: 13
   },
   tracksSection: {
     gap: 8
@@ -745,5 +890,141 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18
+  },
+  emptyAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E0B86C',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    gap: 6,
+    marginTop: 14
+  },
+  emptyAddBtnText: {
+    color: '#0C0D11',
+    fontWeight: '800',
+    fontSize: 13
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'flex-end'
+  },
+  modalContent: {
+    backgroundColor: '#14161E',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '82%',
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF'
+  },
+  modalSub: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2
+  },
+  modalCloseBtn: {
+    padding: 4
+  },
+  modalSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1C1E28',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    marginBottom: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
+  },
+  modalSearchInput: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 13
+  },
+  modalSongsList: {
+    maxHeight: 320,
+    marginBottom: 14
+  },
+  modalSongRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#181A23',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    gap: 10
+  },
+  modalSongRowActive: {
+    borderColor: 'rgba(224, 184, 108, 0.4)',
+    backgroundColor: 'rgba(224, 184, 108, 0.06)'
+  },
+  modalSongIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#1C1E28',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalSongIconActive: {
+    backgroundColor: '#1E202C'
+  },
+  modalSongInfo: {
+    flex: 1
+  },
+  modalSongTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF'
+  },
+  modalSongTitleActive: {
+    color: '#E0B86C'
+  },
+  modalSongArtist: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2
+  },
+  modalCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#6B7280',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalCheckboxActive: {
+    backgroundColor: '#E0B86C',
+    borderColor: '#E0B86C'
+  },
+  modalDoneBtn: {
+    backgroundColor: '#E0B86C',
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 6
+  },
+  modalDoneBtnText: {
+    color: '#0C0D11',
+    fontWeight: '800',
+    fontSize: 14
   }
 });

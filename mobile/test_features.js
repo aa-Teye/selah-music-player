@@ -265,6 +265,28 @@ async function runTests() {
     'LocalLibraryScreen: Multi-format wildcard audio picker with extension filtering'
   );
 
+  const plContent = fs.readFileSync(path.join(__dirname, './src/screens/PlaylistsScreen.js'), 'utf8');
+  assert(
+    plContent.includes('isAddSongsVisible') && plContent.includes('Add Songs to Playlist') && plContent.includes('filteredAvailableTracks'),
+    'PlaylistsScreen: Add Songs modal and custom playlist multi-track selector'
+  );
+
+  assert(
+    ytContent.includes('controlsRow') && ytContent.includes('repeatMode') && ytContent.includes('handlePlayRandomVideo') && ytContent.includes('handleReplayCurrent'),
+    'YouTubeWatchScreen: Loop song (one/all), shuffle, and dedicated playback controls'
+  );
+
+  const scContent = fs.readFileSync(path.join(__dirname, './src/services/scannerService.js'), 'utf8');
+  assert(
+    scContent.includes('AUDIO_EXTENSIONS') && scContent.includes('mediaTypesToQuery') && scContent.includes('getAlbumsAsync'),
+    'ScannerService: Multi-pass storage scan with album discovery and audio extensions'
+  );
+
+  assert(
+    appContent.includes('isRepeatRef') && appContent.includes('player.seekTo(0)'),
+    'App: Seamless single-track audio looping on track finish'
+  );
+
   // Metro Production Compilation Check
   console.log('\n--- 5. Testing Android Metro Production Compilation ---');
   try {

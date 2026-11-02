@@ -74,6 +74,16 @@ export default function App() {
   const playbackTimer = useRef(null);
   const sleepTimerRef = useRef(null);
   const handleNextTrackRef = useRef(null);
+  const isRepeatRef = useRef(isRepeat);
+  const isShuffleRef = useRef(isShuffle);
+
+  useEffect(() => {
+    isRepeatRef.current = isRepeat;
+  }, [isRepeat]);
+
+  useEffect(() => {
+    isShuffleRef.current = isShuffle;
+  }, [isShuffle]);
 
   // Initialize native audio & Load persistent state
   useEffect(() => {
@@ -259,7 +269,16 @@ export default function App() {
             setCurrentPosition(Math.floor(status.currentTime));
           }
           if (status.didJustFinish) {
-            handleNextTrackRef.current?.();
+            if (isRepeatRef.current) {
+              try {
+                player.seekTo(0);
+                player.play();
+              } catch (_) {
+                handleNextTrackRef.current?.();
+              }
+            } else {
+              handleNextTrackRef.current?.();
+            }
           }
         });
         statusSubRef.current = sub;
@@ -273,7 +292,7 @@ export default function App() {
   const handleNextTrack = useCallback(() => {
     if (tracks.length === 0) return;
 
-    if (isShuffle) {
+    if (isShuffleRef.current || isShuffle) {
       const randIdx = Math.floor(Math.random() * tracks.length);
       handlePlayTrack(tracks[randIdx]);
       return;
@@ -710,8 +729,15 @@ export default function App() {
             isPlaying={isPlaying}
             searchQuery={searchQuery}
             onPlayTrack={handlePlayTrack}
+            onTogglePlayPause={handleTogglePlayPause}
             onAddYouTubeTrack={handleAddYouTubeTrack}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
+            isShuffle={isShuffle}
+            onToggleShuffle={() => setIsShuffle((prev) => !prev)}
+            isRepeat={isRepeat}
+            onToggleRepeat={() => setIsRepeat((prev) => !prev)}
+            onPrevTrack={handlePrevTrack}
+            onNextTrack={handleNextTrack}
           />
         </View>
 
