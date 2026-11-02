@@ -20,7 +20,7 @@ export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
     <View style={styles.container}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
-        const color = isActive ? '#F5B74F' : '#7E8799';
+        const color = isActive ? '#E0B86C' : '#757C8E';
 
         return (
           <TouchableOpacity
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: 64,
-    backgroundColor: '#0B0E16',
+    backgroundColor: '#101117',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.06)',
     alignItems: 'center',
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
   activeDot: {
     position: 'absolute',
     bottom: 4,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#F5B74F',
-    shadowColor: '#E5A93C',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0B86C',
+    shadowColor: '#E0B86C',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 5,
-    elevation: 4
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 3
   }
 });

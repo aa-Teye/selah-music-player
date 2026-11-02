@@ -168,7 +168,7 @@ export default function PlayerScreen({
           <Ionicons
             name={isCurrent && isPlaying ? 'pause' : 'play'}
             size={14}
-            color={isCurrent ? '#0A0D14' : '#E5A93C'}
+            color={isCurrent ? '#0C0D11' : '#E0B86C'}
           />
         </View>
 
@@ -254,7 +254,7 @@ export default function PlayerScreen({
               <Ionicons
                 name={isPlaying ? 'pause-circle' : 'play-circle'}
                 size={38}
-                color="#E5A93C"
+                color="#E0B86C"
               />
             </View>
           </TouchableOpacity>
@@ -393,7 +393,7 @@ export default function PlayerScreen({
             {playlists.map((pl) => (
               <View key={pl.id} style={styles.playlistRow}>
                 <View style={styles.playlistIcon}>
-                  <Ionicons name="musical-notes" size={20} color="#E5A93C" />
+                  <Ionicons name="musical-notes" size={20} color="#E0B86C" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.playlistName}>{pl.name}</Text>
@@ -420,7 +420,7 @@ export default function PlayerScreen({
                 style={styles.folderRow}
                 onPress={() => fld.tracks[0] && onPlayTrack(fld.tracks[0])}
               >
-                <Ionicons name="folder-outline" size={24} color="#E5A93C" style={{ marginRight: 12 }} />
+                <Ionicons name="folder-outline" size={24} color="#E0B86C" style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.folderName}>{fld.name}</Text>
                   <Text style={styles.folderCount}>{fld.count} audio tracks</Text>
@@ -463,12 +463,12 @@ export default function PlayerScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F'
+    backgroundColor: '#0C0D11'
   },
   categoryBarWrap: {
-    backgroundColor: '#0B0E16',
+    backgroundColor: '#101117',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.07)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     paddingVertical: 10
   },
   categoryScroll: {
@@ -478,24 +478,24 @@ const styles = StyleSheet.create({
   categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#161822',
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   activeCategoryPill: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#1E202C',
+    borderColor: '#E0B86C'
   },
   categoryText: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 12,
     fontWeight: '700'
   },
   activeCategoryText: {
-    color: '#080A0F',
+    color: '#E0B86C',
     fontWeight: '800'
   },
   scrollBody: {
@@ -508,15 +508,15 @@ const styles = StyleSheet.create({
   nowPlayingHero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 16,
     padding: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.25)',
-    shadowColor: '#E5A93C',
+    borderColor: 'rgba(224, 184, 108, 0.22)',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 8
   },
   heroCover: {
@@ -547,17 +547,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5
   },
   heroTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800'
   },
   heroArtist: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     marginTop: 1
   },
   heroHint: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 10,
     marginTop: 3
   },
@@ -574,12 +574,12 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   sectionTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800'
   },
   sectionCount: {
-    color: '#A0A6B5',
+    color: '#6B7280',
     fontSize: 12
   },
   recentCard: {
@@ -591,52 +591,52 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 12,
     marginBottom: 6,
-    backgroundColor: '#151B28'
+    backgroundColor: '#161822'
   },
   recentCardTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700'
   },
   recentCardArtist: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 10,
     marginTop: 1
   },
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   activeTrackRow: {
-    borderColor: '#E5A93C',
-    backgroundColor: 'rgba(229, 169, 60, 0.08)'
+    borderColor: '#E0B86C',
+    backgroundColor: 'rgba(224, 184, 108, 0.06)'
   },
   trackThumb: {
     width: 44,
     height: 44,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#151B28'
+    backgroundColor: '#161822'
   },
   trackInfo: {
     flex: 1
   },
   trackTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700'
   },
   activeTrackText: {
-    color: '#E5A93C'
+    color: '#E0B86C'
   },
   trackArtist: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2
   },
@@ -647,13 +647,15 @@ const styles = StyleSheet.create({
     borderRadius: 6
   },
   playIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#1C1E28',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 6
+    marginLeft: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   moreBtn: {
     padding: 6,
@@ -666,102 +668,106 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: (width - 44) / 2,
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   gridCover: {
     width: '100%',
     height: 120,
     borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#151B28'
+    backgroundColor: '#161822'
   },
   gridTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700'
   },
   gridSub: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2
   },
   artistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   artistAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     marginRight: 12,
-    backgroundColor: '#151B28'
+    backgroundColor: '#1C1E28',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   artistName: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700'
   },
   artistSub: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2
   },
   playlistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   playlistIcon: {
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: '#1C1E28',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   playlistName: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700'
   },
   playlistCount: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2
   },
   folderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   folderName: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700'
   },
   folderCount: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2
   }

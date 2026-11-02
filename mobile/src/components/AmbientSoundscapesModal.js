@@ -30,7 +30,7 @@ export default function AmbientSoundscapesModal({
       name: 'Holy Cathedral Pad',
       desc: 'Warm, meditative synthesizer drone',
       icon: 'church',
-      color: '#E5A93C'
+      color: '#E0B86C'
     },
     {
       id: 'river',
@@ -62,7 +62,7 @@ export default function AmbientSoundscapesModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="weather-night" size={24} color="#E5A93C" />
+              <MaterialCommunityIcons name="weather-night" size={24} color="#E0B86C" />
               <View>
                 <Text style={styles.title}>Bedtime Ambient Soundscapes</Text>
                 <Text style={styles.subtitle}>Peaceful background layers for prayer & sleep</Text>
@@ -107,7 +107,7 @@ export default function AmbientSoundscapesModal({
           {activeSoundscape && (
             <View style={styles.volumeCard}>
               <View style={styles.volumeHeader}>
-                <Ionicons name="volume-medium" size={16} color="#E5A93C" />
+                <Ionicons name="volume-medium" size={16} color="#E0B86C" />
                 <Text style={styles.volumeTitle}>Ambient Blend Level</Text>
                 <Text style={styles.volumePercent}>{Math.round(ambientVolume * 100)}%</Text>
               </View>
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800'
   },
@@ -189,16 +189,16 @@ const styles = StyleSheet.create({
   soundCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171D2C',
+    backgroundColor: '#1C1E28',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 12
   },
   activeSoundCard: {
-    borderColor: '#E5A93C',
-    backgroundColor: 'rgba(229, 169, 60, 0.1)'
+    borderColor: '#E0B86C',
+    backgroundColor: '#14161E'
   },
   soundIconWrap: {
     width: 44,
@@ -211,12 +211,12 @@ const styles = StyleSheet.create({
     flex: 1
   },
   soundName: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700'
   },
   activeSoundName: {
-    color: '#E5A93C'
+    color: '#E0B86C'
   },
   soundDesc: {
     color: '#9CA3AF',
@@ -233,16 +233,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   activeRadioCircle: {
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#E0B86C'
   },
   volumeCard: {
-    backgroundColor: '#171D2C',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 12,
     marginBottom: 14
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   volumePercent: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -272,14 +272,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 7,
     borderRadius: 8,
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   activeVolPill: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#E0B86C',
+    borderColor: '#E0B86C'
   },
   volPillText: {
     color: '#9CA3AF',
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activeVolPillText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontWeight: '800'
   },
   footerNote: {

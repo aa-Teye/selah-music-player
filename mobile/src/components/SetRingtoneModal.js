@@ -71,8 +71,8 @@ export default function SetRingtoneModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="phone-incoming" size={22} color="#E5A93C" />
-              <Text style={styles.title}>Set Caller Tune &amp; Ringtone</Text>
+              <MaterialCommunityIcons name="phone-incoming" size={22} color="#E0B86C" />
+              <Text style={styles.title}>Set Caller Tune & Ringtone</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color="#9CA3AF" />
@@ -81,7 +81,7 @@ export default function SetRingtoneModal({
 
           {/* Track Preview Box */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#E5A93C" />
+            <Ionicons name="musical-note" size={20} color="#E0B86C" />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Audio'}</Text>
@@ -99,7 +99,7 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="call" size={22} color="#E5A93C" />
+                <Ionicons name="call" size={22} color="#E0B86C" />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Phone Caller Ringtone</Text>
@@ -115,10 +115,10 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="notifications" size={22} color="#E5A93C" />
+                <Ionicons name="notifications" size={22} color="#E0B86C" />
               </View>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>Message &amp; Notification Tone</Text>
+                <Text style={styles.optionTitle}>Message & Notification Tone</Text>
                 <Text style={styles.optionDesc}>Alert sound for SMS and app notifications</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
@@ -131,7 +131,7 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="alarm" size={22} color="#E5A93C" />
+                <Ionicons name="alarm" size={22} color="#E0B86C" />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Morning Devotion Alarm</Text>
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121824',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#F9FAFB'
+    color: '#FFFFFF'
   },
   closeBtn: {
     padding: 4
@@ -187,18 +187,18 @@ const styles = StyleSheet.create({
   trackCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A2234',
+    backgroundColor: '#1C1E28',
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#E5A93C'
+    borderLeftColor: '#E0B86C'
   },
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F3F4F6'
+    color: '#FFFFFF'
   },
   trackArtist: {
     fontSize: 12,
@@ -217,18 +217,20 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A2234',
+    backgroundColor: '#1C1E28',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#263147',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 12
   },
   optionIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: '#14161E',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F9FAFB'
+    color: '#FFFFFF'
   },
   optionDesc: {
     fontSize: 11,
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#1A2234'
+    backgroundColor: '#1C1E28'
   },
   cancelBtnText: {
     color: '#9CA3AF',

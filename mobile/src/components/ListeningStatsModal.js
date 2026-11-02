@@ -31,7 +31,7 @@ export default function ListeningStatsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Ionicons name="stats-chart" size={22} color="#E5A93C" />
+              <Ionicons name="stats-chart" size={22} color="#E0B86C" />
               <Text style={styles.title}>My Worship Journey</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -59,7 +59,7 @@ export default function ListeningStatsModal({
               {/* Total Worship Minutes */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="time" size={24} color="#E5A93C" />
+                  <Ionicons name="time" size={24} color="#E0B86C" />
                   <Text style={styles.badge}>TIME</Text>
                 </View>
                 <Text style={styles.statNumber}>
@@ -91,7 +91,7 @@ export default function ListeningStatsModal({
 
             {/* Motivational Scripture Card */}
             <View style={styles.scriptureCard}>
-              <MaterialCommunityIcons name="book-open-page-variant" size={22} color="#E5A93C" />
+              <MaterialCommunityIcons name="book-open-page-variant" size={22} color="#E0B86C" />
               <Text style={styles.scriptureVerse}>
                 "I will sing to the Lord as long as I live; I will sing praise to my God while I have being."
               </Text>
@@ -124,13 +124,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '85%',
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   header: {
     flexDirection: 'row',
@@ -164,11 +164,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#171E2E',
+    backgroundColor: '#1C1E28',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   cardIconRow: {
     flexDirection: 'row',
@@ -197,11 +197,11 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   scriptureCard: {
-    backgroundColor: 'rgba(229, 169, 60, 0.08)',
+    backgroundColor: '#1C1E28',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.2)',
+    borderColor: 'rgba(224, 184, 108, 0.25)',
     marginBottom: 14,
     gap: 8
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     lineHeight: 22
   },
   scriptureRef: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     fontWeight: '700',
     textAlign: 'right'
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#1E2638',
+    backgroundColor: '#14161E',
     padding: 14,
     borderRadius: 14,
     marginBottom: 20
@@ -234,13 +234,13 @@ const styles = StyleSheet.create({
     fontWeight: '500'
   },
   doneBtn: {
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center'
   },
   doneBtnText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 15,
     fontWeight: '800'
   }

@@ -78,7 +78,7 @@ export default function EqualizerScreen({
       {/* Bedtime Sleep Timer Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color="#E5A93C" />
+          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color="#E0B86C" />
           <Text style={styles.cardTitle}>Bedtime Sleep Timer</Text>
           {sleepTimerRemaining ? (
             <View style={styles.timerBadge}>
@@ -111,7 +111,7 @@ export default function EqualizerScreen({
       {/* Bedtime Ambient Soundscapes Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="weather-night" size={20} color="#E5A93C" />
+          <MaterialCommunityIcons name="weather-night" size={20} color="#E0B86C" />
           <Text style={styles.cardTitle}>Bedtime Ambient Soundscapes</Text>
           {activeSoundscape && (
             <View style={styles.timerBadge}>
@@ -130,7 +130,7 @@ export default function EqualizerScreen({
           onPress={onOpenAmbientSoundscapes}
           activeOpacity={0.8}
         >
-          <MaterialCommunityIcons name="music-note-plus" size={16} color="#0A0D14" />
+          <MaterialCommunityIcons name="music-note-plus" size={16} color="#0C0D11" />
           <Text style={styles.actionCardBtnText}>
             {activeSoundscape ? "Change / Tune Soundscape" : "Choose Ambient Soundscape"}
           </Text>
@@ -140,7 +140,7 @@ export default function EqualizerScreen({
       {/* Audio Crossfade Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="swap-horizontal" size={20} color="#E5A93C" />
+          <Ionicons name="swap-horizontal" size={20} color="#E0B86C" />
           <Text style={styles.cardTitle}>Seamless Audio Crossfade</Text>
           {crossfadeSeconds > 0 && (
             <View style={styles.timerBadge}>
@@ -171,7 +171,7 @@ export default function EqualizerScreen({
       {/* Audio Playback Speed Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="speedometer-outline" size={20} color="#E5A93C" />
+          <Ionicons name="speedometer-outline" size={20} color="#E0B86C" />
           <Text style={styles.cardTitle}>Playback Speed</Text>
         </View>
         <Text style={styles.cardSub}>Great for audiobooks, sermons, and acoustic study</Text>
@@ -197,7 +197,7 @@ export default function EqualizerScreen({
       {/* 5-Band Equalizer */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="options-outline" size={20} color="#E5A93C" />
+          <Ionicons name="options-outline" size={20} color="#E0B86C" />
           <Text style={styles.cardTitle}>5-Band Graphic Equalizer</Text>
         </View>
         <Text style={styles.cardSub}>Tailored audio profiles for worship and headphones</Text>
@@ -271,7 +271,7 @@ export default function EqualizerScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0D14'
+    backgroundColor: '#0C0D11'
   },
   content: {
     padding: 16,
@@ -285,13 +285,13 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 6,
-    backgroundColor: '#171D2C',
+    backgroundColor: '#1C1E28',
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   title: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '800'
   },
@@ -302,12 +302,12 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   settingCard: {
-    backgroundColor: '#121824',
+    backgroundColor: '#14161E',
     borderRadius: 18,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#1F2937'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   cardHeader: {
     flexDirection: 'row',
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#F9FAFB',
+    color: '#FFFFFF',
     flex: 1
   },
   cardSub: {
@@ -327,15 +327,15 @@ const styles = StyleSheet.create({
     marginBottom: 14
   },
   timerBadge: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   timerBadgeText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -348,13 +348,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#1A2333',
+    backgroundColor: '#1C1E28',
     borderWidth: 1,
-    borderColor: '#263346'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   miniPillActive: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#E0B86C',
+    borderColor: '#E0B86C'
   },
   miniPillText: {
     color: '#9CA3AF',
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   miniPillTextActive: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontWeight: '800'
   },
   presetsRow: {
@@ -372,16 +372,16 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   presetBtn: {
-    backgroundColor: '#1A2333',
+    backgroundColor: '#1C1E28',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#263346'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   activePresetBtn: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#E0B86C',
+    borderColor: '#E0B86C'
   },
   presetText: {
     color: '#9CA3AF',
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activePresetText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontWeight: '800'
   },
   bandsGrid: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   gainText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 11,
     fontWeight: '700'
   },
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   sliderFill: {
     width: '100%',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     borderRadius: 3
   },
   sliderThumb: {
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#FFF'
+    backgroundColor: '#FFFFFF'
   },
   freqText: {
     color: '#F3F4F6',
@@ -438,13 +438,13 @@ const styles = StyleSheet.create({
     fontSize: 9
   },
   complianceCard: {
-    backgroundColor: '#121824',
+    backgroundColor: '#14161E',
     borderRadius: 18,
     padding: 16,
     borderLeftWidth: 3,
     borderLeftColor: '#10B981',
     borderWidth: 1,
-    borderColor: '#1F2937'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   complianceHeader: {
     flexDirection: 'row',
@@ -474,13 +474,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 10,
     borderRadius: 12,
     marginTop: 6
   },
   actionCardBtnText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 13,
     fontWeight: '800'
   }

@@ -77,7 +77,7 @@ export default function EditTagsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="tag-text-outline" size={22} color="#E5A93C" />
+              <MaterialCommunityIcons name="tag-text-outline" size={22} color="#E0B86C" />
               <View>
                 <Text style={styles.title}>Edit Audio Tags</Text>
                 <Text style={styles.subtitle}>Clean metadata on your device</Text>
@@ -97,7 +97,7 @@ export default function EditTagsModal({
             <View style={styles.artworkActions}>
               <Text style={styles.artworkLabel}>Cover Artwork</Text>
               <TouchableOpacity style={styles.refreshArtBtn} onPress={handleRefreshArtwork}>
-                <Ionicons name="image" size={14} color="#0A0D14" />
+                <Ionicons name="image" size={14} color="#0C0D11" />
                 <Text style={styles.refreshArtText}>Auto Match Art</Text>
               </TouchableOpacity>
             </View>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800'
   },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: '#171D2C',
+    backgroundColor: '#1C1E28',
     padding: 12,
     borderRadius: 14,
     marginBottom: 16
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 10,
-    backgroundColor: '#1F2937'
+    backgroundColor: '#14161E'
   },
   artworkActions: {
     flex: 1
@@ -233,14 +233,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     alignSelf: 'flex-start'
   },
   refreshArtText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 11,
     fontWeight: '800'
   },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase'
   },
   input: {
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 8,
@@ -279,8 +279,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   activeGenrePill: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#E0B86C',
+    borderColor: '#E0B86C'
   },
   genreText: {
     color: '#9CA3AF',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activeGenreText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontWeight: '800'
   },
   actionRow: {
@@ -310,13 +310,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 10
   },
   saveText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 13,
     fontWeight: '800'
   }

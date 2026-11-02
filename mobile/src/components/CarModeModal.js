@@ -34,8 +34,8 @@ export default function CarModeModal({
         {/* Top Header */}
         <View style={styles.topBar}>
           <View style={styles.modeBadge}>
-            <MaterialCommunityIcons name="car" size={20} color="#E5A93C" />
-            <Text style={styles.modeText}>CAR &amp; STAGE MODE</Text>
+            <MaterialCommunityIcons name="car" size={20} color="#E0B86C" />
+            <Text style={styles.modeText}>CAR & STAGE MODE</Text>
           </View>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
@@ -75,7 +75,7 @@ export default function CarModeModal({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={64} 
-              color="#000000" 
+              color="#0C0D11" 
             />
           </TouchableOpacity>
 
@@ -98,12 +98,12 @@ export default function CarModeModal({
             <Ionicons 
               name={isFavorite ? "heart" : "heart-outline"} 
               size={36} 
-              color={isFavorite ? "#E5A93C" : "#9CA3AF"} 
+              color={isFavorite ? "#E0B86C" : "#9CA3AF"} 
             />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.exitPill} onPress={onClose}>
-            <Ionicons name="arrow-back" size={20} color="#000000" />
+            <Ionicons name="arrow-back" size={20} color="#0C0D11" />
             <Text style={styles.exitPillText}>Exit Car Mode</Text>
           </TouchableOpacity>
         </View>
@@ -130,13 +130,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(229, 169, 60, 0.2)',
+    backgroundColor: 'rgba(224, 184, 108, 0.15)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20
   },
   modeText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 1
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   artist: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#E5A93C',
+    color: '#E0B86C',
     textAlign: 'center',
     marginBottom: 6
   },
@@ -191,10 +191,10 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#E5A93C',
+    shadowColor: '#E0B86C',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 16,
@@ -214,13 +214,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 30
   },
   exitPillText: {
-    color: '#000000',
+    color: '#0C0D11',
     fontSize: 16,
     fontWeight: '800'
   }

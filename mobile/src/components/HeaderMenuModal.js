@@ -34,7 +34,7 @@ export default function HeaderMenuModal({
               {/* Header Profile Brand */}
               <View style={styles.drawerHeader}>
                 <View style={styles.profileAvatar}>
-                  <Ionicons name="person" size={20} color="#E5A93C" />
+                  <Ionicons name="person" size={20} color="#E0B86C" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.profileName}>Selah Player</Text>
@@ -58,8 +58,8 @@ export default function HeaderMenuModal({
                   if (onOpenEq) onOpenEq();
                 }}
               >
-                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(229, 169, 60, 0.15)' }]}>
-                  <Ionicons name="options" size={20} color="#E5A93C" />
+                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(224, 184, 108, 0.15)' }]}>
+                  <Ionicons name="options" size={20} color="#E0B86C" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Sound Equalizer &amp; Presets</Text>
@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
   menuDrawer: {
     width: Math.min(width * 0.82, 340),
     height: '100%',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(229, 169, 60, 0.2)',
+    borderLeftColor: 'rgba(224, 184, 108, 0.2)',
     paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 30
@@ -141,15 +141,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: '#1C1E28',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)'
+    borderColor: 'rgba(224, 184, 108, 0.3)'
   },
   profileName: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800'
   },
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#1C1E28',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   menuIconWrap: {
     width: 38,

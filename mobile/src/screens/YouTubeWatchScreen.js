@@ -318,7 +318,7 @@ export default function YouTubeWatchScreen({
 
               <View style={styles.mp3Info}>
                 <View style={styles.mp3Badge}>
-                  <Ionicons name="radio" size={13} color="#E5A93C" />
+                  <Ionicons name="radio" size={13} color="#E0B86C" />
                   <Text style={styles.mp3BadgeText}>STREAMING AS MP3 AUDIO</Text>
                 </View>
                 <Text style={styles.mp3Title} numberOfLines={1}>{activeVideoTitle}</Text>
@@ -345,7 +345,7 @@ export default function YouTubeWatchScreen({
                 onPress={() => onOpenAddToPlaylist(currentTrack || DEFAULT_FEATURED[0])}
                 title="Add to Playlist"
               >
-                <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+                <Ionicons name="bookmark-outline" size={18} color="#E0B86C" />
               </TouchableOpacity>
             )}
 
@@ -392,7 +392,7 @@ export default function YouTubeWatchScreen({
             style={styles.searchInput}
           />
           {isSearching ? (
-            <ActivityIndicator size="small" color="#E5A93C" style={{ marginRight: 6 }} />
+            <ActivityIndicator size="small" color="#E0B86C" style={{ marginRight: 6 }} />
           ) : localSearch ? (
             <TouchableOpacity onPress={handleClearSearch} style={styles.clearBtn}>
               <Ionicons name="close-circle" size={18} color="#9CA3AF" />
@@ -403,7 +403,7 @@ export default function YouTubeWatchScreen({
             onPress={handleSearchSubmit}
             disabled={isSearching}
           >
-            <Ionicons name="arrow-forward" size={16} color="#0A0D14" />
+            <Ionicons name="arrow-forward" size={16} color="#0C0D11" />
           </TouchableOpacity>
         </View>
 
@@ -438,7 +438,7 @@ export default function YouTubeWatchScreen({
 
         {isSearching && displayVideos.length === 0 ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#E5A93C" />
+            <ActivityIndicator size="large" color="#E0B86C" />
             <Text style={styles.loadingText}>Searching YouTube live...</Text>
           </View>
         ) : displayVideos.length === 0 ? (
@@ -469,7 +469,7 @@ export default function YouTubeWatchScreen({
                     </View>
                     {isSelected && isPlaying && (
                       <View style={styles.playingOverlay}>
-                        <Ionicons name="volume-high" size={20} color="#E5A93C" />
+                        <Ionicons name="volume-high" size={20} color="#E0B86C" />
                       </View>
                     )}
                   </View>
@@ -495,7 +495,7 @@ export default function YouTubeWatchScreen({
                     <Ionicons 
                       name={isSelected && isPlaying ? "pause-circle" : "play-circle"} 
                       size={28} 
-                      color={isSelected ? "#E5A93C" : "#6B7280"} 
+                      color={isSelected ? "#E0B86C" : "#6B7280"} 
                     />
                   </View>
                 </TouchableOpacity>
@@ -513,7 +513,7 @@ export default function YouTubeWatchScreen({
           activeOpacity={0.8}
         >
           <View style={styles.customHeaderLeft}>
-            <Ionicons name="link-outline" size={18} color="#E5A93C" />
+            <Ionicons name="link-outline" size={18} color="#E0B86C" />
             <Text style={styles.customHeaderText}>Paste Direct YouTube Link or ID</Text>
           </View>
           <Ionicons 
@@ -546,7 +546,7 @@ export default function YouTubeWatchScreen({
               onPress={handleLoadCustom}
               disabled={!inputUrl.trim()}
             >
-              <Ionicons name="play" size={16} color="#0A0D14" />
+              <Ionicons name="play" size={16} color="#0C0D11" />
               <Text style={styles.loadBtnText}>Load &amp; Play at Top</Text>
             </TouchableOpacity>
           </View>
@@ -559,7 +559,7 @@ export default function YouTubeWatchScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F'
+    backgroundColor: '#0C0D11'
   },
   content: {
     paddingBottom: 120
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
 
   /* Hero Player */
   heroPlayerSection: {
-    backgroundColor: '#0F1420',
+    backgroundColor: '#101117',
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 14,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   },
   modeTabs: {
     flexDirection: 'row',
-    backgroundColor: '#151B28',
+    backgroundColor: '#161822',
     borderRadius: 16,
     padding: 3,
     borderWidth: 1,
@@ -597,15 +597,15 @@ const styles = StyleSheet.create({
     gap: 4
   },
   modeTabActive: {
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#E0B86C'
   },
   modeTabText: {
     fontSize: 11,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontWeight: '700'
   },
   modeTabTextActive: {
-    color: '#0A0D14'
+    color: '#0C0D11'
   },
   complianceBadge: {
     flexDirection: 'row',
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
   },
   complianceText: {
     fontSize: 10,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontWeight: '600'
   },
   playerContainer: {
@@ -626,9 +626,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000000',
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.25)',
-    shadowColor: '#E5A93C',
-    shadowOpacity: 0.15,
+    borderColor: 'rgba(224, 184, 108, 0.22)',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 8
   },
@@ -643,10 +643,10 @@ const styles = StyleSheet.create({
   },
   mp3PlayerCard: {
     height: (width - 32) * (9 / 16),
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.28)',
+    borderColor: 'rgba(224, 184, 108, 0.22)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -666,13 +666,13 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#080A0F',
+    backgroundColor: '#0C0D11',
     borderWidth: 2,
-    borderColor: '#E5A93C',
+    borderColor: '#E0B86C',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    shadowColor: '#E5A93C',
+    shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6
@@ -687,9 +687,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#080A0F',
+    backgroundColor: '#0C0D11',
     borderWidth: 2,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   mp3Info: {
     flex: 1
@@ -702,19 +702,19 @@ const styles = StyleSheet.create({
   },
   mp3BadgeText: {
     fontSize: 9,
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '800',
     letterSpacing: 0.8
   },
   mp3Title: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     marginBottom: 4
   },
   mp3Artist: {
     fontSize: 13,
-    color: '#A0A6B5'
+    color: '#9CA3AF'
   },
   playingBar: {
     flexDirection: 'row',
@@ -738,11 +738,11 @@ const styles = StyleSheet.create({
   playingTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FBFBFC'
+    color: '#FFFFFF'
   },
   playingArtist: {
     fontSize: 12,
-    color: '#A0A6B5'
+    color: '#9CA3AF'
   },
   playingActions: {
     flexDirection: 'row',
@@ -753,11 +753,11 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#151B28',
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
 
   /* Search & Chips */
@@ -769,10 +769,10 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#14161E',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     paddingHorizontal: 12,
     height: 44
   },
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 13,
     height: '100%'
   },
@@ -792,7 +792,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 6
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   chip: {
-    backgroundColor: '#151B28',
+    backgroundColor: '#161822',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -810,16 +810,16 @@ const styles = StyleSheet.create({
     marginRight: 8
   },
   chipActive: {
-    backgroundColor: '#E5A93C',
-    borderColor: '#E5A93C'
+    backgroundColor: '#1E202C',
+    borderColor: '#E0B86C'
   },
   chipText: {
     fontSize: 12,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontWeight: '600'
   },
   chipTextActive: {
-    color: '#0A0D14',
+    color: '#E0B86C',
     fontWeight: '800'
   },
 
@@ -837,12 +837,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     letterSpacing: 0.3
   },
   sectionSubtitle: {
     fontSize: 11,
-    color: '#687182'
+    color: '#6B7280'
   },
   loadingBox: {
     alignItems: 'center',
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 10
   },
   emptyBox: {
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   },
   emptySub: {
     fontSize: 12,
-    color: '#687182',
+    color: '#6B7280',
     marginTop: 4
   },
   videoList: {
@@ -874,15 +874,15 @@ const styles = StyleSheet.create({
   videoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 14,
     padding: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   videoCardSelected: {
-    borderColor: '#E5A93C',
-    backgroundColor: 'rgba(229, 169, 60, 0.08)'
+    borderColor: '#E0B86C',
+    backgroundColor: 'rgba(224, 184, 108, 0.06)'
   },
   thumbWrapper: {
     width: 90,
@@ -923,15 +923,15 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     lineHeight: 17
   },
   videoTitleSelected: {
-    color: '#E5A93C'
+    color: '#E0B86C'
   },
   videoArtist: {
     fontSize: 11,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 3
   },
   nowPlayingTag: {
@@ -960,7 +960,7 @@ const styles = StyleSheet.create({
   customSection: {
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
   customHeaderText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#D1D5DB'
+    color: '#FFFFFF'
   },
   customBody: {
     padding: 14,
@@ -988,17 +988,17 @@ const styles = StyleSheet.create({
     gap: 10
   },
   customInput: {
-    backgroundColor: '#161D2B',
+    backgroundColor: '#181A23',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 13,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   loadBtn: {
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   loadBtnText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 13,
     fontWeight: '800'
   },

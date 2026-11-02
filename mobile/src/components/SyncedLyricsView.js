@@ -120,11 +120,11 @@ export default function SyncedLyricsView({
       {/* Header controls for lyrics */}
       <View style={styles.headerBar}>
         <View style={styles.badgeWrap}>
-          <MaterialCommunityIcons name="microphone-variant" size={14} color="#E5A93C" />
+          <MaterialCommunityIcons name="microphone-variant" size={14} color="#E0B86C" />
           <Text style={styles.badgeText}>REAL-TIME SYNCED LYRICS</Text>
         </View>
         <TouchableOpacity style={styles.editBtn} onPress={handleOpenEdit}>
-          <Ionicons name="pencil" size={13} color="#E5A93C" />
+          <Ionicons name="pencil" size={13} color="#E0B86C" />
           <Text style={styles.editBtnText}>Edit Lyrics</Text>
         </TouchableOpacity>
       </View>
@@ -246,13 +246,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12
   },
   badgeText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8
   },
   editBtnText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     fontWeight: '700'
   },
@@ -286,9 +286,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   activeLineBox: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: '#1C1E28',
     borderLeftWidth: 4,
-    borderLeftColor: '#E5A93C'
+    borderLeftColor: '#E0B86C'
   },
   lineText: {
     fontSize: 16,
@@ -300,14 +300,14 @@ const styles = StyleSheet.create({
   activeLineText: {
     fontSize: 19,
     lineHeight: 28,
-    color: '#FCD34D',
+    color: '#F0CA82',
     fontWeight: '800'
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     marginLeft: 8
   },
   emptyWrap: {
@@ -321,15 +321,15 @@ const styles = StyleSheet.create({
     fontSize: 14
   },
   addLyricsBtn: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   addLyricsBtnText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '700',
     fontSize: 13
   },
@@ -339,13 +339,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '80%',
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -364,13 +364,13 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   textInput: {
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     color: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     height: 180,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     fontSize: 14,
     lineHeight: 20
   },
@@ -391,13 +391,13 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   saveModalBtn: {
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12
   },
   saveModalText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 14,
     fontWeight: '800'
   }

@@ -38,7 +38,7 @@ export default function PlaybackQueueView({
       {/* Queue Header */}
       <View style={styles.headerBar}>
         <View style={styles.titleGroup}>
-          <MaterialCommunityIcons name="playlist-play" size={20} color="#E5A93C" />
+          <MaterialCommunityIcons name="playlist-play" size={20} color="#E0B86C" />
           <Text style={styles.headerTitle}>Playback Queue</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{queue.length} Tracks</Text>
@@ -87,7 +87,7 @@ export default function PlaybackQueueView({
                     <Ionicons 
                       name={isPlaying ? "volume-high" : "pause"} 
                       size={16} 
-                      color="#E5A93C" 
+                      color="#E0B86C" 
                     />
                   ) : (
                     <Text style={styles.indexText}>{idx + 1}</Text>
@@ -158,10 +158,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#121824',
+    backgroundColor: '#14161E',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   titleGroup: {
     flexDirection: 'row',
@@ -174,13 +174,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   countBadge: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10
   },
   countBadgeText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 11,
     fontWeight: '700'
   },
@@ -226,18 +226,18 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 10
   },
   activeTrackRow: {
-    borderColor: '#E5A93C',
-    backgroundColor: 'rgba(229, 169, 60, 0.1)'
+    borderColor: '#E0B86C',
+    backgroundColor: '#1C1E28'
   },
   indexCol: {
     width: 24,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#1F2937'
+    backgroundColor: '#1C1E28'
   },
   trackDetails: {
     flex: 1
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   activeTrackTitle: {
-    color: '#E5A93C'
+    color: '#E0B86C'
   },
   artistRow: {
     flexDirection: 'row',

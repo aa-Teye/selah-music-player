@@ -224,17 +224,17 @@ export default function LocalLibraryScreen({
             disabled={isScanning}
           >
             {isScanning ? (
-              <ActivityIndicator size="small" color="#E5A93C" />
+              <ActivityIndicator size="small" color="#E0B86C" />
             ) : (
               <>
-                <Ionicons name="refresh" size={16} color="#E5A93C" />
+                <Ionicons name="refresh" size={16} color="#E0B86C" />
                 <Text style={styles.scanBtnText}>Auto-Scan</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.importBtn} onPress={handlePickAudio}>
-            <Ionicons name="add" size={16} color="#0A0D14" />
+            <Ionicons name="add" size={16} color="#0C0D11" />
             <Text style={styles.importBtnText}>Import</Text>
           </TouchableOpacity>
         </View>
@@ -244,7 +244,7 @@ export default function LocalLibraryScreen({
       {localTracks.length === 0 && (
         <View style={styles.emptyCard}>
           <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name="folder-music" size={32} color="#E5A93C" />
+            <MaterialCommunityIcons name="folder-music" size={32} color="#E0B86C" />
           </View>
           <Text style={styles.emptyTitle}>No Local Songs Found Yet</Text>
           <Text style={styles.emptySub}>
@@ -257,17 +257,17 @@ export default function LocalLibraryScreen({
             disabled={isScanning}
           >
             {isScanning ? (
-              <ActivityIndicator color="#0A0D14" />
+              <ActivityIndicator color="#0C0D11" />
             ) : (
               <>
-                <Ionicons name="scan" size={18} color="#0A0D14" />
+                <Ionicons name="scan" size={18} color="#0C0D11" />
                 <Text style={styles.heroScanBtnText}>Auto-Scan All Device Songs</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.heroImportBtn} onPress={handlePickAudio}>
-            <Ionicons name="folder-open-outline" size={16} color="#E5A93C" />
+            <Ionicons name="folder-open-outline" size={16} color="#E0B86C" />
             <Text style={styles.heroImportBtnText}>Pick from Files</Text>
           </TouchableOpacity>
         </View>
@@ -339,7 +339,7 @@ export default function LocalLibraryScreen({
                       <Ionicons 
                         name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
                         size={20} 
-                        color={isCurrent ? "#E5A93C" : "#9CA3AF"} 
+                        color={isCurrent ? "#E0B86C" : "#9CA3AF"} 
                       />
                     </View>
 
@@ -382,7 +382,7 @@ export default function LocalLibraryScreen({
                           style={styles.actionIconBtn}
                           onPress={() => onOpenAddToPlaylist(item)}
                         >
-                          <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+                          <Ionicons name="bookmark-outline" size={18} color="#E0B86C" />
                         </TouchableOpacity>
                       )}
 
@@ -410,12 +410,12 @@ export default function LocalLibraryScreen({
                     style={styles.folderBackBtn} 
                     onPress={() => setSelectedFolder(null)}
                   >
-                    <Ionicons name="arrow-back" size={18} color="#E5A93C" />
+                    <Ionicons name="arrow-back" size={18} color="#E0B86C" />
                     <Text style={styles.folderBackText}>All Folders</Text>
                   </TouchableOpacity>
 
                   <View style={styles.folderHeaderCard}>
-                    <Ionicons name="folder-open" size={28} color="#E5A93C" />
+                    <Ionicons name="folder-open" size={28} color="#E0B86C" />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.folderHeaderTitle}>{selectedFolder}</Text>
                       <Text style={styles.folderHeaderSub}>
@@ -431,7 +431,7 @@ export default function LocalLibraryScreen({
                         }
                       }}
                     >
-                      <Ionicons name="play" size={16} color="#0A0D14" />
+                      <Ionicons name="play" size={16} color="#0C0D11" />
                       <Text style={styles.playFolderText}>Play Folder</Text>
                     </TouchableOpacity>
                   </View>
@@ -450,7 +450,7 @@ export default function LocalLibraryScreen({
                             <Ionicons 
                               name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
                               size={20} 
-                              color={isCurrent ? "#E5A93C" : "#9CA3AF"} 
+                              color={isCurrent ? "#E0B86C" : "#9CA3AF"} 
                             />
                           </View>
                           <View style={styles.songInfo}>
@@ -474,7 +474,7 @@ export default function LocalLibraryScreen({
                             )}
                             {onOpenAddToPlaylist && (
                               <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenAddToPlaylist(item)}>
-                                <Ionicons name="bookmark-outline" size={18} color="#E5A93C" />
+                                <Ionicons name="bookmark-outline" size={18} color="#E0B86C" />
                               </TouchableOpacity>
                             )}
                           </View>
@@ -496,7 +496,7 @@ export default function LocalLibraryScreen({
                         activeOpacity={0.7}
                       >
                         <View style={styles.folderIconBox}>
-                          <Ionicons name="folder" size={26} color="#E5A93C" />
+                          <Ionicons name="folder" size={26} color="#E0B86C" />
                         </View>
                         <View style={styles.folderDetails}>
                           <Text style={styles.folderName} numberOfLines={1}>{folderName}</Text>
@@ -529,7 +529,7 @@ export default function LocalLibraryScreen({
                     style={styles.artistPlayBtn}
                     onPress={() => onPlayTrack(artistsMap[artistName][0])}
                   >
-                    <Ionicons name="play" size={16} color="#E5A93C" />
+                    <Ionicons name="play" size={16} color="#E0B86C" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -544,7 +544,7 @@ export default function LocalLibraryScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F'
+    backgroundColor: '#0C0D11'
   },
   content: {
     padding: 16,
@@ -559,11 +559,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#FBFBFC'
+    color: '#FFFFFF'
   },
   subtitle: {
     fontSize: 12,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 2
   },
   actionBtns: {
@@ -574,63 +574,65 @@ const styles = StyleSheet.create({
   scanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: '#181A23',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5A93C',
+    borderColor: 'rgba(224, 184, 108, 0.3)',
     gap: 5
   },
   btnDisabled: {
     opacity: 0.6
   },
   scanBtnText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '700',
     fontSize: 12
   },
   importBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
     gap: 4
   },
   importBtnText: {
-    color: '#080A0F',
+    color: '#0C0D11',
     fontWeight: '800',
     fontSize: 12
   },
   emptyCard: {
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     marginTop: 10
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 184, 108, 0.25)'
   },
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     marginBottom: 6
   },
   emptySub: {
     fontSize: 13,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20
@@ -638,7 +640,7 @@ const styles = StyleSheet.create({
   heroScanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -648,7 +650,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   heroScanBtnText: {
-    color: '#080A0F',
+    color: '#0C0D11',
     fontWeight: '800',
     fontSize: 14
   },
@@ -661,35 +663,35 @@ const styles = StyleSheet.create({
     gap: 8,
     width: '100%',
     justifyContent: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#181A23',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   heroImportBtnText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '700',
     fontSize: 13
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 8
   },
   searchInput: {
     flex: 1,
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 13
   },
   subTabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 3,
     marginBottom: 14
@@ -701,15 +703,17 @@ const styles = StyleSheet.create({
     borderRadius: 9
   },
   subTabActive: {
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#1E202C',
+    borderWidth: 1,
+    borderColor: '#E0B86C'
   },
   subTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#A0A6B5'
+    color: '#9CA3AF'
   },
   subTabTextActive: {
-    color: '#080A0F',
+    color: '#E0B86C',
     fontWeight: '800'
   },
   songsList: {
@@ -718,24 +722,26 @@ const styles = StyleSheet.create({
   songCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 12
   },
   songCardActive: {
-    borderColor: 'rgba(229, 169, 60, 0.5)',
-    backgroundColor: 'rgba(229, 169, 60, 0.08)'
+    borderColor: '#E0B86C',
+    backgroundColor: 'rgba(224, 184, 108, 0.06)'
   },
   songIconBox: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#151B28',
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   songInfo: {
     flex: 1
@@ -743,14 +749,14 @@ const styles = StyleSheet.create({
   songTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FBFBFC'
+    color: '#FFFFFF'
   },
   songTitleActive: {
-    color: '#E5A93C'
+    color: '#E0B86C'
   },
   songArtist: {
     fontSize: 12,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 2
   },
   cardActions: {
@@ -770,20 +776,22 @@ const styles = StyleSheet.create({
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 12
   },
   folderIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   },
   folderDetails: {
     flex: 1
@@ -791,11 +799,11 @@ const styles = StyleSheet.create({
   folderName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FBFBFC'
+    color: '#FFFFFF'
   },
   folderCount: {
     fontSize: 12,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 2
   },
   folderBackBtn: {
@@ -805,42 +813,42 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   folderBackText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '700',
     fontSize: 13
   },
   folderHeaderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     marginBottom: 12,
     gap: 12
   },
   folderHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FBFBFC'
+    color: '#FFFFFF'
   },
   folderHeaderSub: {
     fontSize: 12,
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     marginTop: 2
   },
   playFolderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4
   },
   playFolderText: {
-    color: '#080A0F',
+    color: '#0C0D11',
     fontWeight: '700',
     fontSize: 12
   },
@@ -850,25 +858,27 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 12
   },
   artistAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(224, 184, 108, 0.3)'
   },
   artistInitial: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
-    color: '#080A0F'
+    color: '#E0B86C'
   },
   artistDetails: {
     flex: 1
@@ -876,19 +886,21 @@ const styles = StyleSheet.create({
   artistNameText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     marginBottom: 2
   },
   artistCountText: {
     fontSize: 12,
-    color: '#A0A6B5'
+    color: '#9CA3AF'
   },
   artistPlayBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#1C1E28',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)'
   }
 });

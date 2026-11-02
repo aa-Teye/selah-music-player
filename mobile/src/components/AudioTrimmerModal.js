@@ -105,7 +105,7 @@ export default function AudioTrimmerModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="content-cut" size={22} color="#E5A93C" />
+              <MaterialCommunityIcons name="content-cut" size={22} color="#E0B86C" />
               <Text style={styles.title}>Audio Trimmer & Ringtone Cutter</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -115,7 +115,7 @@ export default function AudioTrimmerModal({
 
           {/* Track Name */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#E5A93C" />
+            <Ionicons name="musical-note" size={20} color="#E0B86C" />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Track'}</Text>
@@ -149,7 +149,7 @@ export default function AudioTrimmerModal({
                 <Text style={styles.flagTime}>{formatTime(startTime)}</Text>
               </View>
               <View style={styles.clipDurationBadge}>
-                <Ionicons name="time-outline" size={12} color="#E5A93C" />
+                <Ionicons name="time-outline" size={12} color="#E0B86C" />
                 <Text style={styles.clipDurationText}>{trimDuration}s clip</Text>
               </View>
               <View style={styles.timeFlag}>
@@ -207,7 +207,7 @@ export default function AudioTrimmerModal({
               <Ionicons 
                 name={isPreviewing ? "stop" : "play"} 
                 size={18} 
-                color={isPreviewing ? "#0A0D14" : "#E5A93C"} 
+                color={isPreviewing ? "#0C0D11" : "#E0B86C"} 
               />
               <Text style={[styles.previewBtnText, isPreviewing && styles.previewBtnTextActive]}>
                 {isPreviewing ? "Stop Preview" : "Preview Clip"}
@@ -215,7 +215,7 @@ export default function AudioTrimmerModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.saveCutBtn} onPress={handleSaveCut}>
-              <MaterialCommunityIcons name="content-cut" size={18} color="#0A0D14" />
+              <MaterialCommunityIcons name="content-cut" size={18} color="#0C0D11" />
               <Text style={styles.saveCutText}>Set as Ringtone</Text>
             </TouchableOpacity>
           </View>
@@ -232,12 +232,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   header: {
     flexDirection: 'row',
@@ -283,12 +283,12 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   waveformBox: {
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   waveformRow: {
     flexDirection: 'row',
@@ -302,10 +302,10 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   waveBarActive: {
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#E0B86C'
   },
   waveBarDim: {
-    backgroundColor: '#374151'
+    backgroundColor: '#232634'
   },
   rangeRow: {
     flexDirection: 'row',
@@ -325,21 +325,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5
   },
   flagTime: {
-    color: '#FCD34D',
+    color: '#F0CA82',
     fontSize: 14,
     fontWeight: '800'
   },
   clipDurationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4
   },
   clipDurationText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 11,
     fontWeight: '800'
   },
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   adjustBtn: {
-    backgroundColor: '#1E2638',
+    backgroundColor: '#1C1E28',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10
@@ -367,15 +367,15 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   currentStartBox: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   currentStartText: {
-    color: '#FCD34D',
+    color: '#F0CA82',
     fontSize: 15,
     fontWeight: '800'
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   lengthPill: {
     flex: 1,
-    backgroundColor: '#171E2E',
+    backgroundColor: '#14161E',
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 12,
@@ -394,8 +394,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent'
   },
   lengthPillActive: {
-    backgroundColor: 'rgba(229, 169, 60, 0.2)',
-    borderColor: '#E5A93C'
+    backgroundColor: 'rgba(224, 184, 108, 0.15)',
+    borderColor: '#E0B86C'
   },
   lengthText: {
     color: '#9CA3AF',
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   lengthTextActive: {
-    color: '#FCD34D',
+    color: '#F0CA82',
     fontWeight: '800'
   },
   actionsRow: {
@@ -417,34 +417,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: '#E5A93C',
+    borderColor: '#E0B86C',
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8
   },
   previewBtnActive: {
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#E0B86C'
   },
   previewBtnText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 14,
     fontWeight: '800'
   },
   previewBtnTextActive: {
-    color: '#0A0D14'
+    color: '#0C0D11'
   },
   saveCutBtn: {
     flex: 1.2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8
   },
   saveCutText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 14,
     fontWeight: '800'
   }

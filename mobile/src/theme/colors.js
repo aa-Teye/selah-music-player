@@ -1,46 +1,47 @@
 // ═════════════════════════════════════════════════════════════════════════
-//  SELAH MUSIC PLAYER — ROYAL GOLD & VELVET MIDNIGHT THEME
+//  SELAH MUSIC PLAYER — SLEEK CHAMPAGNE & STUDIO CHARCOAL THEME
+//  (Apple Music / Tidal Studio Aesthetic)
 // ═════════════════════════════════════════════════════════════════════════
 
 export const COLORS = {
-  // Backgrounds: Deep Velvet Midnight
-  bgApp: '#080A0F',
-  bgCard: '#10141E',
-  bgCardElevated: '#151B28',
-  bgCardHover: '#1B2232',
-  bgOverlay: 'rgba(5, 7, 12, 0.94)',
+  // Backgrounds: Deep Studio Charcoal & Pure Obsidian (Zero cheap blue tint)
+  bgApp: '#0C0D11',
+  bgCard: '#14161E',
+  bgCardElevated: '#1C1E28',
+  bgCardHover: '#232634',
+  bgOverlay: 'rgba(10, 11, 15, 0.94)',
 
-  // Accents: Royal Champagne Gold
-  goldPrimary: '#E5A93C',
-  goldRadiant: '#F5B74F',
-  goldSoft: '#FBE09E',
-  goldDark: '#B87F20',
-  goldGlow: 'rgba(229, 169, 60, 0.16)',
-  goldGlowStrong: 'rgba(229, 169, 60, 0.28)',
-  goldBorder: 'rgba(229, 169, 60, 0.22)',
+  // Accents: Sleek Champagne Gold (Refined metallic finish)
+  goldPrimary: '#E0B86C',
+  goldRadiant: '#F0CA82',
+  goldSoft: '#F6DEC0',
+  goldDark: '#9E7836',
+  goldGlow: 'rgba(224, 184, 108, 0.15)',
+  goldGlowStrong: 'rgba(224, 184, 108, 0.25)',
+  goldBorder: 'rgba(224, 184, 108, 0.22)',
 
   // Neutrals & Surfaces
-  borderSubtle: 'rgba(255, 255, 255, 0.07)',
-  borderLight: 'rgba(255, 255, 255, 0.12)',
+  borderSubtle: 'rgba(255, 255, 255, 0.06)',
+  borderLight: 'rgba(255, 255, 255, 0.10)',
 
   // Typography
-  textPrimary: '#FBFBFC',
-  textSecondary: '#A0A6B5',
-  textMuted: '#687182',
-  textGold: '#F5B74F',
-  textDark: '#0A0D14',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  textGold: '#E0B86C',
+  textDark: '#0C0D11',
 
   // Status & Badges
   statusSuccess: '#10B981',
   statusLive: '#EF4444',
-  chipActive: '#E5A93C',
-  chipInactive: '#161D2B',
+  chipActive: '#E0B86C',
+  chipInactive: '#181A23',
 
   // Navigation & Bars
-  navBg: '#0B0E16',
-  navBorder: 'rgba(255, 255, 255, 0.07)',
-  miniPlayerBg: '#0F1420',
-  miniPlayerBorder: 'rgba(229, 169, 60, 0.2)'
+  navBg: '#101117',
+  navBorder: 'rgba(255, 255, 255, 0.06)',
+  miniPlayerBg: '#13151D',
+  miniPlayerBorder: 'rgba(224, 184, 108, 0.18)'
 };
 
 export default COLORS;

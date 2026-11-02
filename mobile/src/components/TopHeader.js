@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-    backgroundColor: '#080A0F',
+    backgroundColor: '#0C0D11',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)'
   },
@@ -77,13 +77,13 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     letterSpacing: 0.8
   },
   goldText: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#E5A93C',
+    color: '#E0B86C',
     letterSpacing: 0.8,
     marginLeft: 4
   },
@@ -95,21 +95,21 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: '#181A23',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.28)',
-    gap: 4
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    gap: 5
   },
   streakText: {
-    color: '#F5B74F',
+    color: '#E0B86C',
     fontWeight: '800',
     fontSize: 13
   },
   streakLabel: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontWeight: '700',
     fontSize: 10,
     letterSpacing: 0.5
@@ -117,26 +117,26 @@ const styles = StyleSheet.create({
   aiButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
+    backgroundColor: '#181A23',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
+    borderColor: 'rgba(224, 184, 108, 0.22)',
     gap: 4
   },
   aiButtonText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '800',
     fontSize: 12
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#14161E',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.07)',
     paddingHorizontal: 12,
     height: 42
   },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 13,
     paddingVertical: 0
   },
@@ -153,11 +153,11 @@ const styles = StyleSheet.create({
     padding: 4
   },
   menuBtn: {
-    padding: 6,
+    padding: 7,
     marginLeft: 4,
-    backgroundColor: '#151B28',
-    borderRadius: 18,
+    backgroundColor: '#14161E',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: 'rgba(255, 255, 255, 0.07)'
   }
 });

@@ -940,7 +940,7 @@ export default function App() {
           <View style={styles.libModalContent}>
             <View style={styles.libModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="library" size={22} color="#E5A93C" />
+                <Ionicons name="library" size={22} color="#E0B86C" />
                 <Text style={styles.libModalTitle}>Digital Libraries</Text>
               </View>
               <TouchableOpacity onPress={() => setIsDigitalLibrariesVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -953,7 +953,7 @@ export default function App() {
               {DIGITAL_LIBRARIES.map((lib) => (
                 <View key={lib.id} style={styles.libCard}>
                   <View style={styles.libIconBox}>
-                    <Ionicons name={lib.icon || 'book'} size={22} color="#E5A93C" />
+                    <Ionicons name={lib.icon || 'book'} size={22} color="#E0B86C" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.libName}>{lib.name}</Text>
@@ -1014,24 +1014,24 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#080A0F'
+    backgroundColor: '#0C0D11'
   },
   mainContent: {
     flex: 1
   },
   libModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 11, 0.85)',
+    backgroundColor: 'rgba(4, 5, 8, 0.82)',
     justifyContent: 'flex-end'
   },
   libModalContent: {
-    backgroundColor: '#10141E',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.25)'
+    borderColor: 'rgba(224, 184, 108, 0.2)'
   },
   libModalHeader: {
     flexDirection: 'row',
@@ -1040,41 +1040,43 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   libModalTitle: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '800'
   },
   libModalSub: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 13,
     lineHeight: 18
   },
   libCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#151B28',
+    backgroundColor: '#1C1E28',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 12
   },
   libIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
+    backgroundColor: '#14161E',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center'
   },
   libName: {
-    color: '#FBFBFC',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700'
   },
   libDesc: {
-    color: '#A0A6B5',
+    color: '#9CA3AF',
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15
@@ -1082,14 +1084,14 @@ const styles = StyleSheet.create({
   libOpenBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
     gap: 4
   },
   libOpenText: {
-    color: '#080A0F',
+    color: '#0C0D11',
     fontWeight: '800',
     fontSize: 12
   }

@@ -75,7 +75,7 @@ export default function PrayerBookmarksModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="book-cross" size={24} color="#E5A93C" />
+              <MaterialCommunityIcons name="book-cross" size={24} color="#E0B86C" />
               <View>
                 <Text style={styles.title}>Prayer & Scripture Pins</Text>
                 <Text style={styles.subtitle}>Devotional Audio Moments</Text>
@@ -91,7 +91,7 @@ export default function PrayerBookmarksModal({
             <View style={styles.newPinCard}>
               <View style={styles.pinTimeHeader}>
                 <View style={styles.timeBadge}>
-                  <Ionicons name="time" size={13} color="#0A0D14" />
+                  <Ionicons name="time" size={13} color="#0C0D11" />
                   <Text style={styles.timeBadgeText}>Pin at {formatTime(currentPosition)}</Text>
                 </View>
                 <Text style={styles.trackLabel} numberOfLines={1}>
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#111622',
+    backgroundColor: '#14161E',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '800'
   },
@@ -242,11 +242,11 @@ const styles = StyleSheet.create({
     padding: 6
   },
   newPinCard: {
-    backgroundColor: '#171D2C',
+    backgroundColor: '#1C1E28',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
+    borderColor: 'rgba(224, 184, 108, 0.25)',
     marginBottom: 14
   },
   pinTimeHeader: {
@@ -259,13 +259,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8
   },
   timeBadgeText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 11,
     fontWeight: '800'
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     marginLeft: 8
   },
   textInput: {
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 8,
@@ -296,13 +296,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingVertical: 9,
     borderRadius: 8,
     marginTop: 4
   },
   savePinBtnText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontWeight: '800',
     fontSize: 13
   },
@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   filterPillActive: {
-    backgroundColor: 'rgba(229, 169, 60, 0.15)',
-    borderColor: '#E5A93C'
+    backgroundColor: 'rgba(224, 184, 108, 0.12)',
+    borderColor: '#E0B86C'
   },
   filterPillText: {
     color: '#9CA3AF',
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   filterPillTextActive: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontWeight: '800'
   },
   scrollList: {
@@ -357,12 +357,12 @@ const styles = StyleSheet.create({
     maxWidth: 240
   },
   bookmarkCard: {
-    backgroundColor: '#171D2C',
+    backgroundColor: '#1C1E28',
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)'
+    borderColor: 'rgba(255, 255, 255, 0.08)'
   },
   bmHeader: {
     flexDirection: 'row',
@@ -374,13 +374,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6
   },
   bmTimeText: {
-    color: '#0A0D14',
+    color: '#0C0D11',
     fontSize: 10,
     fontWeight: '800'
   },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     padding: 4
   },
   bmScripture: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 2

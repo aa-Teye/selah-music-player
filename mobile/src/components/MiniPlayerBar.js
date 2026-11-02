@@ -97,7 +97,7 @@ export default function MiniPlayerBar({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={20} 
-              color="#0A0D14" 
+              color="#0C0D11" 
               style={{ marginLeft: isPlaying ? 0 : 2 }}
             />
           </TouchableOpacity>
@@ -109,7 +109,7 @@ export default function MiniPlayerBar({
               onNext();
             }}
           >
-            <Ionicons name="play-skip-forward" size={20} color="#F3F4F6" />
+            <Ionicons name="play-skip-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -119,9 +119,9 @@ export default function MiniPlayerBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0F1420',
+    backgroundColor: '#13151D',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(229, 169, 60, 0.2)',
+    borderTopColor: 'rgba(224, 184, 108, 0.18)',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#E5A93C'
+    backgroundColor: '#E0B86C'
   },
   innerContent: {
     flexDirection: 'row',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   discImage: {
     width: '100%',
@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0A0D14',
+    backgroundColor: '#0C0D11',
     borderWidth: 1.5,
-    borderColor: '#E5A93C'
+    borderColor: '#E0B86C'
   },
   infoContainer: {
     flex: 1,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   trackTitle: {
-    color: '#F3F4F6',
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 13,
     flexShrink: 1
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localBadge: {
-    backgroundColor: 'rgba(229, 169, 60, 0.25)',
+    backgroundColor: 'rgba(224, 184, 108, 0.15)',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4
   },
   localBadgeText: {
-    color: '#E5A93C',
+    color: '#E0B86C',
     fontSize: 9,
     fontWeight: '800'
   },
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E5A93C',
+    backgroundColor: '#E0B86C',
     alignItems: 'center',
     justifyContent: 'center'
   },
