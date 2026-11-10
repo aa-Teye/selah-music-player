@@ -34,11 +34,11 @@ export default function CarModeModal({
         {/* Top Header */}
         <View style={styles.topBar}>
           <View style={styles.modeBadge}>
-            <MaterialCommunityIcons name="car" size={20} color="#34D399" />
+            <MaterialCommunityIcons name="car" size={20} color="#FFFFFF" />
             <Text style={styles.modeText}>CAR & STAGE MODE</Text>
           </View>
           <TouchableOpacity style={styles.exitBtn} onPress={onClose}>
-            <Ionicons name="close" size={28} color="#FFFFFF" />
+            <Ionicons name="close" size={26} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -63,7 +63,7 @@ export default function CarModeModal({
             onPress={onPrev}
             activeOpacity={0.7}
           >
-            <Ionicons name="play-skip-back" size={44} color="#FFFFFF" />
+            <Ionicons name="play-skip-back" size={40} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Giant Play / Pause Button */}
@@ -74,8 +74,8 @@ export default function CarModeModal({
           >
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
-              size={64} 
-              color="#08090C" 
+              size={58} 
+              color="#12141A" 
             />
           </TouchableOpacity>
 
@@ -85,7 +85,7 @@ export default function CarModeModal({
             onPress={onNext}
             activeOpacity={0.7}
           >
-            <Ionicons name="play-skip-forward" size={44} color="#FFFFFF" />
+            <Ionicons name="play-skip-forward" size={40} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -97,13 +97,13 @@ export default function CarModeModal({
           >
             <Ionicons 
               name={isFavorite ? "heart" : "heart-outline"} 
-              size={36} 
-              color={isFavorite ? "#34D399" : "#9CA3AF"} 
+              size={32} 
+              color={isFavorite ? "#EF4444" : "#8A919E"} 
             />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.exitPill} onPress={onClose}>
-            <Ionicons name="arrow-back" size={20} color="#08090C" />
+            <Ionicons name="arrow-back" size={18} color="#12141A" />
             <Text style={styles.exitPillText}>Exit Car Mode</Text>
           </TouchableOpacity>
         </View>
@@ -115,7 +115,7 @@ export default function CarModeModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#12141A',
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 36,
@@ -130,20 +130,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+    backgroundColor: '#1E222B',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20
   },
   modeText: {
-    color: '#34D399',
-    fontSize: 14,
-    fontWeight: '900',
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
     letterSpacing: 1
   },
   exitBtn: {
     padding: 8,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#1E222B',
     borderRadius: 24
   },
   trackCard: {
@@ -159,16 +159,16 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   artist: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#34D399',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 6
   },
   album: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#717886',
     textAlign: 'center'
   },
   controlsRow: {
@@ -181,24 +181,24 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#1E222B',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#2C2C2E'
+    borderWidth: 1.5,
+    borderColor: '#2D323E'
   },
   giantPlayBtn: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#34D399',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#34D399',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.25,
     shadowRadius: 16,
-    elevation: 10
+    elevation: 8
   },
   bottomBar: {
     flexDirection: 'row',
@@ -207,21 +207,21 @@ const styles = StyleSheet.create({
   },
   favBtn: {
     padding: 12,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#1E222B',
     borderRadius: 24
   },
   exitPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#34D399',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 30
   },
   exitPillText: {
-    color: '#08090C',
-    fontSize: 16,
+    color: '#12141A',
+    fontSize: 15,
     fontWeight: '800'
   }
 });

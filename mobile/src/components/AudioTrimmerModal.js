@@ -105,17 +105,17 @@ export default function AudioTrimmerModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="content-cut" size={22} color="#34D399" />
+              <MaterialCommunityIcons name="content-cut" size={22} color="#12141A" />
               <Text style={styles.title}>Audio Trimmer & Ringtone Cutter</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#9CA3AF" />
+              <Ionicons name="close" size={22} color="#717886" />
             </TouchableOpacity>
           </View>
 
           {/* Track Name */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#34D399" />
+            <Ionicons name="musical-note" size={20} color="#12141A" />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Track'}</Text>
@@ -149,7 +149,7 @@ export default function AudioTrimmerModal({
                 <Text style={styles.flagTime}>{formatTime(startTime)}</Text>
               </View>
               <View style={styles.clipDurationBadge}>
-                <Ionicons name="time-outline" size={12} color="#34D399" />
+                <Ionicons name="time-outline" size={12} color="#12141A" />
                 <Text style={styles.clipDurationText}>{trimDuration}s clip</Text>
               </View>
               <View style={styles.timeFlag}>
@@ -207,7 +207,7 @@ export default function AudioTrimmerModal({
               <Ionicons 
                 name={isPreviewing ? "stop" : "play"} 
                 size={18} 
-                color={isPreviewing ? "#08090C" : "#34D399"} 
+                color={isPreviewing ? "#FFFFFF" : "#12141A"} 
               />
               <Text style={[styles.previewBtnText, isPreviewing && styles.previewBtnTextActive]}>
                 {isPreviewing ? "Stop Preview" : "Preview Clip"}
@@ -215,7 +215,7 @@ export default function AudioTrimmerModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.saveCutBtn} onPress={handleSaveCut}>
-              <MaterialCommunityIcons name="content-cut" size={18} color="#08090C" />
+              <MaterialCommunityIcons name="content-cut" size={18} color="#FFFFFF" />
               <Text style={styles.saveCutText}>Set as Ringtone</Text>
             </TouchableOpacity>
           </View>
@@ -228,16 +228,16 @@ export default function AudioTrimmerModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   header: {
     flexDirection: 'row',
@@ -253,42 +253,42 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#F3F4F6'
+    color: '#0F1115'
   },
   closeBtn: {
-    padding: 4
+    padding: 6
   },
   trackCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171E2E',
+    backgroundColor: '#EEF0F4',
     borderRadius: 14,
     padding: 12,
     gap: 12,
     marginBottom: 16
   },
   trackTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '700'
   },
   trackArtist: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     marginTop: 2
   },
   totalLengthBadge: {
-    color: '#6B7280',
+    color: '#8A919E',
     fontSize: 12,
     fontWeight: '600'
   },
   waveformBox: {
-    backgroundColor: '#08090C',
+    backgroundColor: '#F8F9FA',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   waveformRow: {
     flexDirection: 'row',
@@ -302,49 +302,49 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   waveBarActive: {
-    backgroundColor: '#34D399'
+    backgroundColor: '#12141A'
   },
   waveBarDim: {
-    backgroundColor: '#22252F'
+    backgroundColor: '#E2E6EC'
   },
   rangeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: '#E5E7EB',
     paddingTop: 10
   },
   timeFlag: {
     alignItems: 'center'
   },
   flagLabel: {
-    color: '#6B7280',
+    color: '#8A919E',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5
   },
   flagTime: {
-    color: '#6EE7B7',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '800'
   },
   clipDurationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4
   },
   clipDurationText: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 11,
     fontWeight: '800'
   },
   sectionLabel: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 8
@@ -356,26 +356,26 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   adjustBtn: {
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10
   },
   adjustBtnText: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700'
   },
   currentStartBox: {
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#34D399'
+    borderWidth: 1.5,
+    borderColor: '#12141A'
   },
   currentStartText: {
-    color: '#6EE7B7',
+    color: '#0F1115',
     fontSize: 15,
     fontWeight: '800'
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   lengthPill: {
     flex: 1,
-    backgroundColor: '#121318',
+    backgroundColor: '#EEF0F4',
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 12,
@@ -394,16 +394,16 @@ const styles = StyleSheet.create({
     borderColor: 'transparent'
   },
   lengthPillActive: {
-    backgroundColor: 'rgba(52, 211, 153, 0.15)',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   lengthText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     fontWeight: '600'
   },
   lengthTextActive: {
-    color: '#6EE7B7',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   actionsRow: {
@@ -415,36 +415,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: '#34D399',
+    backgroundColor: '#EEF0F4',
+    borderWidth: 1,
+    borderColor: '#E2E6EC',
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8
   },
   previewBtnActive: {
-    backgroundColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   previewBtnText: {
-    color: '#34D399',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '800'
   },
   previewBtnTextActive: {
-    color: '#08090C'
+    color: '#FFFFFF'
   },
   saveCutBtn: {
     flex: 1.2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8
   },
   saveCutText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800'
   }

@@ -77,14 +77,14 @@ export default function EditTagsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="tag-text-outline" size={22} color="#34D399" />
+              <MaterialCommunityIcons name="tag-text-outline" size={22} color="#12141A" />
               <View>
                 <Text style={styles.title}>Edit Audio Tags</Text>
                 <Text style={styles.subtitle}>Clean metadata on your device</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#9CA3AF" />
+              <Ionicons name="close" size={22} color="#717886" />
             </TouchableOpacity>
           </View>
 
@@ -97,7 +97,7 @@ export default function EditTagsModal({
             <View style={styles.artworkActions}>
               <Text style={styles.artworkLabel}>Cover Artwork</Text>
               <TouchableOpacity style={styles.refreshArtBtn} onPress={handleRefreshArtwork}>
-                <Ionicons name="image" size={14} color="#08090C" />
+                <Ionicons name="image" size={14} color="#FFFFFF" />
                 <Text style={styles.refreshArtText}>Auto Match Art</Text>
               </TouchableOpacity>
             </View>
@@ -111,7 +111,7 @@ export default function EditTagsModal({
               value={title}
               onChangeText={setTitle}
               placeholder="e.g. Goodness of God"
-              placeholderTextColor="#6B7280"
+              placeholderTextColor="#8A919E"
             />
 
             <Text style={styles.fieldLabel}>Artist / Worship Leader</Text>
@@ -120,7 +120,7 @@ export default function EditTagsModal({
               value={artist}
               onChangeText={setArtist}
               placeholder="e.g. CeCe Winans"
-              placeholderTextColor="#6B7280"
+              placeholderTextColor="#8A919E"
             />
 
             <Text style={styles.fieldLabel}>Album Name</Text>
@@ -129,7 +129,7 @@ export default function EditTagsModal({
               value={album}
               onChangeText={setAlbum}
               placeholder="e.g. Believe For It"
-              placeholderTextColor="#6B7280"
+              placeholderTextColor="#8A919E"
             />
 
             <Text style={styles.fieldLabel}>Genre Category</Text>
@@ -158,7 +158,7 @@ export default function EditTagsModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Ionicons name="checkmark" size={16} color="#08090C" />
+              <Ionicons name="checkmark" size={16} color="#FFFFFF" />
               <Text style={styles.saveText}>Save Tags</Text>
             </TouchableOpacity>
           </View>
@@ -171,16 +171,16 @@ export default function EditTagsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderTopWidth: 1,
+    borderColor: '#E5E7EB'
   },
   header: {
     flexDirection: 'row',
@@ -194,12 +194,12 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: '#0F1115',
+    fontSize: 18,
     fontWeight: '800'
   },
   subtitle: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12
   },
   closeBtn: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     padding: 12,
     borderRadius: 14,
     marginBottom: 16
@@ -218,13 +218,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 10,
-    backgroundColor: '#121318'
+    backgroundColor: '#E2E6EC'
   },
   artworkActions: {
     flex: 1
   },
   artworkLabel: {
-    color: '#D1D5DB',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 6
@@ -233,14 +233,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#34D399',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: '#12141A',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'flex-start'
   },
   refreshArtText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800'
   },
@@ -248,20 +248,20 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   fieldLabel: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 4,
     textTransform: 'uppercase'
   },
   input: {
-    backgroundColor: '#08090C',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 13,
     marginBottom: 12
   },
@@ -274,21 +274,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#EEF0F4',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E2E6EC'
   },
   activeGenrePill: {
-    backgroundColor: '#34D399',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   genreText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 10,
     fontWeight: '700'
   },
   activeGenreText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   actionRow: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   cancelText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 13,
     fontWeight: '600'
   },
@@ -310,13 +310,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 10
   },
   saveText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '800'
   }

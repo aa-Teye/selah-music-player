@@ -97,7 +97,7 @@ export default function MiniPlayerBar({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={20} 
-              color="#08090C" 
+              color="#12141A" 
               style={{ marginLeft: isPlaying ? 0 : 2 }}
             />
           </TouchableOpacity>
@@ -119,23 +119,23 @@ export default function MiniPlayerBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(18, 19, 24, 0.88)',
+    backgroundColor: '#12141A',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(52, 211, 153, 0.25)',
+    borderTopColor: '#1E2026',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.25,
     shadowRadius: 5
   },
   progressBarBg: {
     height: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     width: '100%'
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#34D399'
+    backgroundColor: '#FFFFFF'
   },
   innerContent: {
     flexDirection: 'row',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#34D399'
+    borderColor: 'rgba(255, 255, 255, 0.2)'
   },
   discImage: {
     width: '100%',
@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#08090C',
+    backgroundColor: '#12141A',
     borderWidth: 1.5,
-    borderColor: '#34D399'
+    borderColor: 'rgba(255, 255, 255, 0.4)'
   },
   infoContainer: {
     flex: 1,
@@ -197,13 +197,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localBadge: {
-    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+    backgroundColor: '#242833',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4
   },
   localBadgeText: {
-    color: '#34D399',
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '800'
   },
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#34D399',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center'
   },

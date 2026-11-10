@@ -332,7 +332,7 @@ export default function App() {
     const nextState = typeof explicitState === 'boolean' ? explicitState : !isPlaying;
     setIsPlaying(nextState);
     if (nextState) {
-      if (soundRef.current) {
+      if (soundRef.current && currentTrack?.sourceType !== 'youtube') {
         try {
           soundRef.current.play();
         } catch (_) {}
@@ -642,24 +642,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#08090C" />
-
-        {/* Studio Iridescent Liquid Glass Sphere Background */}
-        <View style={styles.bgWrapper} pointerEvents="none">
-          <Image
-            source={require('./assets/glass_sphere_bg.jpg')}
-            style={styles.bgSphereImage}
-            resizeMode="cover"
-          />
-          <View style={styles.bgDarkOverlay} />
-        </View>
+        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
 
       {/* Top Header */}
       <TopHeader
         streakDays={streakData.streakDays || 14}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onOpenAi={() => setActiveTab('ai')}
         onOpenMenu={() => setIsHeaderMenuVisible(true)}
       />
 
@@ -675,7 +664,6 @@ export default function App() {
             activeMood={activeMood}
             setActiveMood={setActiveMood}
             moodTags={MOOD_TAGS}
-            onOpenAi={() => setActiveTab('ai')}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             recentTracks={recentTracks}
             onOpenStats={() => setIsStatsVisible(true)}
@@ -765,15 +753,6 @@ export default function App() {
             onDeletePlaylist={handleDeletePlaylist}
             onPlayPlaylist={handlePlayPlaylist}
             onToggleTrackInPlaylist={handleToggleTrackInPlaylist}
-          />
-        )}
-
-        {activeTab === 'ai' && (
-          <AiDiscoveryScreen
-            onPlayTrack={handlePlayTrack}
-            currentTrack={currentTrack}
-            onBack={() => setActiveTab('home')}
-            onOpenAddToPlaylist={handleOpenAddToPlaylist}
           />
         )}
 
@@ -1052,38 +1031,24 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08090C'
-  },
-  bgWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    backgroundColor: '#08090C'
-  },
-  bgSphereImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.36
-  },
-  bgDarkOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 9, 12, 0.40)'
+    backgroundColor: '#F8F9FA'
   },
   mainContent: {
     flex: 1
   },
   libModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(4, 5, 8, 0.82)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   libModalContent: {
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.2)'
+    borderColor: '#E5E7EB'
   },
   libModalHeader: {
     flexDirection: 'row',
@@ -1092,43 +1057,43 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   libModalTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 18,
     fontWeight: '800'
   },
   libModalSub: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 13,
     lineHeight: 18
   },
   libCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#F8F9FA',
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     gap: 12
   },
   libIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#121318',
+    backgroundColor: '#EEF0F4',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E6EC',
     alignItems: 'center',
     justifyContent: 'center'
   },
   libName: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '700'
   },
   libDesc: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15
@@ -1136,14 +1101,14 @@ const styles = StyleSheet.create({
   libOpenBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
     gap: 4
   },
   libOpenText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 12
   }

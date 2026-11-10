@@ -7,7 +7,7 @@ import {
   Image, 
   StyleSheet 
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen({
   devotion,
@@ -18,7 +18,6 @@ export default function HomeScreen({
   activeMood,
   setActiveMood,
   moodTags,
-  onOpenAi,
   onOpenAddToPlaylist,
   recentTracks = [],
   onOpenStats,
@@ -36,7 +35,7 @@ export default function HomeScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Sleek Frosted Glass Quick Access Bar */}
+      {/* Sleek Ceramic Quick Access Bar */}
       <View style={styles.quickBarRow}>
         {onOpenDigitalLibraries && (
           <TouchableOpacity 
@@ -44,7 +43,7 @@ export default function HomeScreen({
             onPress={onOpenDigitalLibraries}
             activeOpacity={0.8}
           >
-            <Ionicons name="library-outline" size={15} color="#34D399" />
+            <Ionicons name="library-outline" size={15} color="#12141A" />
             <Text style={styles.quickBarText}>Libraries</Text>
           </TouchableOpacity>
         )}
@@ -55,19 +54,8 @@ export default function HomeScreen({
             onPress={onOpenStats}
             activeOpacity={0.8}
           >
-            <Ionicons name="stats-chart-outline" size={15} color="#34D399" />
+            <Ionicons name="stats-chart-outline" size={15} color="#12141A" />
             <Text style={styles.quickBarText}>My Devotion</Text>
-          </TouchableOpacity>
-        )}
-
-        {onOpenAi && (
-          <TouchableOpacity 
-            style={styles.quickBarBtn} 
-            onPress={onOpenAi}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="sparkles-outline" size={15} color="#34D399" />
-            <Text style={styles.quickBarText}>AI Discovery</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -92,7 +80,7 @@ export default function HomeScreen({
                 </View>
                 <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
                 <View style={styles.artistRecPlayRow}>
-                  <Ionicons name="play-circle" size={13} color="#34D399" />
+                  <Ionicons name="play-circle" size={13} color="#12141A" />
                   <Text style={styles.artistRecPlayText}>Listen</Text>
                 </View>
               </TouchableOpacity>
@@ -165,7 +153,7 @@ export default function HomeScreen({
               <Text style={styles.searchYtCardSub}>Tap to stream full video directly from YouTube</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#34D399" />
+          <Ionicons name="chevron-forward" size={18} color="#12141A" />
         </TouchableOpacity>
       ) : null}
 
@@ -180,7 +168,7 @@ export default function HomeScreen({
       {/* No local results empty state */}
       {filteredTracks.length === 0 && searchQuery ? (
         <View style={styles.noResultsBox}>
-          <Ionicons name="search-outline" size={38} color="#6B7280" />
+          <Ionicons name="search-outline" size={38} color="#9AA0AC" />
           <Text style={styles.noResultsTitle}>No local tracks found for "{searchQuery}"</Text>
           <Text style={styles.noResultsSub}>Stream this song live from YouTube right now:</Text>
           {onNavigateToYouTube && (
@@ -210,7 +198,7 @@ export default function HomeScreen({
                     <Ionicons 
                       name={isCurrent && isPlaying ? "pause" : "play"} 
                       size={14} 
-                      color="#08090C" 
+                      color="#FFFFFF" 
                     />
                   </View>
                   {track.sourceType === 'youtube' && (
@@ -226,7 +214,7 @@ export default function HomeScreen({
                         onOpenAddToPlaylist(track);
                       }}
                     >
-                      <Ionicons name="bookmark-outline" size={13} color="#34D399" />
+                      <Ionicons name="bookmark-outline" size={13} color="#12141A" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -245,7 +233,7 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent'
+    backgroundColor: '#F8F9FA'
   },
   content: {
     padding: 16,
@@ -262,15 +250,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 19, 24, 0.72)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     paddingVertical: 10,
     borderRadius: 14,
-    gap: 6
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   quickBarText: {
-    color: '#E5E7EB',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700'
   },
@@ -281,12 +274,12 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   sectionTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 17,
     fontWeight: '800'
   },
   sectionSubtitle: {
-    color: '#6B7280',
+    color: '#717886',
     fontSize: 12
   },
   moodScroll: {
@@ -295,9 +288,9 @@ const styles = StyleSheet.create({
   moodPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 28, 35, 0.72)',
+    backgroundColor: '#EEF0F4',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E6EC',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -305,19 +298,16 @@ const styles = StyleSheet.create({
     gap: 6
   },
   activeMoodPill: {
-    backgroundColor: 'rgba(52, 211, 153, 0.18)',
-    borderColor: '#34D399'
-  },
-  moodIcon: {
-    fontSize: 14
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   moodText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     fontWeight: '600'
   },
   activeMoodText: {
-    color: '#34D399',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   tracksGrid: {
@@ -327,15 +317,20 @@ const styles = StyleSheet.create({
   },
   trackCard: {
     width: '48%',
-    backgroundColor: 'rgba(18, 19, 24, 0.72)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1
   },
   activeTrackCard: {
-    borderColor: '#34D399',
-    backgroundColor: 'rgba(52, 211, 153, 0.12)'
+    borderColor: '#12141A',
+    backgroundColor: '#F1F3F7'
   },
   cardCoverWrap: {
     width: '100%',
@@ -356,7 +351,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -375,12 +370,12 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   cardTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '700'
   },
   cardArtist: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     marginTop: 2
   },
@@ -391,20 +386,25 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(12, 13, 17, 0.85)',
+    backgroundColor: '#EEF0F4',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.35)'
+    borderColor: '#E2E6EC'
   },
   recentItemCard: {
     width: 110,
     marginRight: 12,
-    backgroundColor: 'rgba(18, 19, 24, 0.72)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   recentCover: {
     width: '100%',
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   recentTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700'
   },
   recentArtist: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 10,
     marginTop: 2
   },
@@ -426,12 +426,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(18, 19, 24, 0.75)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   searchYtCardLeft: {
     flexDirection: 'row',
@@ -444,41 +449,41 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: 'rgba(239, 68, 68, 0.10)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.25)'
+    borderColor: 'rgba(239, 68, 68, 0.20)'
   },
   searchYtCardTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '700'
   },
   searchYtCardSub: {
-    color: '#34D399',
+    color: '#717886',
     fontSize: 11,
     marginTop: 2
   },
   noResultsBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: '#E5E7EB'
   },
   noResultsTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 15,
     fontWeight: '700',
     marginTop: 12,
     textAlign: 'center'
   },
   noResultsSub: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     marginTop: 6,
     textAlign: 'center',
@@ -487,9 +492,7 @@ const styles = StyleSheet.create({
   searchYtBannerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16171E',
-    borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.3)',
+    backgroundColor: '#12141A',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -500,51 +503,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700'
   },
-  cycleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#16171E',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    gap: 4
-  },
-  cycleBadgeText: {
-    color: '#34D399',
-    fontSize: 11,
-    fontWeight: '700'
-  },
   recommendedSection: {
     marginBottom: 20
   },
   artistRecCard: {
     width: 104,
     marginRight: 12,
-    backgroundColor: 'rgba(18, 19, 24, 0.72)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1
   },
   artistRecAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#1E202C',
+    backgroundColor: '#EEF0F4',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.3)'
+    borderColor: '#E2E6EC'
   },
   artistRecInitial: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 17,
     fontWeight: '800'
   },
   artistRecName: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 11,
     fontWeight: '700',
     textAlign: 'center',
@@ -553,14 +547,14 @@ const styles = StyleSheet.create({
   artistRecPlayRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     gap: 4
   },
   artistRecPlayText: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 10,
     fontWeight: '800'
   }

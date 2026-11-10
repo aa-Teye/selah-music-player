@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#08090C",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#08090C"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.selah.musicplayer",
@@ -60,10 +55,22 @@
           "photosPermission": "Allow Selah Player to access your music and audio files.",
           "savePhotosPermission": "Allow Selah Player to manage music files.",
           "isAccessMediaLocationEnabled": false,
-          "granularPermissions": ["audio", "photo"]
+          "granularPermissions": [
+            "audio",
+            "photo"
+          ]
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#08090C"
+        }
+      ]
     ],
     "extra": {
       "eas": {

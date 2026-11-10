@@ -120,11 +120,11 @@ export default function SyncedLyricsView({
       {/* Header controls for lyrics */}
       <View style={styles.headerBar}>
         <View style={styles.badgeWrap}>
-          <MaterialCommunityIcons name="microphone-variant" size={14} color="#34D399" />
+          <MaterialCommunityIcons name="microphone-variant" size={14} color="#12141A" />
           <Text style={styles.badgeText}>REAL-TIME SYNCED LYRICS</Text>
         </View>
         <TouchableOpacity style={styles.editBtn} onPress={handleOpenEdit}>
-          <Ionicons name="pencil" size={13} color="#34D399" />
+          <Ionicons name="pencil" size={13} color="#717886" />
           <Text style={styles.editBtnText}>Edit Lyrics</Text>
         </TouchableOpacity>
       </View>
@@ -156,7 +156,7 @@ export default function SyncedLyricsView({
           })
         ) : (
           <View style={styles.emptyWrap}>
-            <MaterialCommunityIcons name="music-note-off" size={32} color="#6B7280" />
+            <MaterialCommunityIcons name="music-note-off" size={32} color="#8A919E" />
             <Text style={styles.emptyText}>No lyrics found for this song</Text>
             <TouchableOpacity style={styles.addLyricsBtn} onPress={handleOpenEdit}>
               <Text style={styles.addLyricsBtnText}>+ Add Lyrics Now</Text>
@@ -177,7 +177,7 @@ export default function SyncedLyricsView({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Lyrics</Text>
               <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#9CA3AF" />
+                <Ionicons name="close" size={22} color="#717886" />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSub}>
@@ -190,7 +190,7 @@ export default function SyncedLyricsView({
               value={editText}
               onChangeText={setEditText}
               placeholder="Paste devotion lyrics here..."
-              placeholderTextColor="#6B7280"
+              placeholderTextColor="#8A919E"
               textAlignVertical="top"
             />
 
@@ -246,13 +246,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 12
   },
   badgeText: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8
   },
   editBtnText: {
-    color: '#34D399',
+    color: '#717886',
     fontSize: 12,
     fontWeight: '700'
   },
@@ -286,28 +286,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   activeLineBox: {
-    backgroundColor: '#1A1C23',
-    borderLeftWidth: 4,
-    borderLeftColor: '#34D399'
+    backgroundColor: '#EEF0F4',
+    borderLeftWidth: 3,
+    borderLeftColor: '#12141A'
   },
   lineText: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#9CA3AF',
+    color: '#717886',
     fontWeight: '500',
     flex: 1
   },
   activeLineText: {
-    fontSize: 19,
-    lineHeight: 28,
-    color: '#6EE7B7',
+    fontSize: 18,
+    lineHeight: 26,
+    color: '#0F1115',
     fontWeight: '800'
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     marginLeft: 8
   },
   emptyWrap: {
@@ -317,35 +317,35 @@ const styles = StyleSheet.create({
     gap: 12
   },
   emptyText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 14
   },
   addLyricsBtn: {
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#34D399'
+    borderColor: '#E2E6EC'
   },
   addLyricsBtnText: {
-    color: '#34D399',
+    color: '#0F1115',
     fontWeight: '700',
     fontSize: 13
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     maxHeight: '80%',
     borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   modalHeader: {
     flexDirection: 'row',
@@ -353,24 +353,24 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   modalTitle: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 18,
     fontWeight: '800'
   },
   modalSub: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     marginTop: 4,
     marginBottom: 16
   },
   textInput: {
-    backgroundColor: '#08090C',
-    color: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
+    color: '#0F1115',
     borderRadius: 12,
     padding: 14,
     height: 180,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     fontSize: 14,
     lineHeight: 20
   },
@@ -386,18 +386,18 @@ const styles = StyleSheet.create({
     borderRadius: 12
   },
   cancelModalText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 14,
     fontWeight: '600'
   },
   saveModalBtn: {
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12
   },
   saveModalText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800'
   }

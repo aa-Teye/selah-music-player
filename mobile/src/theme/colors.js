@@ -1,57 +1,71 @@
 // ═════════════════════════════════════════════════════════════════════════
-//  SELAH MUSIC PLAYER — LIQUID OBSIDIAN & IRIDESCENT MINT THEME
-//  (Inspired by Minimalist Studio Glass Aesthetic)
+//  SELAH MUSIC PLAYER — CERAMIC PORCELAIN & CHARCOAL NOIR THEME
+//  (Inspired by Minimalist Ceramic Light Studio Aesthetic)
 // ═════════════════════════════════════════════════════════════════════════
 
 export const COLORS = {
-  // Backgrounds: Deep Liquid Obsidian & Smoked Glass
-  bgApp: '#08090C',
-  bgCard: '#121318',
-  bgCardElevated: '#1A1C23',
-  bgCardHover: '#22252F',
-  bgOverlay: 'rgba(8, 9, 12, 0.94)',
+  // Backgrounds: Clean Ceramic Porcelain & Pure White Surfaces
+  bgApp: '#F8F9FA',
+  bgCard: '#FFFFFF',
+  bgCardElevated: '#FFFFFF',
+  bgCardHover: '#F1F3F7',
+  bgOverlay: 'rgba(15, 17, 21, 0.45)',
 
-  // Accents: Luminous Liquid Mint / Emerald Glass
-  accentPrimary: '#34D399',
-  accentRadiant: '#6EE7B7',
-  accentSoft: '#A7F3D0',
-  accentDark: '#059669',
-  accentGlow: 'rgba(52, 211, 153, 0.15)',
-  accentGlowStrong: 'rgba(52, 211, 153, 0.25)',
-  accentBorder: 'rgba(52, 211, 153, 0.22)',
+  // Accents: Deep Charcoal Noir & Pitch Slate
+  accentPrimary: '#12141A',
+  accentRadiant: '#242833',
+  accentSoft: '#EEF0F4',
+  accentDark: '#0A0B0E',
+  accentGlow: 'rgba(18, 20, 26, 0.08)',
+  accentGlowStrong: 'rgba(18, 20, 26, 0.16)',
+  accentBorder: '#E5E7EB',
 
-  // Backward-compatibility aliases
-  goldPrimary: '#34D399',
-  goldRadiant: '#6EE7B7',
-  goldSoft: '#A7F3D0',
-  goldDark: '#059669',
-  goldGlow: 'rgba(52, 211, 153, 0.15)',
-  goldGlowStrong: 'rgba(52, 211, 153, 0.25)',
-  goldBorder: 'rgba(52, 211, 153, 0.22)',
+  // Backward-compatibility aliases (cleanly maps legacy tokens to Charcoal)
+  goldPrimary: '#12141A',
+  goldRadiant: '#242833',
+  goldSoft: '#EEF0F4',
+  goldDark: '#0A0B0E',
+  goldGlow: 'rgba(18, 20, 26, 0.08)',
+  goldGlowStrong: 'rgba(18, 20, 26, 0.16)',
+  goldBorder: '#E5E7EB',
 
   // Neutrals & Surfaces
-  borderSubtle: 'rgba(255, 255, 255, 0.08)',
-  borderLight: 'rgba(255, 255, 255, 0.12)',
+  surfaceSoft: '#EEF0F4',
+  surfaceMuted: '#F3F4F6',
+  borderSubtle: '#E5E7EB',
+  borderLight: '#D1D5DB',
+  borderCard: '#ECEFF3',
 
   // Typography
-  textPrimary: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  textAccent: '#34D399',
-  textGold: '#34D399',
-  textDark: '#08090C',
+  textPrimary: '#0F1115',
+  textSecondary: '#717886',
+  textMuted: '#9AA0AC',
+  textAccent: '#12141A',
+  textGold: '#12141A',
+  textDark: '#0F1115',
+  textLight: '#FFFFFF',
 
   // Status & Badges
   statusSuccess: '#10B981',
   statusLive: '#EF4444',
-  chipActive: '#34D399',
-  chipInactive: '#16171E',
+  chipActive: '#12141A',
+  chipActiveText: '#FFFFFF',
+  chipInactive: '#EEF0F4',
+  chipInactiveText: '#717886',
 
   // Navigation & Bars
-  navBg: '#0E0F14',
-  navBorder: 'rgba(255, 255, 255, 0.08)',
-  miniPlayerBg: '#13141A',
-  miniPlayerBorder: 'rgba(255, 255, 255, 0.10)'
+  navBg: '#FFFFFF',
+  navBorder: '#E5E7EB',
+  navActive: '#12141A',
+  navInactive: '#8A919E',
+
+  // Inverted High-Contrast Mini-Player Capsule
+  miniPlayerBg: '#12141A',
+  miniPlayerBorder: '#1E2026',
+  miniPlayerPlayBtn: '#FFFFFF',
+  miniPlayerPlayIcon: '#12141A',
+  miniPlayerText: '#FFFFFF',
+  miniPlayerSubtext: '#9CA3AF'
 };
 
 export default COLORS;

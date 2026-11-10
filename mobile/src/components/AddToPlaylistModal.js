@@ -48,11 +48,11 @@ export default function AddToPlaylistModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Ionicons name="musical-notes" size={20} color="#34D399" />
+              <Ionicons name="musical-notes" size={20} color="#12141A" />
               <Text style={styles.title}>Add to Playlist</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#9CA3AF" />
+              <Ionicons name="close" size={22} color="#717886" />
             </TouchableOpacity>
           </View>
 
@@ -68,7 +68,7 @@ export default function AddToPlaylistModal({
               <TextInput
                 style={styles.createInput}
                 placeholder="New playlist name..."
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#8A919E"
                 value={newPlaylistName}
                 onChangeText={setNewPlaylistName}
                 autoFocus
@@ -80,7 +80,7 @@ export default function AddToPlaylistModal({
                 style={styles.cancelBtn} 
                 onPress={() => setIsCreating(false)}
               >
-                <Ionicons name="close" size={18} color="#9CA3AF" />
+                <Ionicons name="close" size={18} color="#717886" />
               </TouchableOpacity>
             </View>
           ) : (
@@ -88,7 +88,7 @@ export default function AddToPlaylistModal({
               style={styles.createTriggerBtn} 
               onPress={() => setIsCreating(true)}
             >
-              <Ionicons name="add-circle-outline" size={20} color="#34D399" />
+              <Ionicons name="add-circle-outline" size={20} color="#12141A" />
               <Text style={styles.createTriggerText}>Create New Playlist</Text>
             </TouchableOpacity>
           )}
@@ -110,7 +110,7 @@ export default function AddToPlaylistModal({
                       <Ionicons 
                         name={isInPlaylist ? "folder" : "folder-outline"} 
                         size={22} 
-                        color={isInPlaylist ? "#34D399" : "#9CA3AF"} 
+                        color={isInPlaylist ? "#12141A" : "#8A919E"} 
                       />
                       <View style={styles.plTextWrap}>
                         <Text style={[styles.plName, isInPlaylist && styles.plNameActive]} numberOfLines={1}>
@@ -123,7 +123,7 @@ export default function AddToPlaylistModal({
                     </View>
 
                     <View style={[styles.checkbox, isInPlaylist && styles.checkboxActive]}>
-                      {isInPlaylist && <Ionicons name="checkmark" size={16} color="#08090C" />}
+                      {isInPlaylist && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
                     </View>
                   </TouchableOpacity>
                 );
@@ -149,17 +149,17 @@ export default function AddToPlaylistModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalContent: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     maxHeight: '75%',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderTopWidth: 1,
+    borderColor: '#E5E7EB'
   },
   header: {
     flexDirection: 'row',
@@ -175,70 +175,70 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF'
+    color: '#0F1115'
   },
   closeBtn: {
-    padding: 4
+    padding: 6
   },
   trackCard: {
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#34D399'
+    borderLeftColor: '#12141A'
   },
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF'
+    color: '#0F1115'
   },
   trackArtist: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: '#717886',
     marginTop: 2
   },
   createTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.25)'
+    borderColor: '#E2E6EC'
   },
   createTriggerText: {
-    color: '#34D399',
+    color: '#0F1115',
     fontWeight: '700',
     fontSize: 13
   },
   createBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     borderRadius: 12,
     padding: 8,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#34D399',
+    borderWidth: 1.5,
+    borderColor: '#12141A',
     gap: 8
   },
   createInput: {
     flex: 1,
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 14,
     paddingHorizontal: 8
   },
   saveBtn: {
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8
   },
   saveBtnText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 12
   },
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: '#717886',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 10
@@ -263,16 +263,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#121318',
+    backgroundColor: '#F8F9FA',
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)'
+    borderColor: '#E5E7EB'
   },
   playlistRowActive: {
-    borderColor: 'rgba(52, 211, 153, 0.4)',
-    backgroundColor: '#1A1C23'
+    borderColor: '#12141A',
+    backgroundColor: '#EEF0F4'
   },
   plInfo: {
     flexDirection: 'row',
@@ -286,14 +286,14 @@ const styles = StyleSheet.create({
   plName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#E5E7EB'
+    color: '#0F1115'
   },
   plNameActive: {
-    color: '#34D399'
+    color: '#0F1115'
   },
   plSub: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#717886',
     marginTop: 2
   },
   checkbox: {
@@ -301,38 +301,38 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#4B5563',
+    borderColor: '#D1D5DB',
     justifyContent: 'center',
     alignItems: 'center'
   },
   checkboxActive: {
-    backgroundColor: '#34D399',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   emptyWrap: {
     padding: 20,
     alignItems: 'center'
   },
   emptyText: {
-    color: '#9CA3AF',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '600'
   },
   emptySub: {
-    color: '#6B7280',
+    color: '#717886',
     fontSize: 11,
     textAlign: 'center',
     marginTop: 4
   },
   doneBtn: {
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 10
   },
   doneBtnText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 14
   }

@@ -75,14 +75,14 @@ export default function PrayerBookmarksModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="book-cross" size={24} color="#34D399" />
+              <MaterialCommunityIcons name="book-cross" size={24} color="#12141A" />
               <View>
                 <Text style={styles.title}>Prayer & Scripture Pins</Text>
                 <Text style={styles.subtitle}>Devotional Audio Moments</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#9CA3AF" />
+              <Ionicons name="close" size={22} color="#717886" />
             </TouchableOpacity>
           </View>
 
@@ -91,7 +91,7 @@ export default function PrayerBookmarksModal({
             <View style={styles.newPinCard}>
               <View style={styles.pinTimeHeader}>
                 <View style={styles.timeBadge}>
-                  <Ionicons name="time" size={13} color="#08090C" />
+                  <Ionicons name="time" size={13} color="#FFFFFF" />
                   <Text style={styles.timeBadgeText}>Pin at {formatTime(currentPosition)}</Text>
                 </View>
                 <Text style={styles.trackLabel} numberOfLines={1}>
@@ -102,7 +102,7 @@ export default function PrayerBookmarksModal({
               <TextInput
                 style={styles.textInput}
                 placeholder="Scripture reference (e.g. Psalm 23:4, Phil 4:7)"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#8A919E"
                 value={scripture}
                 onChangeText={setScripture}
               />
@@ -110,14 +110,14 @@ export default function PrayerBookmarksModal({
               <TextInput
                 style={[styles.textInput, styles.textArea]}
                 placeholder="What did God place on your heart during this moment?"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#8A919E"
                 value={note}
                 onChangeText={setNote}
                 multiline
               />
 
               <TouchableOpacity style={styles.savePinBtn} onPress={handleSavePin}>
-                <Ionicons name="bookmark" size={16} color="#08090C" />
+                <Ionicons name="bookmark" size={16} color="#FFFFFF" />
                 <Text style={styles.savePinBtnText}>Save Prayer Moment</Text>
               </TouchableOpacity>
             </View>
@@ -148,7 +148,7 @@ export default function PrayerBookmarksModal({
           <ScrollView style={styles.scrollList} contentContainerStyle={styles.scrollContent}>
             {displayedBookmarks.length === 0 ? (
               <View style={styles.emptyWrap}>
-                <MaterialCommunityIcons name="book-open-page-variant-outline" size={40} color="#4B5563" />
+                <MaterialCommunityIcons name="book-open-page-variant-outline" size={40} color="#8A919E" />
                 <Text style={styles.emptyText}>No prayer moments recorded yet</Text>
                 <Text style={styles.emptySub}>
                   Drop a pin while listening to remember where God spoke to you.
@@ -167,7 +167,7 @@ export default function PrayerBookmarksModal({
                 >
                   <View style={styles.bmHeader}>
                     <View style={styles.bmTimePill}>
-                      <Ionicons name="play" size={10} color="#08090C" />
+                      <Ionicons name="play" size={10} color="#FFFFFF" />
                       <Text style={styles.bmTimeText}>{formatTime(bm.timestamp)}</Text>
                     </View>
                     <Text style={styles.bmTrackTitle} numberOfLines={1}>
@@ -206,17 +206,17 @@ export default function PrayerBookmarksModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     maxHeight: '90%',
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderTopWidth: 1,
+    borderColor: '#E5E7EB'
   },
   header: {
     flexDirection: 'row',
@@ -230,23 +230,23 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 17,
+    color: '#0F1115',
+    fontSize: 18,
     fontWeight: '800'
   },
   subtitle: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12
   },
   closeBtn: {
     padding: 6
   },
   newPinCard: {
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.25)',
+    borderColor: '#E2E6EC',
     marginBottom: 14
   },
   pinTimeHeader: {
@@ -259,31 +259,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8
   },
   timeBadgeText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800'
   },
   trackLabel: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     flex: 1,
     textAlign: 'right',
     marginLeft: 8
   },
   textInput: {
-    backgroundColor: '#08090C',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 13,
     marginBottom: 8
   },
@@ -296,13 +296,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#34D399',
-    paddingVertical: 9,
+    backgroundColor: '#12141A',
+    paddingVertical: 10,
     borderRadius: 8,
     marginTop: 4
   },
   savePinBtnText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 13
   },
@@ -315,21 +315,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#EEF0F4',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E2E6EC'
   },
   filterPillActive: {
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   filterPillText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     fontWeight: '600'
   },
   filterPillTextActive: {
-    color: '#34D399',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   scrollList: {
@@ -344,25 +344,25 @@ const styles = StyleSheet.create({
     paddingVertical: 36
   },
   emptyText: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '700',
     marginTop: 8
   },
   emptySub: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 4,
     maxWidth: 240
   },
   bookmarkCard: {
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#F8F9FA',
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   bmHeader: {
     flexDirection: 'row',
@@ -374,18 +374,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6
   },
   bmTimeText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800'
   },
   bmTrackTitle: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700',
     flex: 1
@@ -394,13 +394,13 @@ const styles = StyleSheet.create({
     padding: 4
   },
   bmScripture: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 2
   },
   bmNote: {
-    color: '#D1D5DB',
+    color: '#717886',
     fontSize: 12,
     fontStyle: 'italic',
     lineHeight: 16

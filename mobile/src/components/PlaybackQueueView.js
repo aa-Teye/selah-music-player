@@ -38,7 +38,7 @@ export default function PlaybackQueueView({
       {/* Queue Header */}
       <View style={styles.headerBar}>
         <View style={styles.titleGroup}>
-          <MaterialCommunityIcons name="playlist-play" size={20} color="#34D399" />
+          <MaterialCommunityIcons name="playlist-play" size={20} color="#12141A" />
           <Text style={styles.headerTitle}>Playback Queue</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{queue.length} Tracks</Text>
@@ -65,7 +65,7 @@ export default function PlaybackQueueView({
       >
         {queue.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="music-box-multiple-outline" size={48} color="#4B5563" />
+            <MaterialCommunityIcons name="music-box-multiple-outline" size={48} color="#8A919E" />
             <Text style={styles.emptyTitle}>Queue is Empty</Text>
             <Text style={styles.emptySubtitle}>
               Select any song from Home, Local Library, or YouTube to start queuing.
@@ -87,7 +87,7 @@ export default function PlaybackQueueView({
                     <Ionicons 
                       name={isPlaying ? "volume-high" : "pause"} 
                       size={16} 
-                      color="#34D399" 
+                      color="#12141A" 
                     />
                   ) : (
                     <Text style={styles.indexText}>{idx + 1}</Text>
@@ -134,7 +134,7 @@ export default function PlaybackQueueView({
                     }}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="close" size={18} color="#9CA3AF" />
+                    <Ionicons name="close" size={18} color="#717886" />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -156,12 +156,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#121318',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   titleGroup: {
     flexDirection: 'row',
@@ -169,20 +169,20 @@ const styles = StyleSheet.create({
     gap: 8
   },
   headerTitle: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 15,
     fontWeight: '800'
   },
   countBadge: {
-    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10
   },
   countBadgeText: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 11,
-    fontWeight: '700'
+    fontWeight: '800'
   },
   clearBtn: {
     flexDirection: 'row',
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)'
+    backgroundColor: 'rgba(239, 68, 68, 0.1)'
   },
   clearBtnText: {
     color: '#EF4444',
@@ -211,13 +211,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24
   },
   emptyTitle: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 16,
     fontWeight: '700',
     marginTop: 12
   },
   emptySubtitle: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 6,
@@ -226,18 +226,18 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121318',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    gap: 10
+    borderColor: '#E5E7EB',
+    gap: 12
   },
   activeTrackRow: {
-    borderColor: '#34D399',
-    backgroundColor: '#1A1C23'
+    borderColor: '#12141A',
+    backgroundColor: '#EEF0F4'
   },
   indexCol: {
     width: 24,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   indexText: {
-    color: '#6B7280',
+    color: '#8A919E',
     fontSize: 12,
     fontWeight: '700'
   },
@@ -253,18 +253,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#1A1C23'
+    backgroundColor: '#EEF0F4'
   },
   trackDetails: {
     flex: 1
   },
   trackTitle: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '700'
   },
   activeTrackTitle: {
-    color: '#34D399'
+    color: '#0F1115',
+    fontWeight: '800'
   },
   artistRow: {
     flexDirection: 'row',
@@ -273,11 +274,11 @@ const styles = StyleSheet.create({
     marginTop: 3
   },
   trackArtist: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11
   },
   ytPill: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4
@@ -288,13 +289,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localPill: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: '#EEF0F4',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4
   },
   localPillText: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 9,
     fontWeight: '800'
   },

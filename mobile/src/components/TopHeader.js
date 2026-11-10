@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TopHeader({
   streakDays,
   searchQuery,
   onSearchChange,
-  onOpenAi,
   onOpenMenu
 }) {
   return (
@@ -20,7 +19,7 @@ export default function TopHeader({
           {/* Hamburger Menu Drawer Button */}
           {onOpenMenu && (
             <TouchableOpacity onPress={onOpenMenu} style={styles.menuBtn} activeOpacity={0.7}>
-              <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
+              <Ionicons name="menu-outline" size={22} color="#0F1115" />
             </TouchableOpacity>
           )}
         </View>
@@ -28,10 +27,10 @@ export default function TopHeader({
 
       {/* Global Search Bar */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#94A3B8" style={styles.searchIcon} />
+        <Ionicons name="search" size={16} color="#717886" style={styles.searchIcon} />
         <TextInput
           placeholder="Search songs, scriptures, or YouTube..."
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#8A919E"
           value={searchQuery}
           onChangeText={onSearchChange}
           style={styles.searchInput}
@@ -39,7 +38,7 @@ export default function TopHeader({
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => onSearchChange('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={16} color="#94A3B8" />
+            <Ionicons name="close-circle" size={16} color="#8A919E" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -52,9 +51,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-    backgroundColor: 'rgba(8, 9, 12, 0.88)',
+    backgroundColor: '#F8F9FA',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.06)'
+    borderBottomColor: '#E5E7EB'
   },
   topRow: {
     flexDirection: 'row',
@@ -69,7 +68,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F1115',
     letterSpacing: 0.5
   },
   actionsRow: {
@@ -80,10 +79,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121318',
+    backgroundColor: '#EEF0F4',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E2E6EC',
     paddingHorizontal: 12,
     height: 42
   },
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 13,
     paddingVertical: 0
   },
@@ -101,9 +100,9 @@ const styles = StyleSheet.create({
   },
   menuBtn: {
     padding: 8,
-    backgroundColor: '#121318',
+    backgroundColor: '#EEF0F4',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E2E6EC'
   }
 });

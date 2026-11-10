@@ -62,14 +62,14 @@ export default function AmbientSoundscapesModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="weather-night" size={24} color="#34D399" />
+              <MaterialCommunityIcons name="weather-night" size={24} color="#12141A" />
               <View>
                 <Text style={styles.title}>Bedtime Ambient Soundscapes</Text>
                 <Text style={styles.subtitle}>Peaceful background layers for prayer & sleep</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#9CA3AF" />
+              <Ionicons name="close" size={22} color="#717886" />
             </TouchableOpacity>
           </View>
 
@@ -84,8 +84,8 @@ export default function AmbientSoundscapesModal({
                   onPress={() => onSelectSoundscape && onSelectSoundscape(isActive ? null : s.id)}
                   activeOpacity={0.8}
                 >
-                  <View style={[styles.soundIconWrap, { backgroundColor: `${s.color}20` }]}>
-                    <MaterialCommunityIcons name={s.icon} size={26} color={s.color} />
+                  <View style={[styles.soundIconWrap, { backgroundColor: '#EEF0F4' }]}>
+                    <MaterialCommunityIcons name={s.icon} size={24} color="#12141A" />
                   </View>
                   <View style={styles.soundInfo}>
                     <Text style={[styles.soundName, isActive && styles.activeSoundName]}>
@@ -107,7 +107,7 @@ export default function AmbientSoundscapesModal({
           {activeSoundscape && (
             <View style={styles.volumeCard}>
               <View style={styles.volumeHeader}>
-                <Ionicons name="volume-medium" size={16} color="#34D399" />
+                <Ionicons name="volume-medium" size={16} color="#12141A" />
                 <Text style={styles.volumeTitle}>Ambient Blend Level</Text>
                 <Text style={styles.volumePercent}>{Math.round(ambientVolume * 100)}%</Text>
               </View>
@@ -132,7 +132,7 @@ export default function AmbientSoundscapesModal({
 
           {/* Sleep Timer Notice */}
           <View style={styles.footerNote}>
-            <MaterialCommunityIcons name="moon-waning-crescent" size={16} color="#9CA3AF" />
+            <MaterialCommunityIcons name="moon-waning-crescent" size={16} color="#717886" />
             <Text style={styles.footerText}>
               {sleepTimerRemaining
                 ? `Ambient sound fades with sleep timer (${Math.round(sleepTimerRemaining / 60)}m remaining).`
@@ -148,16 +148,16 @@ export default function AmbientSoundscapesModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#121318',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderTopWidth: 1,
+    borderColor: '#E5E7EB'
   },
   header: {
     flexDirection: 'row',
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: '#0F1115',
+    fontSize: 18,
     fontWeight: '800'
   },
   subtitle: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12
   },
   closeBtn: {
@@ -189,16 +189,16 @@ const styles = StyleSheet.create({
   soundCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#E5E7EB',
     gap: 12
   },
   activeSoundCard: {
-    borderColor: '#34D399',
-    backgroundColor: '#121318'
+    borderColor: '#12141A',
+    backgroundColor: '#EEF0F4'
   },
   soundIconWrap: {
     width: 44,
@@ -211,15 +211,15 @@ const styles = StyleSheet.create({
     flex: 1
   },
   soundName: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '700'
   },
   activeSoundName: {
-    color: '#34D399'
+    color: '#0F1115'
   },
   soundDesc: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     marginTop: 2
   },
@@ -228,39 +228,39 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#4B5563',
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center'
   },
   activeRadioCircle: {
-    borderColor: '#34D399'
+    borderColor: '#12141A'
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#34D399'
+    backgroundColor: '#12141A'
   },
   volumeCard: {
-    backgroundColor: '#121318',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: '#EEF0F4',
+    borderRadius: 14,
+    padding: 14,
     marginBottom: 14
   },
   volumeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 8
+    marginBottom: 10
   },
   volumeTitle: {
-    color: '#F3F4F6',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700',
     flex: 1
   },
   volumePercent: {
-    color: '#34D399',
+    color: '#12141A',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -270,24 +270,24 @@ const styles = StyleSheet.create({
   },
   volPill: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#08090C',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   activeVolPill: {
-    backgroundColor: '#34D399',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   volPillText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 12,
     fontWeight: '700'
   },
   activeVolPillText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   footerNote: {
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     paddingTop: 6
   },
   footerText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 11,
     flex: 1
   }

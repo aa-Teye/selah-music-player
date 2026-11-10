@@ -121,7 +121,7 @@ export default function FullPlayerModal({
         {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.iconBtn}>
-            <Ionicons name="chevron-down" size={26} color="#F3F4F6" />
+            <Ionicons name="chevron-down" size={26} color="#0F1115" />
           </TouchableOpacity>
 
           <View style={styles.headerTabs}>
@@ -150,14 +150,14 @@ export default function FullPlayerModal({
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             {onOpenCarMode && (
               <TouchableOpacity onPress={onOpenCarMode} style={styles.iconBtn}>
-                <MaterialCommunityIcons name="car" size={22} color="#34D399" />
+                <MaterialCommunityIcons name="car" size={22} color="#12141A" />
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={() => onToggleFavorite(currentTrack.id)} style={styles.iconBtn}>
               <Ionicons 
                 name={isFavorite ? "heart" : "heart-outline"} 
                 size={24} 
-                color={isFavorite ? "#34D399" : "#9CA3AF"} 
+                color={isFavorite ? "#EF4444" : "#717886"} 
               />
             </TouchableOpacity>
           </View>
@@ -187,7 +187,7 @@ export default function FullPlayerModal({
                     styles.waveformBar, 
                     { 
                       height: isPlaying ? h * (0.8 + (i % 3) * 0.2) : 6,
-                      backgroundColor: isPlaying ? '#34D399' : '#22252F' 
+                      backgroundColor: isPlaying ? '#12141A' : '#E2E6EC' 
                     }
                   ]} 
                 />
@@ -249,32 +249,32 @@ export default function FullPlayerModal({
               <Ionicons 
                 name="shuffle" 
                 size={22} 
-                color={isShuffle ? "#34D399" : "#9CA3AF"} 
+                color={isShuffle ? "#12141A" : "#8A919E"} 
               />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={onPrev}>
-              <Ionicons name="play-skip-back" size={28} color="#F3F4F6" />
+              <Ionicons name="play-skip-back" size={28} color="#12141A" />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.mainPlayBtn} onPress={onTogglePlay}>
               <Ionicons 
                 name={isPlaying ? "pause" : "play"} 
                 size={32} 
-                color="#08090C" 
+                color="#FFFFFF" 
                 style={{ marginLeft: isPlaying ? 0 : 3 }}
               />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={onNext}>
-              <Ionicons name="play-skip-forward" size={28} color="#F3F4F6" />
+              <Ionicons name="play-skip-forward" size={28} color="#12141A" />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={onToggleRepeat}>
               <Ionicons 
                 name="repeat" 
                 size={22} 
-                color={isRepeat ? "#34D399" : "#9CA3AF"} 
+                color={isRepeat ? "#12141A" : "#8A919E"} 
               />
             </TouchableOpacity>
           </View>
@@ -288,7 +288,7 @@ export default function FullPlayerModal({
           >
             {/* Speed Changer */}
             <TouchableOpacity style={styles.utilityPill} onPress={handleCycleSpeed}>
-              <Ionicons name="speedometer-outline" size={15} color="#34D399" />
+              <Ionicons name="speedometer-outline" size={15} color="#12141A" />
               <Text style={styles.utilityPillText}>{playbackSpeed}x Speed</Text>
             </TouchableOpacity>
 
@@ -300,7 +300,7 @@ export default function FullPlayerModal({
               <MaterialCommunityIcons 
                 name="sleep" 
                 size={16} 
-                color={sleepTimerRemaining ? "#08090C" : "#34D399"} 
+                color={sleepTimerRemaining ? "#FFFFFF" : "#12141A"} 
               />
               <Text style={[styles.utilityPillText, sleepTimerRemaining && styles.utilityPillTextActive]}>
                 {sleepTimerRemaining ? `${formatTime(sleepTimerRemaining)}` : 'Sleep Timer'}
@@ -313,7 +313,7 @@ export default function FullPlayerModal({
                 style={styles.utilityPill} 
                 onPress={() => onOpenAddToPlaylist(currentTrack)}
               >
-                <Ionicons name="bookmark-outline" size={15} color="#34D399" />
+                <Ionicons name="bookmark-outline" size={15} color="#12141A" />
                 <Text style={styles.utilityPillText}>+ Playlist</Text>
               </TouchableOpacity>
             )}
@@ -324,7 +324,7 @@ export default function FullPlayerModal({
                 style={styles.utilityPill} 
                 onPress={() => onOpenSetRingtone(currentTrack)}
               >
-                <MaterialCommunityIcons name="phone-incoming" size={15} color="#34D399" />
+                <MaterialCommunityIcons name="phone-incoming" size={15} color="#12141A" />
                 <Text style={styles.utilityPillText}>Ringtone</Text>
               </TouchableOpacity>
             )}
@@ -334,7 +334,7 @@ export default function FullPlayerModal({
                 style={styles.utilityPill} 
                 onPress={() => onOpenAudioTrimmer(currentTrack)}
               >
-                <MaterialCommunityIcons name="content-cut" size={15} color="#34D399" />
+                <MaterialCommunityIcons name="content-cut" size={15} color="#12141A" />
                 <Text style={styles.utilityPillText}>Cutter</Text>
               </TouchableOpacity>
             )}
@@ -348,7 +348,7 @@ export default function FullPlayerModal({
                 <MaterialCommunityIcons 
                   name="book-cross" 
                   size={15} 
-                  color={bookmarksCount > 0 ? "#08090C" : "#34D399"} 
+                  color={bookmarksCount > 0 ? "#FFFFFF" : "#12141A"} 
                 />
                 <Text style={[styles.utilityPillText, bookmarksCount > 0 && styles.utilityPillTextActive]}>
                   {bookmarksCount > 0 ? `${bookmarksCount} Pins` : 'Prayer Pin'}
@@ -365,7 +365,7 @@ export default function FullPlayerModal({
                 <MaterialCommunityIcons 
                   name="weather-night" 
                   size={15} 
-                  color={activeSoundscape ? "#08090C" : "#34D399"} 
+                  color={activeSoundscape ? "#FFFFFF" : "#12141A"} 
                 />
                 <Text style={[styles.utilityPillText, activeSoundscape && styles.utilityPillTextActive]}>
                   {activeSoundscape ? activeSoundscape.toUpperCase() : 'Ambience'}
@@ -422,7 +422,7 @@ export default function FullPlayerModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#08090C',
+    backgroundColor: '#F8F9FA',
     paddingTop: 48,
     paddingHorizontal: 20
   },
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   headerTabs: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#EEF0F4',
     borderRadius: 20,
     padding: 3
   },
@@ -447,15 +447,15 @@ const styles = StyleSheet.create({
     borderRadius: 16
   },
   activeTabPill: {
-    backgroundColor: '#34D399'
+    backgroundColor: '#12141A'
   },
   headerTabText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 13,
     fontWeight: '700'
   },
   activeTabText: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   playerContent: {
@@ -468,38 +468,38 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: '#101117',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#34D399',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 2,
-    borderColor: 'rgba(52, 211, 153, 0.25)'
+    borderColor: '#E5E7EB'
   },
   ambientAura: {
     position: 'absolute',
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: 'rgba(52, 211, 153, 0.2)',
-    shadowColor: '#34D399',
+    backgroundColor: 'rgba(18, 20, 26, 0.05)',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 35,
-    elevation: 12
+    shadowOpacity: 0.2,
+    shadowRadius: 25,
+    elevation: 6
   },
   largeDisc: {
     width: 236,
     height: 236,
     borderRadius: 118,
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 6,
-    borderColor: '#08090C'
+    borderColor: '#EEF0F4'
   },
   largeCoverArt: {
     width: 140,
@@ -511,9 +511,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#08090C',
+    backgroundColor: '#F8F9FA',
     borderWidth: 2,
-    borderColor: 'rgba(52, 211, 153, 0.6)'
+    borderColor: '#E5E7EB'
   },
   waveformContainer: {
     flexDirection: 'row',
@@ -535,19 +535,19 @@ const styles = StyleSheet.create({
   fullTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F1115',
     textAlign: 'center',
     marginBottom: 6
   },
   fullArtist: {
     fontSize: 15,
-    color: '#34D399',
+    color: '#717886',
     fontWeight: '600',
     marginBottom: 4
   },
   fullAlbum: {
     fontSize: 12,
-    color: '#6B7280'
+    color: '#9AA0AC'
   },
   lyricsScroll: {
     flex: 1,
@@ -560,24 +560,24 @@ const styles = StyleSheet.create({
   lyricsSongTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F1115',
     marginBottom: 4
   },
   lyricsSongArtist: {
     fontSize: 13,
-    color: '#34D399',
+    color: '#717886',
     marginBottom: 16
   },
   lyricsDivider: {
     width: 40,
     height: 2,
-    backgroundColor: 'rgba(52, 211, 153, 0.3)',
+    backgroundColor: '#E5E7EB',
     marginBottom: 16
   },
   lyricsText: {
     fontSize: 16,
     lineHeight: 28,
-    color: '#D1D5DB',
+    color: '#374151',
     textAlign: 'center',
     fontStyle: 'italic',
     paddingHorizontal: 16
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#717886',
     fontFamily: 'monospace',
     minWidth: 32
   },
@@ -604,13 +604,13 @@ const styles = StyleSheet.create({
   },
   scrubberTrack: {
     height: 5,
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     borderRadius: 2.5,
     overflow: 'visible'
   },
   scrubberFill: {
     height: '100%',
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     borderRadius: 2.5,
     position: 'relative',
     justifyContent: 'center'
@@ -621,9 +621,9 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#12141A',
     borderWidth: 2,
-    borderColor: '#34D399'
+    borderColor: '#FFFFFF'
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -636,12 +636,12 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#34D399',
+    backgroundColor: '#12141A',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#34D399',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6
   },
@@ -658,42 +658,47 @@ const styles = StyleSheet.create({
   utilityPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    gap: 6
+    borderColor: '#E5E7EB',
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1
   },
   utilityPillActive: {
-    backgroundColor: '#34D399',
-    borderColor: '#34D399'
+    backgroundColor: '#12141A',
+    borderColor: '#12141A'
   },
   utilityPillText: {
-    color: '#34D399',
+    color: '#0F1115',
     fontSize: 12,
     fontWeight: '700'
   },
   utilityPillTextActive: {
-    color: '#08090C',
+    color: '#FFFFFF',
     fontWeight: '800'
   },
   sleepModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24
   },
   sleepModalBox: {
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     width: '100%',
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   sleepModalHeader: {
     flexDirection: 'row',
@@ -704,11 +709,11 @@ const styles = StyleSheet.create({
   sleepModalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF'
+    color: '#0F1115'
   },
   sleepModalSub: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: '#717886',
     marginBottom: 20
   },
   presetGrid: {
@@ -717,15 +722,15 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   presetBtn: {
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#F8F9FA',
     paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB'
   },
   presetBtnText: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 15,
     fontWeight: '700'
   },
@@ -733,7 +738,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8
   },
   closeSleepText: {
-    color: '#9CA3AF',
+    color: '#717886',
     fontSize: 14,
     fontWeight: '600'
   }

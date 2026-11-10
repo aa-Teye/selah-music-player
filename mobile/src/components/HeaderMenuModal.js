@@ -34,17 +34,17 @@ export default function HeaderMenuModal({
               {/* Header Profile Brand */}
               <View style={styles.drawerHeader}>
                 <View style={styles.profileAvatar}>
-                  <Ionicons name="person" size={20} color="#34D399" />
+                  <Ionicons name="person" size={20} color="#12141A" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.profileName}>Selah</Text>
                   <View style={styles.streakRow}>
-                    <Ionicons name="sparkles-outline" size={13} color="#34D399" />
+                    <Ionicons name="sparkles-outline" size={13} color="#12141A" />
                     <Text style={styles.streakText}>Day {streakDays} Daily Worship</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={20} color="#9CA3AF" />
+                  <Ionicons name="close" size={20} color="#717886" />
                 </TouchableOpacity>
               </View>
 
@@ -58,14 +58,14 @@ export default function HeaderMenuModal({
                   if (onOpenEq) onOpenEq();
                 }}
               >
-                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
-                  <Ionicons name="options" size={20} color="#34D399" />
+                <View style={styles.menuIconWrap}>
+                  <Ionicons name="options" size={20} color="#12141A" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Sound Equalizer &amp; Presets</Text>
                   <Text style={styles.menuSub}>5-Band EQ, Worship, Bass Boost, Clarity</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -75,14 +75,14 @@ export default function HeaderMenuModal({
                   if (onOpenStats) onOpenStats();
                 }}
               >
-                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-                  <Ionicons name="stats-chart" size={20} color="#3B82F6" />
+                <View style={styles.menuIconWrap}>
+                  <Ionicons name="stats-chart" size={20} color="#12141A" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Listening Statistics</Text>
                   <Text style={styles.menuSub}>Session minutes, devotionals, top frequency</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -92,14 +92,14 @@ export default function HeaderMenuModal({
                   if (onOpenSleepTimer) onOpenSleepTimer();
                 }}
               >
-                <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
-                  <Ionicons name="moon" size={20} color="#A855F7" />
+                <View style={styles.menuIconWrap}>
+                  <Ionicons name="moon" size={20} color="#12141A" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Bedtime Sleep Timer</Text>
                   <Text style={styles.menuSub}>Auto fade-out (15m, 30m, 45m, 60m)</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
               </TouchableOpacity>
 
               {/* Version & Badge Footer */}
@@ -118,19 +118,24 @@ export default function HeaderMenuModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(5, 7, 11, 0.75)',
+    backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-start',
     alignItems: 'flex-end'
   },
   menuDrawer: {
     width: Math.min(width * 0.82, 340),
     height: '100%',
-    backgroundColor: '#121318',
+    backgroundColor: '#FFFFFF',
     borderLeftWidth: 1,
-    borderLeftColor: 'rgba(52, 211, 153, 0.2)',
+    borderLeftColor: '#E5E7EB',
     paddingTop: 54,
     paddingHorizontal: 20,
-    paddingBottom: 30
+    paddingBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: -2, height: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 8
   },
   drawerHeader: {
     flexDirection: 'row',
@@ -141,15 +146,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#EEF0F4',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.3)'
+    borderColor: '#E2E6EC'
   },
   profileName: {
-    color: '#FFFFFF',
+    color: '#0F1115',
     fontSize: 14,
     fontWeight: '800'
   },
@@ -160,7 +165,7 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   streakText: {
-    color: '#34D399',
+    color: '#717886',
     fontSize: 11,
     fontWeight: '700'
   },
@@ -169,18 +174,23 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#E5E7EB',
     marginBottom: 20
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1C23',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)'
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1
   },
   menuIconWrap: {
     width: 38,
@@ -188,15 +198,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12
+    marginRight: 12,
+    backgroundColor: '#EEF0F4',
+    borderWidth: 1,
+    borderColor: '#E2E6EC'
   },
   menuTitle: {
-    color: '#FBFBFC',
+    color: '#0F1115',
     fontSize: 13,
     fontWeight: '700'
   },
   menuSub: {
-    color: '#A0A6B5',
+    color: '#717886',
     fontSize: 10,
     marginTop: 2
   },
@@ -208,10 +221,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)'
+    borderTopColor: '#E5E7EB'
   },
   footerText: {
-    color: '#6B7280',
+    color: '#717886',
     fontSize: 11,
     fontWeight: '600'
   }
