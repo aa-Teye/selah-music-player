@@ -820,8 +820,17 @@ export default function PlayerScreen(props) {
 
       {view === 'library' ? (
         <LibraryBrowser {...props} onOpenFullPlayer={() => onChangeView && onChangeView('now')} />
-      ) : (
+      ) : props.currentTrack ? (
         <PlayerPanel {...props} view={view} onChangeView={onChangeView} />
+      ) : (
+        <View style={viewStyles.emptyBox}>
+          <Ionicons name="musical-notes-outline" size={44} color="#9AA0AC" />
+          <Text style={viewStyles.emptyTitle}>Nothing playing yet</Text>
+          <Text style={viewStyles.emptySub}>Pick a song from your Library to start listening.</Text>
+          <TouchableOpacity style={viewStyles.emptyBtn} onPress={() => onChangeView && onChangeView('library')}>
+            <Text style={viewStyles.emptyBtnText}>Open Library</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -847,5 +856,10 @@ const viewStyles = StyleSheet.create({
   },
   segmentActive: { backgroundColor: '#12141A' },
   segmentText: { color: '#717886', fontSize: 12, fontWeight: '800' },
-  segmentTextActive: { color: '#FFFFFF' }
+  segmentTextActive: { color: '#FFFFFF' },
+  emptyBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
+  emptyTitle: { color: '#0F1115', fontSize: 18, fontWeight: '800' },
+  emptySub: { color: '#717886', fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  emptyBtn: { marginTop: 6, backgroundColor: '#12141A', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 20 },
+  emptyBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 }
 });

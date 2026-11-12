@@ -1,5 +1,30 @@
 import AsyncStoragePackage from '@react-native-async-storage/async-storage';
 const AsyncStorage = AsyncStoragePackage?.default || AsyncStoragePackage;
+import { Directory, File, Paths } from 'expo-file-system';
+import { Id3Service } from './id3Service';
+
+// The music library can hold thousands of songs, so it is kept in a file
+// (the phone's key-value storage only allows a few MB).
+function libraryFile() {
+  const dir = new Directory(Paths.document, '.selah');
+  if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
+  return new File(dir, 'library.json');
+}
+
+const PLACEHOLDER_LYRICS = /^\s*\[(device audio|local audio track)/i;
+
+function compactTrack(t) {
+  if (!t) return t;
+  const out = { ...t };
+  if (typeof out.lyrics === 'string' && PLACEHOLDER_LYRICS.test(out.lyrics)) delete out.lyrics;
+  if (out.coverUrl && out.coverUrl === Id3Service.generateCuratedArtwork(out.title, out.artist)) delete out.coverUrl;
+  return out;
+}
+
+function hydrateTrack(t) {
+  if (!t || t.coverUrl) return t;
+  return { ...t, coverUrl: Id3Service.generateCuratedArtwork(t.title, t.artist) };
+}
 
 const KEYS = {
   FAVORITES: '@selah_favorites',
@@ -20,10 +45,10 @@ export const StorageService = {
   async getFavorites() {
     try {
       const data = await AsyncStorage.getItem(KEYS.FAVORITES);
-      return data ? JSON.parse(data) : ['yt-1', 'yt-2'];
+      return data ? JSON.parse(data) : [];
     } catch (e) {
       console.log('Error reading favorites:', e);
-      return ['yt-1', 'yt-2'];
+      return [];
     }
   },
 
@@ -35,11 +60,22 @@ export const StorageService = {
     }
   },
 
-  // Local Tracks imported/scanned
+  // Local Tracks imported/scanned (saved in a file so large libraries fit)
   async getLocalTracks() {
     try {
+      const file = libraryFile();
+      if (file.exists) {
+        const list = JSON.parse(await file.text());
+        if (Array.isArray(list)) return list.map(hydrateTrack);
+      }
+    } catch (e) {
+      console.log('Error reading library file:', e);
+    }
+    // Older versions kept the library in key-value storage
+    try {
       const data = await AsyncStorage.getItem(KEYS.LOCAL_TRACKS);
-      return data ? JSON.parse(data) : [];
+      const list = data ? JSON.parse(data) : [];
+      return Array.isArray(list) ? list.map(hydrateTrack) : [];
     } catch (e) {
       console.log('Error reading local tracks:', e);
       return [];
@@ -47,8 +83,18 @@ export const StorageService = {
   },
 
   async saveLocalTracks(tracks) {
+    const json = JSON.stringify((tracks || []).map(compactTrack));
     try {
-      await AsyncStorage.setItem(KEYS.LOCAL_TRACKS, JSON.stringify(tracks));
+      const file = libraryFile();
+      if (!file.exists) file.create();
+      await file.write(json);
+      AsyncStorage.removeItem(KEYS.LOCAL_TRACKS).catch(() => {});
+      return;
+    } catch (e) {
+      console.log('Error saving library file:', e);
+    }
+    try {
+      await AsyncStorage.setItem(KEYS.LOCAL_TRACKS, json);
     } catch (e) {
       console.log('Error saving local tracks:', e);
     }
@@ -58,10 +104,7 @@ export const StorageService = {
   async getPlaylists() {
     try {
       const data = await AsyncStorage.getItem(KEYS.PLAYLISTS);
-      return data ? JSON.parse(data) : [
-        { id: 'pl-1', name: 'Morning Devotions', trackIds: ['yt-1', 'yt-4'] },
-        { id: 'pl-2', name: 'Peaceful Worship', trackIds: ['yt-2', 'yt-3'] }
-      ];
+      return data ? JSON.parse(data) : [];
     } catch (e) {
       console.log('Error reading playlists:', e);
       return [];
@@ -126,6 +169,14 @@ export const StorageService = {
       return updated;
     } catch (e) {
       console.log('Error saving recent track:', e);
+    }
+  },
+
+  async saveRecentlyPlayed(list) {
+    try {
+      await AsyncStorage.setItem(KEYS.RECENT_TRACKS, JSON.stringify((list || []).slice(0, 50)));
+    } catch (e) {
+      console.log('Error saving recent tracks:', e);
     }
   },
 

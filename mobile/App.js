@@ -25,14 +25,14 @@ import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
 import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 
-import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
+import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
-import { ScannerService } from './src/services/scannerService';
+import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [tracks, setTracks] = useState(INITIAL_TRACKS);
+  const [tracks, setTracks] = useState([]);
   const [localTracks, setLocalTracks] = useState([]);
   const [playlists, setPlaylists] = useState([]);
   const [playlistModalTrack, setPlaylistModalTrack] = useState(null);
@@ -51,13 +51,13 @@ export default function App() {
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
   const [isEqVisible, setIsEqVisible] = useState(false);
   const [tagEditTrack, setTagEditTrack] = useState(null);
-  const [currentTrack, setCurrentTrack] = useState(INITIAL_TRACKS[0]);
+  const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [duration, setDuration] = useState(INITIAL_TRACKS[0].duration || 180);
+  const [duration, setDuration] = useState(0);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
-  const [favorites, setFavorites] = useState(['track-1', 'track-2']);
+  const [favorites, setFavorites] = useState([]);
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
@@ -83,6 +83,7 @@ export default function App() {
   const isPlayingRef = useRef(false);
   const ambientPlayerRef = useRef(null);
   const ambientVolumeRef = useRef(0.5);
+  const loadWatchdogRef = useRef(null);
 
   // Queue: null = play through the whole library; array = custom queue (e.g. a playlist)
   const [queueOverride, setQueueOverride] = useState(null);
@@ -214,10 +215,23 @@ export default function App() {
           StorageService.getFavoriteArtists()
         ]);
 
-        if (savedFavs) setFavorites(savedFavs);
+        // Remove sample/demo content left over from older versions
+        const isDemoId = (id) => /^track-\d+$/.test(String(id)) || /^yt-\d$/.test(String(id));
+        const isSamplePlaylist = (pl) =>
+          (pl.id === 'pl-1' && pl.name === 'Morning Devotions') || (pl.id === 'pl-2' && pl.name === 'Peaceful Worship');
+
+        if (savedFavs) setFavorites(savedFavs.filter((id) => !isDemoId(id)));
         if (savedStreak) setStreakData(savedStreak);
-        if (savedPlaylists) setPlaylists(savedPlaylists);
-        if (savedRecent) setRecentTracks(savedRecent);
+        if (savedPlaylists) {
+          const cleanPlaylists = savedPlaylists.filter((pl) => !isSamplePlaylist(pl));
+          setPlaylists(cleanPlaylists);
+          if (cleanPlaylists.length !== savedPlaylists.length) StorageService.savePlaylists(cleanPlaylists);
+        }
+        if (savedRecent) {
+          const cleanRecent = savedRecent.filter((t) => t && !isDemoId(t.id));
+          setRecentTracks(cleanRecent);
+          if (cleanRecent.length !== savedRecent.length) StorageService.saveRecentlyPlayed(cleanRecent);
+        }
         if (savedStats) setListeningStats(savedStats);
         if (savedBookmarks) setBookmarks(savedBookmarks);
         if (savedHasOnboarded === false) {
@@ -241,7 +255,7 @@ export default function App() {
         try {
           const last = await StorageService.getLastPlayed();
           if (last?.trackId) {
-            const pool = [...(savedLocal || []), ...INITIAL_TRACKS];
+            const pool = savedLocal || [];
             const lastTrack = pool.find((t) => t.id === last.trackId);
             if (lastTrack && lastTrack.sourceType !== 'youtube') {
               setCurrentTrack(lastTrack);
@@ -251,41 +265,44 @@ export default function App() {
           }
         } catch {}
 
-        // Automatic background auto-scan for all phone MP3s & audio files
-        if (Platform.OS === 'android') ScannerService.scanDeviceAudio(40, 200).then((scanResult) => {
-          if (scanResult && scanResult.success && scanResult.tracks.length > 0) {
-            const foundTracks = scanResult.tracks;
-            const foundUris = new Set(foundTracks.map((t) => t.uri));
-            // Songs that were scanned earlier but no longer exist on the phone
-            const isStale = (t) => String(t.id).startsWith('local-scan-') && !foundUris.has(t.uri);
+        // Background scan: every song on the phone (Android) / in Selah's folder (iPhone)
+        ScannerService.scanDeviceAudio().then((scanResult) => {
+          if (!scanResult || !scanResult.success) return;
+          const foundTracks = scanResult.tracks || [];
+          const freshById = new Map(foundTracks.map((t) => [t.id, t]));
+          const isScanned = (t) => String(t.id).startsWith('local-scan-') || String(t.id).startsWith('local-doc-');
 
-            setLocalTracks((prev) => {
-              const existingUris = new Set(prev.map((t) => t.uri || t.id));
-              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
-              const kept = prev.filter((t) => !isStale(t));
-              if (newFound.length === 0 && kept.length === prev.length) return prev;
-              const merged = [...newFound, ...kept];
-              StorageService.saveLocalTracks(merged);
-              return merged;
-            });
-            setTracks((prev) => {
-              const existingUris = new Set(prev.map((t) => t.uri || t.id));
-              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
-              const kept = prev.filter((t) => !isStale(t));
-              if (newFound.length === 0 && kept.length === prev.length) return prev;
-              return [...newFound, ...kept];
-            });
-            // Automatically add discovered MP3s to recent tracks for instant visibility
-            setRecentTracks((prev) => {
-              const existingUris = new Set(prev.map((t) => t.uri || t.id));
-              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
-              if (newFound.length > 0) {
-                const updatedRecent = [...newFound, ...prev].slice(0, 50);
-                StorageService.saveRecentlyPlayed(updatedRecent);
-                return updatedRecent;
+          // Add new songs, drop songs that are gone from the phone, refresh moved file paths
+          const mergeWith = (prev) => {
+            const known = new Set(prev.map((t) => t.id));
+            const newFound = foundTracks.filter((t) => !known.has(t.id));
+            let changed = newFound.length > 0;
+            const kept = [];
+            prev.forEach((t) => {
+              if (isScanned(t) && !freshById.has(t.id)) {
+                changed = true;
+                return;
               }
-              return prev;
+              const fresh = freshById.get(t.id);
+              if (fresh && fresh.uri !== t.uri) {
+                changed = true;
+                kept.push({ ...t, uri: fresh.uri });
+              } else {
+                kept.push(t);
+              }
             });
+            return changed ? [...newFound, ...kept] : prev;
+          };
+
+          setLocalTracks((prev) => {
+            const merged = mergeWith(prev);
+            if (merged !== prev) StorageService.saveLocalTracks(merged);
+            return merged;
+          });
+          setTracks((prev) => mergeWith(prev));
+          if (foundTracks.length > 0) {
+            setCurrentTrack((prev) => prev || foundTracks[0]);
+            setDuration((prev) => prev || foundTracks[0].duration || 0);
           }
         }).catch((scanErr) => console.log('Auto-scan background notice:', scanErr));
       } catch (e) {
@@ -311,6 +328,9 @@ export default function App() {
       }
       if (sleepTimerRef.current) {
         clearInterval(sleepTimerRef.current);
+      }
+      if (loadWatchdogRef.current) {
+        clearTimeout(loadWatchdogRef.current);
       }
     };
   }, []);
@@ -339,6 +359,15 @@ export default function App() {
     if (!track) return;
     const options = opts && typeof opts === 'object' && !opts.nativeEvent ? opts : {};
     const resumeAt = typeof options.resumeAt === 'number' && options.resumeAt > 1 ? options.resumeAt : 0;
+
+    const badFormat = unsupportedFormat(track);
+    if (badFormat) {
+      Alert.alert(
+        'Format not supported',
+        `"${track.title}" is a .${badFormat} file, which this phone can't play. Convert it to MP3 or M4A to listen in Selah.`
+      );
+      return;
+    }
 
     // Playing something outside the custom queue returns to the whole library
     if (!options.keepQueue) {
@@ -372,6 +401,11 @@ export default function App() {
         soundRef.current.remove();
       } catch {}
       soundRef.current = null;
+    }
+
+    if (loadWatchdogRef.current) {
+      clearTimeout(loadWatchdogRef.current);
+      loadWatchdogRef.current = null;
     }
 
     // If it's a YouTube track, activate YouTube streaming engine
@@ -411,7 +445,30 @@ export default function App() {
           } catch {}
         }
 
+        // If a phone file never opens (moved, deleted or unreadable), say so instead of failing silently
+        if (!track.asset && /^(file|content):/i.test(String(track.uri || ''))) {
+          loadWatchdogRef.current = setTimeout(() => {
+            loadWatchdogRef.current = null;
+            if (soundRef.current !== player) return;
+            let loaded = false;
+            try {
+              loaded = Boolean(player.isLoaded);
+            } catch {}
+            if (!loaded) {
+              setIsPlaying(false);
+              Alert.alert(
+                "Can't play this song",
+                `"${track.title}" could not be opened. The file may have been moved or deleted, or this phone can't play its format.`
+              );
+            }
+          }, 8000);
+        }
+
         const sub = player.addListener('playbackStatusUpdate', (status) => {
+          if (status.isLoaded && loadWatchdogRef.current) {
+            clearTimeout(loadWatchdogRef.current);
+            loadWatchdogRef.current = null;
+          }
           if (status.duration && status.duration > 0) {
             setDuration(Math.floor(status.duration));
           }
@@ -485,6 +542,7 @@ export default function App() {
 
   // Toggle Play / Pause
   const handleTogglePlay = (explicitState) => {
+    if (!currentTrack) return;
     const nextState = typeof explicitState === 'boolean' ? explicitState : !isPlaying;
 
     // Cold start (e.g. after app launch / resume): no player exists yet, so create one
@@ -651,20 +709,9 @@ export default function App() {
       const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
       return [...fresh, ...prev];
     });
-    setRecentTracks((prev) => {
-      const existingIds = new Set(prev.map(t => t.id || t.uri));
-      const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
-      if (fresh.length > 0) {
-        const updatedRecent = [...fresh, ...prev].slice(0, 50);
-        StorageService.saveRecentlyPlayed(updatedRecent);
-        return updatedRecent;
-      }
-      return prev;
-    });
-
-    if (newTracks.length > 0 && (!currentTrack || currentTrack.id === INITIAL_TRACKS[0]?.id)) {
+    if (newTracks.length > 0 && !currentTrack) {
       setCurrentTrack(newTracks[0]);
-      setDuration(newTracks[0].duration || 180);
+      setDuration(newTracks[0].duration || 0);
     }
   };
 
@@ -866,6 +913,7 @@ export default function App() {
             favoriteArtists={favoriteArtists}
             onNextDevotional={() => setDevotionalIndex((prev) => (prev + 1) % DEVOTIONAL_COLLECTION.length)}
             onOpenDigitalLibraries={() => setIsDigitalLibrariesVisible(true)}
+            onOpenLibrary={() => setActiveTab('library')}
           />
         )}
 

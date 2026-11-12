@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { Id3Service } from '../services/id3Service';
 import { ScannerService } from '../services/scannerService';
 
 export default function LocalLibraryScreen({
@@ -38,7 +37,7 @@ export default function LocalLibraryScreen({
   const handleAutoScanDevice = async (silent = false) => {
     try {
       setIsScanning(true);
-      const res = await ScannerService.scanDeviceAudio(10, 100);
+      const res = await ScannerService.scanDeviceAudio();
 
       if (res.success && res.tracks && res.tracks.length > 0) {
         if (onBatchAddLocalTracks) {
@@ -67,8 +66,10 @@ export default function LocalLibraryScreen({
           );
         } else {
           Alert.alert(
-            "No Media Found in Audio Library", 
-            "No audio tracks were found in the standard system media folders. Would you like to select your music files directly from your Downloads or Files app?",
+            Platform.OS === 'android' ? "No Music Found" : "No Songs in Selah's Folder Yet", 
+            Platform.OS === 'android'
+              ? "No audio files were found on this phone. You can pick music files directly from your Downloads or Files app."
+              : "iPhone doesn't let apps scan the whole phone. Import songs from the Files app, or copy music into Files › On My iPhone › Selah, then scan again.",
             [
               { text: "Later", style: "cancel" },
               { text: "Select Files Directly", onPress: handlePickAudio }
@@ -112,17 +113,7 @@ export default function LocalLibraryScreen({
           const name = (file.name || '').toLowerCase();
           const mime = (file.mimeType || '').toLowerCase();
           return (
-            mime.startsWith('audio/') ||
-            name.endsWith('.mp3') ||
-            name.endsWith('.m4a') ||
-            name.endsWith('.wav') ||
-            name.endsWith('.flac') ||
-            name.endsWith('.aac') ||
-            name.endsWith('.ogg') ||
-            name.endsWith('.opus') ||
-            name.endsWith('.wma') ||
-            name.endsWith('.aiff') ||
-            name.endsWith('.webm')
+            mime.startsWith('audio/') || ScannerService.isAudioFileName(name)
           );
         });
 
@@ -131,28 +122,8 @@ export default function LocalLibraryScreen({
           return;
         }
 
-        const now = Date.now();
-        const importedTracks = audioAssets.map((file, idx) => {
-          const rawName = file.name || 'Audio Track';
-          const meta = Id3Service.parseFilenameMetadata(rawName);
-          const cover = Id3Service.generateCuratedArtwork(meta.title, meta.artist);
-
-          return {
-            id: `local-${now}-${idx}`,
-            title: meta.title,
-            artist: meta.artist,
-            album: meta.album,
-            folder: 'Imported Files',
-            duration: 180,
-            category: "local",
-            sourceType: "local",
-            uri: file.uri,
-            coverUrl: cover,
-            addedAt: now - idx * 1000,
-            scannedAt: now - idx * 1000,
-            lyrics: `[Local Audio Track: ${file.name}]\nPlaying from your phone storage.`
-          };
-        });
+        // Copy the songs into Selah's own folder so they keep working later
+        const importedTracks = await ScannerService.importPickedFiles(audioAssets);
 
         if (importedTracks.length > 1) {
           if (onBatchAddLocalTracks) {
@@ -219,7 +190,7 @@ export default function LocalLibraryScreen({
         <View style={styles.actionBtns}>
           <TouchableOpacity 
             style={[styles.scanBtn, isScanning && styles.btnDisabled]} 
-            onPress={handleAutoScanDevice}
+            onPress={() => handleAutoScanDevice(false)}
             disabled={isScanning}
           >
             {isScanning ? (
@@ -247,12 +218,14 @@ export default function LocalLibraryScreen({
           </View>
           <Text style={styles.emptyTitle}>No Local Songs Found Yet</Text>
           <Text style={styles.emptySub}>
-            Auto-scan your device storage to find all MP3 and music files, or import them directly.
+            {Platform.OS === 'android'
+              ? 'Scan your phone to find every song in every audio format, or import files directly.'
+              : 'Import songs from the Files app, or copy music into Files › On My iPhone › Selah and scan.'}
           </Text>
 
           <TouchableOpacity 
             style={styles.heroScanBtn} 
-            onPress={handleAutoScanDevice}
+            onPress={() => handleAutoScanDevice(false)}
             disabled={isScanning}
           >
             {isScanning ? (
@@ -260,14 +233,14 @@ export default function LocalLibraryScreen({
             ) : (
               <>
                 <Ionicons name="scan" size={18} color="#FFFFFF" />
-                <Text style={styles.heroScanBtnText}>Auto-Scan All Device Songs</Text>
+                <Text style={styles.heroScanBtnText}>{Platform.OS === 'android' ? 'Scan My Phone for Music' : "Scan Selah's Folder"}</Text>
               </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.heroImportBtn} onPress={handlePickAudio}>
             <Ionicons name="folder-open-outline" size={16} color="#12141A" />
-            <Text style={styles.heroImportBtnText}>Pick from Files</Text>
+            <Text style={styles.heroImportBtnText}>Import from Files</Text>
           </TouchableOpacity>
         </View>
       )}

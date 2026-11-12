@@ -5,7 +5,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Image, 
-  StyleSheet 
+  StyleSheet,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -25,7 +26,8 @@ export default function HomeScreen({
   onNavigateToYouTube,
   favoriteArtists = [],
   onNextDevotional,
-  onOpenDigitalLibraries
+  onOpenDigitalLibraries,
+  onOpenLibrary
 }) {
   const filteredTracks = activeMood === 'all' 
     ? tracks 
@@ -160,13 +162,29 @@ export default function HomeScreen({
       {/* Featured Tracks */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>
-          {searchQuery ? `Search Results for "${searchQuery}"` : 'Featured Melodies'}
+          {searchQuery ? `Search Results for "${searchQuery}"` : 'Your Songs'}
         </Text>
         <Text style={styles.sectionSubtitle}>{filteredTracks.length} available</Text>
       </View>
 
       {/* No local results empty state */}
-      {filteredTracks.length === 0 && searchQuery ? (
+      {tracks.length === 0 && !searchQuery ? (
+        <View style={styles.noResultsBox}>
+          <Ionicons name="musical-notes-outline" size={38} color="#9AA0AC" />
+          <Text style={styles.noResultsTitle}>No songs yet</Text>
+          <Text style={styles.noResultsSub}>
+            {Platform.OS === 'android'
+              ? 'Selah finds all the music on your phone. Open your Library to scan.'
+              : 'Import songs from the Files app, or copy music into Files › On My iPhone › Selah.'}
+          </Text>
+          {onOpenLibrary && (
+            <TouchableOpacity style={styles.searchYtBannerBtn} onPress={onOpenLibrary}>
+              <Ionicons name="folder-open-outline" size={18} color="#12141A" />
+              <Text style={styles.searchYtBannerBtnText}>Open my Library</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : filteredTracks.length === 0 && searchQuery ? (
         <View style={styles.noResultsBox}>
           <Ionicons name="search-outline" size={38} color="#9AA0AC" />
           <Text style={styles.noResultsTitle}>No local tracks found for "{searchQuery}"</Text>

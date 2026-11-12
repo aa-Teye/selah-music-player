@@ -1,237 +1,303 @@
 // ═════════════════════════════════════════════════════════════════════════
-//  SELAH MUSIC PLAYER — AUTOMATIC AUDIO SCANNER SERVICE
+//  SELAH — MUSIC SCANNER
+//
+//  Android: reads the phone's media index (MediaStore) and lists EVERY audio
+//           file Android knows about, in every format and folder (internal
+//           storage and SD card), page by page with no limit.
+//  iPhone:  Apple does not let any app read the whole phone storage or other
+//           apps' music. Expo's media library only reaches the Photos app.
+//           So Selah scans its own folder instead:
+//           Files app › On My iPhone › Selah  (imported songs are saved there too).
 // ═════════════════════════════════════════════════════════════════════════
 
-let Platform;
-try {
-  Platform = require('react-native').Platform;
-} catch (_) {
-  Platform = { OS: 'android' };
-}
+import { Platform } from 'react-native';
+import * as MediaLibrary from 'expo-media-library/legacy';
+import { Directory, File, Paths } from 'expo-file-system';
+import { Id3Service } from './id3Service';
 
-let MediaLibrary;
-try {
-  MediaLibrary = require('expo-media-library/legacy');
-} catch (_) {
-  try {
-    MediaLibrary = require('expo-media-library');
-  } catch (e) {
-    MediaLibrary = {};
-  }
-}
-
-import { Id3Service } from './id3Service.js';
-import { StorageService } from './storageService.js';
-
-const AUDIO_EXTENSIONS = [
-  '.mp3', '.m4a', '.wav', '.flac', '.aac', '.ogg', '.opus', 
-  '.wma', '.aiff', '.m4p', '.alac', '.weba', '.mid', '.midi', '.amr', '.3gp'
+// Every common audio file type
+export const AUDIO_EXTENSIONS = [
+  'mp3', 'mp2', 'mpga', 'm4a', 'm4b', 'm4p', 'mp4a', 'aac', 'adts', 'wav', 'wave', 'flac',
+  'ogg', 'oga', 'opus', 'wma', 'aif', 'aiff', 'aifc', 'caf', 'alac', 'amr', 'awb', '3ga',
+  'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota', 'mka', 'weba', 'ac3', 'eac3',
+  'ape', 'wv', 'dsf', 'dff', 'spx', 'tta'
 ];
 
-/**
- * Requests and verifies device media permissions for audio scanning.
- * On Android 13+ / Expo Go, strictly requests 'audio' granular permission
- * to avoid Expo Go's security exception on photo/video permissions.
- */
-export async function requestAudioPermissions() {
+// Formats the phone's built-in decoders cannot play (we still list them, and explain on tap)
+const NOT_PLAYABLE = {
+  android: ['wma', 'ape', 'wv', 'dsf', 'dff', 'tta', 'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota', 'spx'],
+  ios: [
+    'wma', 'ape', 'wv', 'dsf', 'dff', 'tta', 'ogg', 'oga', 'opus', 'spx', 'amr', 'awb', '3ga',
+    'mka', 'weba', 'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota'
+  ]
+};
+
+// Phone sounds and private recordings are not music, so they are skipped
+const EXCLUDED_PATHS = [
+  /\/(notifications?|ringtones?|alarms?)\//i,
+  /whatsapp voice notes/i,
+  /\/(call ?recordings?|callrecord(?:ing)?s?)\//i
+];
+
+const PAGE_SIZE = 500;
+const MAX_PAGES = 400; // up to 200,000 audio files
+export const MUSIC_FOLDER_NAME = 'Selah Music';
+
+const safeDecode = (s) => {
   try {
-    if (!MediaLibrary || typeof MediaLibrary.getPermissionsAsync !== 'function') {
-      return false;
-    }
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
 
+export function getExtension(nameOrUri = '') {
+  const clean = String(nameOrUri).split('?')[0].split('#')[0];
+  const match = clean.match(/\.([a-z0-9]{1,5})$/i);
+  return match ? match[1].toLowerCase() : '';
+}
+
+export function isAudioFileName(name) {
+  return AUDIO_EXTENSIONS.includes(getExtension(name));
+}
+
+/** Returns the file type (e.g. 'wma') when this phone cannot play it, otherwise null */
+export function unsupportedFormat(track) {
+  if (!track || track.sourceType === 'youtube' || track.youtubeId || track.asset) return null;
+  const ext = getExtension(track.uri || '');
+  const list = NOT_PLAYABLE[Platform.OS] || [];
+  return list.includes(ext) ? ext : null;
+}
+
+const isExcluded = (uri) => {
+  const path = safeDecode(String(uri || ''));
+  return EXCLUDED_PATHS.some((re) => re.test(path));
+};
+
+/** Android: asks for the "Music and audio" permission. iPhone needs no permission for Selah's own folder. */
+export async function requestAudioPermissions() {
+  if (Platform.OS !== 'android') return true;
+  try {
     let perm = null;
-
-    if (Platform.OS === 'android') {
-      // Step 1: Check existing permission with granular ['audio']
-      try {
-        perm = await MediaLibrary.getPermissionsAsync(false, ['audio']);
-      } catch (err1) {
-        // Fallback without arguments for older versions
-        try {
-          perm = await MediaLibrary.getPermissionsAsync();
-        } catch (_) {}
-      }
-
-      if (perm && (perm.granted || perm.status === 'granted')) {
-        return true;
-      }
-
-      // Step 2: Request permission with granular ['audio']
-      try {
-        perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
-      } catch (err2) {
-        try {
-          perm = await MediaLibrary.requestPermissionsAsync();
-        } catch (_) {}
-      }
-
-      if (perm && (perm.granted || perm.status === 'granted')) {
-        return true;
-      }
-
-      // Fallback attempt without arguments for standard Android storage
-      try {
-        const genericPerm = await MediaLibrary.requestPermissionsAsync();
-        if (genericPerm && (genericPerm.granted || genericPerm.status === 'granted')) {
-          return true;
-        }
-      } catch (_) {}
-    } else {
-      // iOS
-      try {
-        perm = await MediaLibrary.getPermissionsAsync();
-      } catch (_) {}
-      if (!perm || (!perm.granted && perm.status !== 'granted')) {
-        try {
-          perm = await MediaLibrary.requestPermissionsAsync();
-        } catch (_) {}
-      }
+    try {
+      perm = await MediaLibrary.getPermissionsAsync(false, ['audio']);
+    } catch {
+      perm = await MediaLibrary.getPermissionsAsync();
     }
+    if (perm && (perm.granted || perm.status === 'granted')) return true;
+    if (perm && perm.canAskAgain === false) return false;
 
+    try {
+      perm = await MediaLibrary.requestPermissionsAsync(false, ['audio']);
+    } catch {
+      perm = await MediaLibrary.requestPermissionsAsync();
+    }
     return Boolean(perm && (perm.granted || perm.status === 'granted'));
   } catch (err) {
-    console.log('Audio permission request notice:', err);
+    console.log('Audio permission notice:', err);
     return false;
   }
 }
 
-/**
- * Automatically scans device storage for all MP3, M4A, WAV, FLAC, and audio tracks.
- * Returns enriched track objects ready for Selah player.
- */
-export async function scanDeviceAudio(maxPages = 20, pageSize = 100) {
-  const hasPermission = await requestAudioPermissions();
-  if (!hasPermission) {
-    return { success: false, tracks: [], error: 'Permission not granted' };
+// ── Selah's own folder (Documents) ─────────────────────────────────────────
+
+/** Files app › On My iPhone › Selah › Selah Music (on Android: the app's private storage) */
+export function getMusicFolder() {
+  const dir = new Directory(Paths.document, MUSIC_FOLDER_NAME);
+  try {
+    if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
+  } catch (err) {
+    console.log('Music folder notice:', err);
+  }
+  return dir;
+}
+
+function documentRelativePath(uri) {
+  const base = String(Paths.document.uri || '').replace(/\/?$/, '/');
+  const value = String(uri || '');
+  return safeDecode(value.startsWith(base) ? value.slice(base.length) : value);
+}
+
+/** Turns a file in Selah's folder into a track. The id stays the same between app updates. */
+export function fileToTrack(file, folderName) {
+  const meta = Id3Service.parseFilenameMetadata(file.name);
+  const now = Date.now();
+  return {
+    id: `local-doc-${documentRelativePath(file.uri)}`,
+    title: meta.title,
+    artist: meta.artist,
+    album: meta.album,
+    folder: folderName || MUSIC_FOLDER_NAME,
+    duration: 0,
+    category: 'local',
+    sourceType: 'local',
+    uri: file.uri,
+    coverUrl: Id3Service.generateCuratedArtwork(meta.title, meta.artist),
+    addedAt: now,
+    scannedAt: now
+  };
+}
+
+function scanAppFolder() {
+  const tracks = [];
+  const walk = (dir, depth) => {
+    if (depth > 8) return;
+    let entries = [];
+    try {
+      entries = dir.list();
+    } catch {
+      return;
+    }
+    entries.forEach((entry) => {
+      if (entry instanceof Directory) {
+        if (!entry.name.startsWith('.')) walk(entry, depth + 1);
+      } else if (entry instanceof File && isAudioFileName(entry.name)) {
+        tracks.push(fileToTrack(entry, depth === 0 ? MUSIC_FOLDER_NAME : dir.name));
+      }
+    });
+  };
+  try {
+    walk(Paths.document, 0);
+  } catch (err) {
+    console.log('App folder scan notice:', err);
+  }
+  return tracks;
+}
+
+// ── Android media index ────────────────────────────────────────────────────
+
+async function scanAndroidMediaStore(onProgress) {
+  const tracks = [];
+  const seen = new Set();
+  const add = (asset) => {
+    const uri = asset && asset.uri;
+    if (!uri || seen.has(uri) || isExcluded(uri)) return;
+    seen.add(uri);
+    tracks.push(Id3Service.enrichAsset(asset));
+  };
+
+  // Pass 1: everything Android lists as audio (all formats, all folders, SD card included)
+  let after;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const res = await MediaLibrary.getAssetsAsync({
+      mediaType: MediaLibrary.MediaType.audio,
+      first: PAGE_SIZE,
+      after
+    });
+    (res?.assets || []).forEach(add);
+    if (onProgress) onProgress(tracks.length);
+    if (!res?.hasNextPage || !res.endCursor || res.endCursor === after) break;
+    after = res.endCursor;
   }
 
-  const discovered = [];
-  const seenUris = new Set();
-  let hasNextPage = true;
-  let after = undefined;
-  let page = 0;
+  // Pass 2: audio files Android did not label as audio (older phones can see these)
+  try {
+    let afterOther;
+    for (let page = 0; page < 40; page++) {
+      const res = await MediaLibrary.getAssetsAsync({
+        mediaType: MediaLibrary.MediaType.unknown,
+        first: PAGE_SIZE,
+        after: afterOther
+      });
+      (res?.assets || []).forEach((asset) => {
+        if (isAudioFileName(asset.filename || asset.uri)) add(asset);
+      });
+      if (!res?.hasNextPage || !res.endCursor || res.endCursor === afterOther) break;
+      afterOther = res.endCursor;
+    }
+  } catch {
+    // Newer Android only allows the audio list with audio permission — that's fine.
+  }
+
+  return tracks;
+}
+
+/**
+ * Finds every song Selah can reach.
+ * Returns { success, tracks, platformScan, error? }.
+ */
+export async function scanDeviceAudio({ onProgress } = {}) {
+  const fromAppFolder = scanAppFolder();
+
+  if (Platform.OS !== 'android') {
+    return { success: true, tracks: fromAppFolder, platformScan: 'app-folder' };
+  }
+
+  const allowed = await requestAudioPermissions();
+  if (!allowed) {
+    return { success: false, tracks: fromAppFolder, platformScan: 'android', error: 'Permission not granted' };
+  }
 
   try {
-    if (typeof MediaLibrary.getAssetsAsync !== 'function') {
-      return { success: false, tracks: [], error: 'getAssetsAsync not available' };
-    }
-
-    const audioType = MediaLibrary.MediaType?.audio || 'audio';
-    const mediaTypesToQuery = [audioType];
-    if (MediaLibrary.MediaType?.unknown) {
-      mediaTypesToQuery.push(MediaLibrary.MediaType.unknown);
-    }
-
-    // ── PASS 1: Scan Audio Media Assets with Pagination ──
-    while (hasNextPage && page < maxPages) {
-      page++;
-      const options = {
-        mediaType: mediaTypesToQuery,
-        first: pageSize
-      };
-      if (after) {
-        options.after = String(after);
-      }
-
-      const res = await MediaLibrary.getAssetsAsync(options);
-      if (res && res.assets && res.assets.length > 0) {
-        for (const asset of res.assets) {
-          const uri = asset.uri || asset.id;
-          const fname = (asset.filename || asset.uri || '').toLowerCase();
-          const isAudioMatch = 
-            asset.mediaType === 'audio' || 
-            AUDIO_EXTENSIONS.some(ext => fname.endsWith(ext));
-
-          if (uri && isAudioMatch && !seenUris.has(uri)) {
-            seenUris.add(uri);
-            discovered.push(Id3Service.enrichAsset(asset));
-          }
-        }
-      }
-
-      hasNextPage = Boolean(res && res.hasNextPage && res.endCursor && res.endCursor !== after);
-      after = res?.endCursor;
-      if (!res?.assets || res.assets.length === 0) break;
-    }
-
-    // ── PASS 2: Scan Audio Folders/Albums (Music, Download, WhatsApp, Recordings) ──
-    try {
-      if (typeof MediaLibrary.getAlbumsAsync === 'function') {
-        const albums = await MediaLibrary.getAlbumsAsync();
-        if (Array.isArray(albums) && albums.length > 0) {
-          const targetAlbumKeywords = ['music', 'download', 'audio', 'song', 'record', 'podcast', 'track'];
-          const relevantAlbums = albums.filter(a => {
-            const title = (a.title || '').toLowerCase();
-            return targetAlbumKeywords.some(k => title.includes(k));
-          });
-
-          for (const album of relevantAlbums.slice(0, 8)) {
-            try {
-              const albumAssets = await MediaLibrary.getAssetsAsync({
-                album: album.id,
-                first: 100,
-                mediaType: mediaTypesToQuery
-              });
-              if (albumAssets && albumAssets.assets) {
-                for (const asset of albumAssets.assets) {
-                  const uri = asset.uri || asset.id;
-                  const fname = (asset.filename || asset.uri || '').toLowerCase();
-                  const isAudioMatch = 
-                    asset.mediaType === 'audio' || 
-                    AUDIO_EXTENSIONS.some(ext => fname.endsWith(ext));
-
-                  if (uri && isAudioMatch && !seenUris.has(uri)) {
-                    seenUris.add(uri);
-                    const enriched = Id3Service.enrichAsset(asset);
-                    if (!enriched.folder || enriched.folder === 'Music') {
-                      enriched.folder = album.title || 'Music';
-                    }
-                    discovered.push(enriched);
-                  }
-                }
-              }
-            } catch (_) {}
-          }
-        }
-      }
-    } catch (albumErr) {
-      console.log('Album inspection notice:', albumErr);
-    }
-
-    // ── PASS 3: Secondary scan fallback across all media assets ──
-    if (discovered.length === 0) {
-      try {
-        const fallbackRes = await MediaLibrary.getAssetsAsync({ 
-          first: 300,
-          mediaType: [MediaLibrary.MediaType?.audio || 'audio', MediaLibrary.MediaType?.unknown || 'unknown']
-        });
-        if (fallbackRes && fallbackRes.assets) {
-          for (const asset of fallbackRes.assets) {
-            const fname = (asset.filename || asset.uri || '').toLowerCase();
-            if (AUDIO_EXTENSIONS.some(ext => fname.endsWith(ext))) {
-              const uri = asset.uri || asset.id;
-              if (uri && !seenUris.has(uri)) {
-                seenUris.add(uri);
-                discovered.push(Id3Service.enrichAsset(asset));
-              }
-            }
-          }
-        }
-      } catch (fbErr) {
-        console.log('Secondary media fallback notice:', fbErr);
-      }
-    }
-
-    return { success: true, tracks: discovered };
+    const fromPhone = await scanAndroidMediaStore(onProgress);
+    return { success: true, tracks: [...fromPhone, ...fromAppFolder], platformScan: 'android' };
   } catch (err) {
-    console.error('Scan device audio error:', err);
-    return { success: false, tracks: discovered, error: err.message };
+    console.log('Scan device audio notice:', err);
+    return { success: false, tracks: fromAppFolder, platformScan: 'android', error: err?.message || 'Scan failed' };
   }
+}
+
+// ── Import from Files ──────────────────────────────────────────────────────
+
+function uniqueDestination(folder, fileName, sourceSize) {
+  const dot = fileName.lastIndexOf('.');
+  const base = dot > 0 ? fileName.slice(0, dot) : fileName;
+  const ext = dot > 0 ? fileName.slice(dot) : '';
+  let candidate = new File(folder, fileName);
+  for (let i = 1; i < 500 && candidate.exists; i++) {
+    // Same name and same size: it's the same song, reuse it instead of copying again
+    if (sourceSize && candidate.size === sourceSize) return { file: candidate, reuse: true };
+    candidate = new File(folder, `${base} (${i})${ext}`);
+  }
+  return { file: candidate, reuse: false };
+}
+
+/**
+ * Copies picked songs into Selah's own folder so they keep working after the
+ * phone clears temporary files. Returns tracks ready for the library.
+ */
+export async function importPickedFiles(pickedAssets = []) {
+  const folder = getMusicFolder();
+  const imported = [];
+  for (let i = 0; i < pickedAssets.length; i++) {
+    const picked = pickedAssets[i];
+    const name = picked.name || `Song ${Date.now()}-${i}.mp3`;
+    try {
+      const source = new File(picked.uri);
+      const { file: destination, reuse } = uniqueDestination(folder, name, picked.size || source.size);
+      if (!reuse) await source.copy(destination);
+      imported.push(fileToTrack(destination, MUSIC_FOLDER_NAME));
+    } catch (err) {
+      console.log('Import copy notice:', err);
+      // Could not copy: keep the picked file as it is
+      const meta = Id3Service.parseFilenameMetadata(name);
+      imported.push({
+        id: `local-${Date.now()}-${i}`,
+        title: meta.title,
+        artist: meta.artist,
+        album: meta.album,
+        folder: 'Imported Files',
+        duration: 0,
+        category: 'local',
+        sourceType: 'local',
+        uri: picked.uri,
+        coverUrl: Id3Service.generateCuratedArtwork(meta.title, meta.artist),
+        addedAt: Date.now(),
+        scannedAt: Date.now()
+      });
+    }
+  }
+  return imported;
 }
 
 export const ScannerService = {
   requestAudioPermissions,
-  scanDeviceAudio
+  scanDeviceAudio,
+  importPickedFiles,
+  getMusicFolder,
+  isAudioFileName,
+  unsupportedFormat,
+  AUDIO_EXTENSIONS
 };
 
 export default ScannerService;

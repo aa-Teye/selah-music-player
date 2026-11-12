@@ -63,6 +63,8 @@ export default function PrayerBookmarksModal({
     ? bookmarks.filter((b) => b.trackId === currentTrack.id)
     : bookmarks;
 
+  if (!currentTrack) return null;
+
   return (
     <Modal
       visible={visible}

@@ -12,7 +12,7 @@ export const Id3Service = {
    * - "Title (Feat. Artist).mp3"
    */
   parseFilenameMetadata(rawFilename) {
-    if (!rawFilename) return { title: 'Unknown Audio', artist: 'Device Storage', album: 'My Music' };
+    if (!rawFilename) return { title: 'Unknown Audio', artist: 'Unknown Artist', album: 'My Music' };
 
     // Remove file extension
     let clean = rawFilename.replace(/\.[^/.]+$/, "").trim();
@@ -21,7 +21,7 @@ export const Id3Service = {
     clean = clean.replace(/^\d{1,3}\s*[-._)]+\s*/, "").replace(/^0\d\s+/, "").trim();
 
     let title = clean;
-    let artist = "Device Storage";
+    let artist = "Unknown Artist";
     let album = "My Music Files";
 
     // Check for "Artist - Title" pattern
@@ -41,7 +41,7 @@ export const Id3Service = {
 
     return {
       title: title || 'Audio Track',
-      artist: artist || 'Device Storage',
+      artist: artist || 'Unknown Artist',
       album: album
     };
   },
@@ -91,7 +91,8 @@ export const Id3Service = {
     }
 
     const coverUrl = this.generateCuratedArtwork(parsed.title, parsed.artist);
-    const addedTime = asset.modificationTime ? asset.modificationTime * 1000 : Date.now();
+    const stamp = Number(asset.modificationTime || asset.creationTime || 0);
+    const addedTime = stamp > 1e12 ? stamp : stamp > 0 ? stamp * 1000 : Date.now();
 
     return {
       id: `local-scan-${asset.id}`,
@@ -99,14 +100,13 @@ export const Id3Service = {
       artist: parsed.artist,
       album: parsed.album,
       folder: folderName,
-      duration: Math.round(asset.duration || 180),
+      duration: Math.round(asset.duration || 0),
       category: "local",
       sourceType: "local",
       uri: asset.uri,
       coverUrl: coverUrl,
       addedAt: addedTime,
-      scannedAt: Date.now(),
-      lyrics: `[Device Audio: ${parsed.title}]\nArtist: ${parsed.artist}\nStored in: ${folderName}\nOffline playback from your phone.`
+      scannedAt: Date.now()
     };
   }
 };
