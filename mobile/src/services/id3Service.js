@@ -18,7 +18,7 @@ export const Id3Service = {
     let clean = rawFilename.replace(/\.[^/.]+$/, "").trim();
 
     // Remove leading track numbers (e.g. "01 - ", "1. ", "02_")
-    clean = clean.replace(/^\d+[\s.-_]+/, "").trim();
+    clean = clean.replace(/^\d{1,3}\s*[-._)]+\s*/, "").replace(/^0\d\s+/, "").trim();
 
     let title = clean;
     let artist = "Device Storage";

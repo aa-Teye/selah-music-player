@@ -29,6 +29,7 @@ import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 import { DAILY_DEVOTION, DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
 import { ScannerService } from './src/services/scannerService';
+import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -61,7 +62,7 @@ export default function App() {
   const [isFullPlayerVisible, setIsFullPlayerVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
-  const [streakData, setStreakData] = useState({ streakDays: 14 });
+  const [streakData, setStreakData] = useState({ streakDays: 1 });
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
   const [favoriteArtists, setFavoriteArtists] = useState([]);
@@ -76,6 +77,102 @@ export default function App() {
   const handleNextTrackRef = useRef(null);
   const isRepeatRef = useRef(isRepeat);
   const isShuffleRef = useRef(isShuffle);
+  const crossfadeRef = useRef(0);
+  const sleepEndRef = useRef(null);
+  const positionRef = useRef(0);
+  const listenAccumRef = useRef(0);
+  const isPlayingRef = useRef(false);
+  const ambientPlayerRef = useRef(null);
+  const ambientVolumeRef = useRef(0.5);
+
+  // Queue: null = play through the whole library; array = custom queue (e.g. a playlist)
+  const [queueOverride, setQueueOverride] = useState(null);
+  const queue = queueOverride ?? tracks;
+
+  useEffect(() => {
+    crossfadeRef.current = crossfadeSeconds;
+  }, [crossfadeSeconds]);
+
+  useEffect(() => {
+    positionRef.current = currentPosition;
+  }, [currentPosition]);
+
+  // Ambient soundscape: real looping background audio layered under the music
+  useEffect(() => {
+    ambientVolumeRef.current = ambientVolume;
+    if (ambientPlayerRef.current) {
+      try {
+        ambientPlayerRef.current.volume = ambientVolume;
+      } catch {}
+    }
+  }, [ambientVolume]);
+
+  useEffect(() => {
+    const source = activeSoundscape ? SOUNDSCAPE_ASSETS[activeSoundscape] : null;
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      // let the soundscape play together with the music instead of pausing it
+      interruptionMode: source ? 'mixWithOthers' : 'doNotMix'
+    }).catch(() => {});
+    if (!source) return undefined;
+    let player = null;
+    try {
+      player = createAudioPlayer(source);
+      player.loop = true;
+      player.volume = ambientVolumeRef.current;
+      player.play();
+      ambientPlayerRef.current = player;
+    } catch (err) {
+      console.log('Ambient soundscape notice:', err);
+    }
+    return () => {
+      try {
+        player?.pause();
+        player?.remove();
+      } catch {}
+      if (ambientPlayerRef.current === player) ambientPlayerRef.current = null;
+    };
+  }, [activeSoundscape]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Count REAL listening time (flush to storage every 30s and when playback stops)
+  useEffect(() => {
+    if (!isPlaying) return undefined;
+    const flush = () => {
+      const secs = listenAccumRef.current;
+      if (secs > 0) {
+        listenAccumRef.current = 0;
+        StorageService.addListeningSeconds(secs).then((stats) => {
+          if (stats) setListeningStats(stats);
+        });
+      }
+    };
+    const timer = setInterval(() => {
+      listenAccumRef.current += 1;
+      if (listenAccumRef.current >= 30) flush();
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+      flush();
+    };
+  }, [isPlaying]);
+
+  // Remember where the user stopped so the app can resume on next launch
+  useEffect(() => {
+    if (!currentTrack?.id) return undefined;
+    if (!isPlaying) {
+      StorageService.saveLastPlayed(currentTrack.id, positionRef.current);
+      return undefined;
+    }
+    const timer = setInterval(() => {
+      StorageService.saveLastPlayed(currentTrack.id, positionRef.current);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [isPlaying, currentTrack?.id]);
 
   useEffect(() => {
     isRepeatRef.current = isRepeat;
@@ -132,7 +229,6 @@ export default function App() {
         }
         if (savedSettings) {
           if (typeof savedSettings.crossfadeSeconds === 'number') setCrossfadeSeconds(savedSettings.crossfadeSeconds);
-          if (savedSettings.ambientSoundType) setActiveSoundscape(savedSettings.ambientSoundType);
           if (typeof savedSettings.ambientVolume === 'number') setAmbientVolume(savedSettings.ambientVolume);
         }
         if (savedLocal && savedLocal.length > 0) {
@@ -142,20 +238,43 @@ export default function App() {
           setDuration(savedLocal[0].duration || 180);
         }
 
+        // Resume the last played track (paused, ready to continue)
+        try {
+          const last = await StorageService.getLastPlayed();
+          if (last?.trackId) {
+            const pool = [...(savedLocal || []), ...INITIAL_TRACKS];
+            const lastTrack = pool.find((t) => t.id === last.trackId);
+            if (lastTrack && lastTrack.sourceType !== 'youtube') {
+              setCurrentTrack(lastTrack);
+              setDuration(lastTrack.duration || 180);
+              setCurrentPosition(Math.floor(last.position || 0));
+            }
+          }
+        } catch {}
+
         // Automatic background auto-scan for all phone MP3s & audio files
-        ScannerService.scanDeviceAudio(10, 100).then((scanResult) => {
+        ScannerService.scanDeviceAudio(40, 200).then((scanResult) => {
           if (scanResult && scanResult.success && scanResult.tracks.length > 0) {
             const foundTracks = scanResult.tracks;
+            const foundUris = new Set(foundTracks.map((t) => t.uri));
+            // Songs that were scanned earlier but no longer exist on the phone
+            const isStale = (t) => String(t.id).startsWith('local-scan-') && !foundUris.has(t.uri);
+
             setLocalTracks((prev) => {
               const existingUris = new Set(prev.map((t) => t.uri || t.id));
               const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
-              if (newFound.length > 0) {
-                const merged = [...newFound, ...prev];
-                StorageService.saveLocalTracks(merged);
-                setTracks((prevTracks) => [...newFound, ...prevTracks]);
-                return merged;
-              }
-              return prev;
+              const kept = prev.filter((t) => !isStale(t));
+              if (newFound.length === 0 && kept.length === prev.length) return prev;
+              const merged = [...newFound, ...kept];
+              StorageService.saveLocalTracks(merged);
+              return merged;
+            });
+            setTracks((prev) => {
+              const existingUris = new Set(prev.map((t) => t.uri || t.id));
+              const newFound = foundTracks.filter((t) => !existingUris.has(t.uri || t.id));
+              const kept = prev.filter((t) => !isStale(t));
+              if (newFound.length === 0 && kept.length === prev.length) return prev;
+              return [...newFound, ...kept];
             });
             // Automatically add discovered MP3s to recent tracks for instant visibility
             setRecentTracks((prev) => {
@@ -180,13 +299,13 @@ export default function App() {
       if (statusSubRef.current) {
         try {
           statusSubRef.current.remove();
-        } catch (_) {}
+        } catch {}
       }
       if (soundRef.current) {
         try {
           soundRef.current.pause();
           soundRef.current.remove();
-        } catch (_) {}
+        } catch {}
       }
       if (playbackTimer.current) {
         clearInterval(playbackTimer.current);
@@ -197,19 +316,46 @@ export default function App() {
     };
   }, []);
 
-  // Handle Play a Track
-  const handlePlayTrack = useCallback(async (track) => {
+  // Smoothly adjust volume: crossfade-style fade in/out at track edges + sleep-timer fade-out
+  const applyVolume = useCallback((player, position, total) => {
+    if (!player) return;
+    let factor = 1;
+    const cf = crossfadeRef.current;
+    if (cf > 0 && total > cf * 2) {
+      const fadeIn = Math.max(0, Math.min(1, (position + 1) / cf));
+      const fadeOut = Math.max(0, Math.min(1, (total - position) / cf));
+      factor = Math.min(factor, fadeIn, fadeOut);
+    }
+    if (sleepEndRef.current) {
+      const remaining = (sleepEndRef.current - Date.now()) / 1000;
+      if (remaining <= 10) factor = Math.min(factor, Math.max(0, remaining / 10));
+    }
+    try {
+      if (player.volume !== factor) player.volume = factor;
+    } catch {}
+  }, []);
+
+  // Handle Play a Track  (opts: { keepQueue, resumeAt })
+  const handlePlayTrack = useCallback(async (track, opts) => {
     if (!track) return;
+    const options = opts && typeof opts === 'object' && !opts.nativeEvent ? opts : {};
+    const resumeAt = typeof options.resumeAt === 'number' && options.resumeAt > 1 ? options.resumeAt : 0;
+
+    // Playing something outside the custom queue returns to the whole library
+    if (!options.keepQueue) {
+      setQueueOverride((prev) => (prev && prev.some((t) => t.id === track.id) ? prev : null));
+    }
+
     setCurrentTrack(track);
     setIsPlaying(true);
-    setCurrentPosition(0);
+    setCurrentPosition(resumeAt);
     setDuration(track.duration || 180);
 
-    // Record to recently played and increment listening stats
+    // Record to recently played and count the play (real listening time is tracked separately)
     StorageService.addRecentlyPlayed(track).then((updated) => {
       if (updated) setRecentTracks(updated);
     });
-    StorageService.recordListeningSession(30).then((stats) => {
+    StorageService.recordTrackPlayed().then((stats) => {
       if (stats) setListeningStats(stats);
     });
 
@@ -217,7 +363,7 @@ export default function App() {
     if (statusSubRef.current) {
       try {
         statusSubRef.current.remove();
-      } catch (_) {}
+      } catch {}
       statusSubRef.current = null;
     }
 
@@ -225,7 +371,7 @@ export default function App() {
       try {
         soundRef.current.pause();
         soundRef.current.remove();
-      } catch (_) {}
+      } catch {}
       soundRef.current = null;
     }
 
@@ -260,6 +406,11 @@ export default function App() {
         }
 
         player.play();
+        if (resumeAt > 0) {
+          try {
+            player.seekTo(resumeAt);
+          } catch {}
+        }
 
         const sub = player.addListener('playbackStatusUpdate', (status) => {
           if (status.duration && status.duration > 0) {
@@ -267,13 +418,14 @@ export default function App() {
           }
           if (typeof status.currentTime === 'number') {
             setCurrentPosition(Math.floor(status.currentTime));
+            applyVolume(player, status.currentTime, status.duration || track.duration || 0);
           }
           if (status.didJustFinish) {
             if (isRepeatRef.current) {
               try {
                 player.seekTo(0);
                 player.play();
-              } catch (_) {
+              } catch {
                 handleNextTrackRef.current?.();
               }
             } else {
@@ -286,27 +438,30 @@ export default function App() {
         console.log('Error playing audio sound:', err);
       }
     }
-  }, [playbackSpeed]);
+  }, [playbackSpeed, applyVolume]);
 
   // Next Track
   const handleNextTrack = useCallback(() => {
-    if (tracks.length === 0) return;
+    if (queue.length === 0) return;
+    const keep = { keepQueue: true };
 
     if (isShuffleRef.current || isShuffle) {
-      const randIdx = Math.floor(Math.random() * tracks.length);
-      handlePlayTrack(tracks[randIdx]);
+      const pool = queue.length > 1 ? queue.filter((t) => t.id !== currentTrack?.id) : queue;
+      handlePlayTrack(pool[Math.floor(Math.random() * pool.length)], keep);
       return;
     }
 
-    const currentIdx = tracks.findIndex((t) => t.id === currentTrack?.id);
-    if (currentIdx !== -1 && currentIdx < tracks.length - 1) {
-      handlePlayTrack(tracks[currentIdx + 1]);
+    const currentIdx = queue.findIndex((t) => t.id === currentTrack?.id);
+    if (currentIdx !== -1 && currentIdx < queue.length - 1) {
+      handlePlayTrack(queue[currentIdx + 1], keep);
     } else {
-      handlePlayTrack(tracks[0]);
+      handlePlayTrack(queue[0], keep);
     }
-  }, [tracks, isShuffle, currentTrack, handlePlayTrack]);
+  }, [queue, isShuffle, currentTrack, handlePlayTrack]);
 
-  handleNextTrackRef.current = handleNextTrack;
+  useEffect(() => {
+    handleNextTrackRef.current = handleNextTrack;
+  }, [handleNextTrack]);
 
   // Previous Track
   const handlePrevTrack = useCallback(() => {
@@ -315,38 +470,52 @@ export default function App() {
       if (soundRef.current) {
         try {
           soundRef.current.seekTo(0);
-        } catch (_) {}
+        } catch {}
       }
       return;
     }
-    const currentIdx = tracks.findIndex((t) => t.id === currentTrack?.id);
+    if (queue.length === 0) return;
+    const keep = { keepQueue: true };
+    const currentIdx = queue.findIndex((t) => t.id === currentTrack?.id);
     if (currentIdx > 0) {
-      handlePlayTrack(tracks[currentIdx - 1]);
+      handlePlayTrack(queue[currentIdx - 1], keep);
     } else {
-      handlePlayTrack(tracks[tracks.length - 1]);
+      handlePlayTrack(queue[queue.length - 1], keep);
     }
-  }, [currentPosition, tracks, currentTrack, handlePlayTrack]);
+  }, [currentPosition, queue, currentTrack, handlePlayTrack]);
 
   // Toggle Play / Pause
   const handleTogglePlay = (explicitState) => {
     const nextState = typeof explicitState === 'boolean' ? explicitState : !isPlaying;
+
+    // Cold start (e.g. after app launch / resume): no player exists yet, so create one
+    if (
+      nextState &&
+      !soundRef.current &&
+      currentTrack &&
+      currentTrack.sourceType !== 'youtube' &&
+      !currentTrack.youtubeId &&
+      (currentTrack.asset || currentTrack.uri)
+    ) {
+      handlePlayTrack(currentTrack, { keepQueue: true, resumeAt: currentPosition });
+      return;
+    }
+
     setIsPlaying(nextState);
     if (nextState) {
       if (soundRef.current && currentTrack?.sourceType !== 'youtube') {
         try {
           soundRef.current.play();
-        } catch (_) {}
+        } catch {}
       }
     } else {
       if (soundRef.current) {
         try {
           soundRef.current.pause();
-        } catch (_) {}
+        } catch {}
       }
     }
   };
-
-  const handleTogglePlayPause = handleTogglePlay;
 
   // Interactive Audio Seeking (Scrubber)
   const handleSeek = (targetSeconds) => {
@@ -374,11 +543,17 @@ export default function App() {
     }
   };
 
-  // Bedtime Sleep Timer
+  // Bedtime Sleep Timer (fades the music out over the last 10 seconds, then pauses)
   const handleSetSleepTimer = (minutes) => {
     if (sleepTimerRef.current) {
       clearInterval(sleepTimerRef.current);
       sleepTimerRef.current = null;
+    }
+    sleepEndRef.current = null;
+    if (soundRef.current) {
+      try {
+        soundRef.current.volume = 1;
+      } catch {}
     }
 
     if (!minutes) {
@@ -386,26 +561,29 @@ export default function App() {
       return;
     }
 
-    const totalSeconds = minutes * 60;
-    setSleepTimerRemaining(totalSeconds);
+    const endAt = Date.now() + minutes * 60 * 1000;
+    sleepEndRef.current = endAt;
+    setSleepTimerRemaining(minutes * 60);
 
     sleepTimerRef.current = setInterval(() => {
-      setSleepTimerRemaining((prev) => {
-        if (!prev || prev <= 1) {
-          clearInterval(sleepTimerRef.current);
-          sleepTimerRef.current = null;
-          // Pause playback gently
-          setIsPlaying(false);
-          if (soundRef.current) {
-            try {
-              soundRef.current.pause();
-            } catch (_) {}
-          }
-          Alert.alert("Sleep Timer Ended 🌙", "Selah has gently paused your music. Goodnight!");
-          return null;
+      const remaining = Math.ceil((endAt - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+        sleepEndRef.current = null;
+        setSleepTimerRemaining(null);
+        setIsPlaying(false);
+        setActiveSoundscape(null);
+        if (soundRef.current) {
+          try {
+            soundRef.current.pause();
+            soundRef.current.volume = 1;
+          } catch {}
         }
-        return prev - 1;
-      });
+        Alert.alert("Sleep Timer Ended 🌙", "Selah has gently paused your music. Goodnight!");
+        return;
+      }
+      setSleepTimerRemaining(remaining);
     }, 1000);
   };
 
@@ -561,6 +739,7 @@ export default function App() {
       const fresh = playlistTracks.filter(t => !existingIds.has(t.id));
       return [...fresh, ...prev];
     });
+    setQueueOverride(playlistTracks);
     handlePlayTrack(playlistTracks[0]);
   };
 
@@ -646,7 +825,7 @@ export default function App() {
 
       {/* Top Header */}
       <TopHeader
-        streakDays={streakData.streakDays || 14}
+        streakDays={streakData.streakDays || 1}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenMenu={() => setIsHeaderMenuVisible(true)}
@@ -656,7 +835,7 @@ export default function App() {
       <View style={styles.mainContent}>
         {activeTab === 'home' && (
           <HomeScreen
-            devotion={{ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 14 }}
+            devotion={{ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 1 }}
             tracks={visibleTracks}
             currentTrack={currentTrack}
             isPlaying={isPlaying}
@@ -813,10 +992,10 @@ export default function App() {
         onOpenSetRingtone={handleOpenSetRingtone}
         onOpenAudioTrimmer={(t) => setTrimmerModalTrack(t || currentTrack)}
         onOpenCarMode={() => setIsCarModeVisible(true)}
-        queue={tracks}
-        onPlayTrack={handlePlayTrack}
-        onRemoveFromQueue={(trackId) => setTracks((prev) => prev.filter((t) => t.id !== trackId))}
-        onClearQueue={() => setTracks(currentTrack ? [currentTrack] : [])}
+        queue={queue}
+        onPlayTrack={(t) => handlePlayTrack(t, { keepQueue: true })}
+        onRemoveFromQueue={(trackId) => setQueueOverride((prev) => (prev ?? tracks).filter((t) => t.id !== trackId))}
+        onClearQueue={() => setQueueOverride(currentTrack ? [currentTrack] : [])}
         onOpenPrayerBookmarks={() => setIsBookmarksModalVisible(true)}
         onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
         activeSoundscape={activeSoundscape}
@@ -846,11 +1025,11 @@ export default function App() {
         track={trimmerModalTrack}
         duration={duration}
         onClose={() => setTrimmerModalTrack(null)}
-        onPlayPreview={(start, end) => {
+        onPlayPreview={(start) => {
           handleSeek(start);
           setIsPlaying(true);
           if (soundRef.current) {
-            try { soundRef.current.play(); } catch (_) {}
+            try { soundRef.current.play(); } catch {}
           }
         }}
         onApplyRingtone={(track) => {
@@ -877,7 +1056,7 @@ export default function App() {
         visible={isStatsVisible}
         onClose={() => setIsStatsVisible(false)}
         stats={listeningStats}
-        streakDays={streakData?.streakDays || 14}
+        streakDays={streakData?.streakDays || 1}
         favoritesCount={favorites.length}
       />
 
@@ -919,7 +1098,7 @@ export default function App() {
         onOpenEq={() => setIsEqVisible(true)}
         onOpenStats={() => setIsStatsVisible(true)}
         onOpenSleepTimer={() => setIsEqVisible(true)}
-        streakDays={streakData?.streakDays || 14}
+        streakDays={streakData?.streakDays || 1}
       />
 
       {/* Equalizer & Sound Settings Modal */}

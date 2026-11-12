@@ -28,19 +28,20 @@ export default function SetRingtoneModal({
         type === 'ringtone' ? 'Phone Ringtone / Caller Tune' :
         type === 'notification' ? 'Notification Sound' : 'Devotional Alarm';
 
-      // On Android devices, open System Sound Settings or guide user
+      const slot = type === 'notification' ? 'Notification sound' : type === 'alarm' ? 'Alarm sound' : 'Phone ringtone';
       if (Platform.OS === 'android') {
         Alert.alert(
-          `${typeLabel} Configured! 🔔`,
-          `"${track.title}" has been assigned as your ${typeLabel}.\n\nWould you like to open your device Sound Settings to verify?`,
+          `Set as ${typeLabel}`,
+          `Android doesn't let apps change your ringtone directly.\n\nOpen Sound settings, choose "${slot}", and pick "${track.title}" from your files.`,
           [
-            { text: "Done", style: "cancel", onPress: onClose },
-            { 
-              text: "Open Sound Settings", 
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Sound Settings",
               onPress: () => {
-                Linking.openSettings().catch(() => {
-                  Alert.alert("Notice", "Please open Settings > Sounds on your phone to view ringtones.");
-                });
+                const open = Linking.sendIntent
+                  ? Linking.sendIntent('android.settings.SOUND_SETTINGS')
+                  : Linking.openSettings();
+                Promise.resolve(open).catch(() => Linking.openSettings().catch(() => {}));
                 onClose();
               }
             }
@@ -48,8 +49,8 @@ export default function SetRingtoneModal({
         );
       } else {
         Alert.alert(
-          `${typeLabel} Ready 🎵`,
-          `On iOS, ringtones can be synced via GarageBand or iTunes. "${track.title}" is ready in your Selah music cache.`,
+          `${typeLabel}`,
+          `iPhone ringtones can't be set from an app. Add "${track.title}" as a ringtone using GarageBand or Finder on a computer.`,
           [{ text: "OK", onPress: onClose }]
         );
       }

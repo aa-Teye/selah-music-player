@@ -75,12 +75,12 @@ export default function AudioTrimmerModal({
 
   const handleSaveCut = () => {
     Alert.alert(
-      "Ringtone Cut Ready ✂️",
-      `Clip from ${formatTime(startTime)} to ${formatTime(endTime)} (${trimDuration}s) created for "${track.title}".\n\nApply as phone ringtone?`,
+      "Clip Selected ✂️",
+      `You chose ${formatTime(startTime)} to ${formatTime(endTime)} (${trimDuration}s) of "${track.title}".\n\nSelah can't save a trimmed file yet, so you'll set the full track as your ringtone from Sound settings.`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Set as Ringtone", 
+        {
+          text: "Continue",
           onPress: () => {
             if (onApplyRingtone) onApplyRingtone(track, startTime, endTime);
             onClose();

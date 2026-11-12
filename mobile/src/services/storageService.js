@@ -11,6 +11,7 @@ const KEYS = {
   BOOKMARKS: '@selah_bookmarks',
   SETTINGS: '@selah_settings',
   FAV_ARTISTS: '@selah_fav_artists',
+  LAST_PLAYED: '@selah_last_played',
   HAS_ONBOARDED: '@selah_has_onboarded'
 };
 
@@ -75,32 +76,33 @@ export const StorageService = {
     }
   },
 
-  // Daily Streak
+  // Daily Streak (real: counts consecutive days the app was opened)
   async getStreak() {
     try {
       const data = await AsyncStorage.getItem(KEYS.STREAK);
-      if (!data) return { streakDays: 14, lastActiveDate: new Date().toDateString() };
+      if (!data) return { streakDays: 0, lastActiveDate: null };
       return JSON.parse(data);
     } catch (e) {
-      return { streakDays: 14, lastActiveDate: new Date().toDateString() };
+      return { streakDays: 0, lastActiveDate: null };
     }
   },
 
   async recordDailyStreak() {
     try {
       const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
       const current = await this.getStreak();
-      if (current.lastActiveDate !== today) {
-        const updated = {
-          streakDays: (current.streakDays || 14) + 1,
-          lastActiveDate: today
-        };
-        await AsyncStorage.setItem(KEYS.STREAK, JSON.stringify(updated));
-        return updated;
+      if (current.lastActiveDate === today) {
+        return { ...current, streakDays: Math.max(1, current.streakDays || 1) };
       }
-      return current;
+      const updated = {
+        streakDays: current.lastActiveDate === yesterday ? (current.streakDays || 0) + 1 : 1,
+        lastActiveDate: today
+      };
+      await AsyncStorage.setItem(KEYS.STREAK, JSON.stringify(updated));
+      return updated;
     } catch (e) {
-      return { streakDays: 14, lastActiveDate: new Date().toDateString() };
+      return { streakDays: 1, lastActiveDate: new Date().toDateString() };
     }
   },
 
@@ -154,6 +156,50 @@ export const StorageService = {
       return data ? JSON.parse(data) : { totalSeconds: 0, tracksPlayedCount: 0 };
     } catch (e) {
       return { totalSeconds: 0, tracksPlayedCount: 0 };
+    }
+  },
+
+  // Count one more track started (no fake seconds)
+  async recordTrackPlayed() {
+    try {
+      const current = await this.getListeningStats();
+      const updated = { ...current, tracksPlayedCount: (current.tracksPlayedCount || 0) + 1 };
+      await AsyncStorage.setItem('@selah_listening_stats', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.log('Error saving stats:', e);
+    }
+  },
+
+  // Add real listened seconds
+  async addListeningSeconds(seconds) {
+    if (!seconds || seconds <= 0) return;
+    try {
+      const current = await this.getListeningStats();
+      const updated = { ...current, totalSeconds: (current.totalSeconds || 0) + Math.round(seconds) };
+      await AsyncStorage.setItem('@selah_listening_stats', JSON.stringify(updated));
+      return updated;
+    } catch (e) {
+      console.log('Error saving stats:', e);
+    }
+  },
+
+  // Last played track + position (for resume on launch)
+  async getLastPlayed() {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.LAST_PLAYED);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async saveLastPlayed(trackId, position) {
+    if (!trackId) return;
+    try {
+      await AsyncStorage.setItem(KEYS.LAST_PLAYED, JSON.stringify({ trackId, position: Math.floor(position || 0) }));
+    } catch (e) {
+      console.log('Error saving last played:', e);
     }
   },
 
