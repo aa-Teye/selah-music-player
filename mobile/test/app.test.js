@@ -352,15 +352,14 @@ androidOnly('repeat: off stops at the end of the list, all starts over, one repe
   expect(audio.createAudioPlayer).not.toHaveBeenCalled();
 });
 
-test('dark mode: switch from the menu, every screen still opens, and it switches back', async () => {
+test('dark mode: one tap on the header button, every screen still opens, and it switches back', async () => {
   media.__state.audio = phoneSongs(5);
   await render(<App />);
   await settle(20);
   const background = () => StyleSheet.flatten(screen.getByTestId('app-root').props.style).backgroundColor;
   expect(background()).toBe('#F8F9FA');
 
-  await tap(screen.getByTestId('open-menu'));
-  await tap(screen.getByTestId('theme-dark'));
+  await tap(screen.getByTestId('theme-toggle'));
   expect(background()).toBe('#0B0D12');
 
   for (const tab of ['library', 'youtube', 'playlists', 'home', 'player']) {
@@ -370,7 +369,6 @@ test('dark mode: switch from the menu, every screen still opens, and it switches
     await tap(screen.getByTestId(`player-view-${view}`));
   }
   await tap(screen.getByTestId('tab-home'));
-  await tap(screen.getByTestId('open-menu'));
-  await tap(screen.getByTestId('theme-light'));
+  await tap(screen.getByTestId('theme-toggle'));
   expect(background()).toBe('#F8F9FA');
 });

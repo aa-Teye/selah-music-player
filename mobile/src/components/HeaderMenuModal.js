@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useColors, useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,7 +22,6 @@ export default function HeaderMenuModal({
   streakDays = 14
 }) {
   const c = useColors();
-  const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const styles = useThemedStyles(makeStyles);
   return (
     <Modal
@@ -106,32 +105,6 @@ export default function HeaderMenuModal({
                 <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
 
-              {/* Appearance: match phone / light / dark */}
-              <View style={styles.themeSection}>
-                <Text style={styles.themeLabel}>Appearance</Text>
-                <View style={styles.themeRow}>
-                  {[
-                    { id: 'system', label: 'Match phone', icon: 'phone-portrait-outline' },
-                    { id: 'light', label: 'Light', icon: 'sunny-outline' },
-                    { id: 'dark', label: 'Dark', icon: 'moon-outline' }
-                  ].map((opt) => {
-                    const active = themeMode === opt.id;
-                    return (
-                      <TouchableOpacity
-                        key={opt.id}
-                        testID={`theme-${opt.id}`}
-                        style={[styles.themePill, active && styles.themePillActive]}
-                        onPress={() => setThemeMode(opt.id)}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name={opt.icon} size={15} color={active ? '#FFFFFF' : c.ink} />
-                        <Text style={[styles.themePillText, active && styles.themePillTextActive]}>{opt.label}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
               {/* Version & Badge Footer */}
               <View style={styles.drawerFooter}>
                 <Ionicons name="shield-checkmark" size={14} color="#10B981" />
@@ -146,29 +119,6 @@ export default function HeaderMenuModal({
 }
 
 const makeStyles = (c) => StyleSheet.create({
-  themeSection: { marginTop: 12, marginBottom: 6 },
-  themeLabel: {
-    color: c.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    marginBottom: 8
-  },
-  themeRow: { flexDirection: 'row', gap: 8 },
-  themePill: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    backgroundColor: c.surfaceAlt,
-    borderRadius: 14,
-    paddingVertical: 10
-  },
-  themePillActive: { backgroundColor: c.inverse },
-  themePillText: { color: c.ink, fontSize: 12, fontWeight: '800' },
-  themePillTextActive: { color: '#FFFFFF' },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',

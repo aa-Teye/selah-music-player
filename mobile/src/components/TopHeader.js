@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import { useColors, useTheme, useThemedStyles } from '../theme/ThemeContext';
 
 export default function TopHeader({
   streakDays,
@@ -11,6 +11,8 @@ export default function TopHeader({
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
+  const { scheme, setMode } = useTheme();
+  const isDark = scheme === 'dark';
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
@@ -19,10 +21,21 @@ export default function TopHeader({
         </View>
 
         <View style={styles.actionsRow}>
+          {/* Light / dark mode: one tap */}
+          <TouchableOpacity
+            onPress={() => setMode(isDark ? 'light' : 'dark')}
+            testID="theme-toggle"
+            accessibilityRole="button"
+            accessibilityLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={styles.menuBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={20} color={c.text} />
+          </TouchableOpacity>
+
           {/* Hamburger Menu Drawer Button */}
           {onOpenMenu && (
-            <TouchableOpacity onPress={onOpenMenu}
-          testID="open-menu" style={styles.menuBtn} activeOpacity={0.7}>
+            <TouchableOpacity onPress={onOpenMenu} testID="open-menu" style={styles.menuBtn} activeOpacity={0.7}>
               <Ionicons name="menu-outline" size={22} color={c.text} />
             </TouchableOpacity>
           )}
