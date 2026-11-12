@@ -26,7 +26,14 @@ import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 import DeepScanModal from './src/components/DeepScanModal';
 
-import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/mockData';
+import { DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/mockData';
+import {
+  dayNumber,
+  devotionForDay,
+  songOfTheDay,
+  refreshReminders,
+  setupNotificationDisplay
+} from './src/services/dailyService';
 import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
@@ -133,7 +140,10 @@ function SelahApp() {
   const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
   const [favoriteArtists, setFavoriteArtists] = useState([]);
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
-  const [devotionalIndex, setDevotionalIndex] = useState(0);
+  // Today's verse: changes every day; "Another verse" moves ahead
+  const [today, setToday] = useState(() => dayNumber());
+  const todayRef = useRef(today);
+  const [devotionOffset, setDevotionOffset] = useState(0);
   const [isDigitalLibrariesVisible, setIsDigitalLibrariesVisible] = useState(false);
 
   const soundRef = useRef(null);
@@ -324,15 +334,29 @@ function SelahApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, currentTrack?.id, rememberSpot]);
 
-  // Leaving or closing the app: save the exact spot immediately
+  // Leaving or closing the app: save the exact spot immediately.
+  // Coming back: a new day shows a new verse and song.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       if (next === 'background' || next === 'inactive') {
         rememberSpot(currentTrackRef.current, positionRef.current, durationRef.current);
+      } else if (next === 'active') {
+        const now = dayNumber();
+        if (todayRef.current !== now) {
+          todayRef.current = now;
+          setToday(now);
+          setDevotionOffset(0);
+        }
       }
     });
     return () => sub?.remove?.();
   }, [rememberSpot]);
+
+  // Daily reminder: show it even while the app is open, and keep two weeks scheduled ahead
+  useEffect(() => {
+    setupNotificationDisplay();
+    refreshReminders();
+  }, []);
 
   useEffect(() => {
     repeatModeRef.current = repeatMode;
@@ -1224,15 +1248,16 @@ function SelahApp() {
 
   // Stable actions, so screens don't redraw every second while music plays
   const homeDevotion = useMemo(
-    () => ({ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 1 }),
-    [devotionalIndex, streakData.streakDays]
+    () => ({ ...devotionForDay(today + devotionOffset), streakDays: streakData.streakDays || 1 }),
+    [today, devotionOffset, streakData.streakDays]
   );
   const openStats = useCallback(() => setIsStatsVisible(true), []);
   const navigateToYouTube = useCallback((query) => {
     if (query) setSearchQuery(query);
     setActiveTab('youtube');
   }, []);
-  const nextDevotional = useCallback(() => setDevotionalIndex((prev) => (prev + 1) % DEVOTIONAL_COLLECTION.length), []);
+  const nextDevotional = useCallback(() => setDevotionOffset((prev) => prev + 1), []);
+  const songForToday = useMemo(() => songOfTheDay(localTracks, today), [localTracks, today]);
   const openDigitalLibraries = useCallback(() => setIsDigitalLibrariesVisible(true), []);
   const openLibrary = useCallback(() => setActiveTab('library'), []);
   const openPlaylists = useCallback(() => setActiveTab('playlists'), []);
@@ -1293,6 +1318,7 @@ function SelahApp() {
             onOpenPlaylists={openPlaylists}
             scanStatus={scanStatus}
             continueListening={continueListening}
+            songOfTheDay={songForToday}
           />
         )}
 

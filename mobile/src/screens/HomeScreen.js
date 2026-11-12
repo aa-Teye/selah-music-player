@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ScanStatusBanner from '../components/ScanStatusBanner';
+import TodayCard from '../components/TodayCard';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const HOME_SONG_LIMIT = 30;
@@ -46,7 +47,8 @@ function HomeScreen({
   onPlayPlaylist,
   onOpenPlaylists,
   scanStatus,
-  continueListening = []
+  continueListening = [],
+  songOfTheDay = null
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -93,6 +95,17 @@ function HomeScreen({
       </View>
 
       <ScanStatusBanner status={scanStatus} />
+
+      {/* Today: verse of the day, a short thought, a song for today and the daily reminder */}
+      {!searchQuery && (
+        <TodayCard
+          devotion={devotion}
+          song={songOfTheDay}
+          onPlaySong={onPlayTrack}
+          onNextVerse={onNextDevotional}
+          isPlayingSong={Boolean(songOfTheDay && isPlaying && currentTrack?.id === songOfTheDay.id)}
+        />
+      )}
 
       {/* Continue listening: long songs and sermons you stopped part-way */}
       {continueListening.length > 0 && (

@@ -72,6 +72,7 @@ beforeEach(async () => {
   await AsyncStorage.clear();
   await AsyncStorage.setItem('@selah_has_onboarded', 'true');
   fs.__reset();
+  require('./mocks/notifications').__reset();
   media.__state.audio = [];
   media.__state.other = [];
   media.__state.permission = 'granted';
@@ -127,6 +128,42 @@ test('fresh install with no music: every tab and player view opens without crash
     expect(media.getPermissionsAsync).not.toHaveBeenCalled();
     expect(media.getAssetsAsync).not.toHaveBeenCalled();
   }
+});
+
+test("Home's Today card: verse of the day, another verse, and a daily reminder", async () => {
+  const { devotionForDay, dayNumber } = require('../src/services/dailyService');
+  const notifications = require('./mocks/notifications');
+  await render(<App />);
+  await settle(15);
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+
+  const todays = devotionForDay(dayNumber());
+  expect(within(screen.getByTestId('today-card')).getByText(todays.reference)).toBeTruthy();
+  expect(screen.queryByTestId('song-of-the-day')).toBeNull(); // no songs yet
+
+  await tap(screen.getByTestId('next-verse'));
+  expect(within(screen.getByTestId('today-card')).getByText(devotionForDay(dayNumber() + 1).reference)).toBeTruthy();
+
+  await tap(screen.getByTestId('open-reminder'));
+  await tap(screen.getByTestId('reminder-on'));
+  await tap(screen.getByTestId('reminder-time-21'));
+  await tap(screen.getByTestId('reminder-save'));
+  await settle(4);
+  expect(notifications.__scheduled.length).toBe(14);
+  expect(screen.getByText('Reminder 9:00 PM')).toBeTruthy();
+  expect(screen.queryByTestId('reminder-modal')).toBeNull();
+});
+
+androidOnly('song for today comes from your own music and plays with one tap', async () => {
+  media.__state.audio = phoneSongs(5);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  const card = screen.getByTestId('song-of-the-day');
+  expect(within(card).getByText('Sinach')).toBeTruthy();
+  audio.createAudioPlayer.mockClear();
+  await tap(card);
+  expect(audio.createAudioPlayer).toHaveBeenCalledWith(expect.stringContaining('Way%20Maker'));
 });
 
 test('Sound screen is honest: no fake equalizer; Android opens the phone equalizer', async () => {
