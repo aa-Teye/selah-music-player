@@ -147,6 +147,20 @@ function SelahApp() {
   const sleepEndRef = useRef(null);
   const positionRef = useRef(0);
   const listenAccumRef = useRef(0);
+  // Play counts for smart playlists: { [trackId]: { n, last } }
+  const [playCounts, setPlayCounts] = useState({});
+  const playCountsRef = useRef({});
+  const songListenRef = useRef({ id: null, secs: 0, counted: false });
+  const startListenCount = useCallback((id) => {
+    songListenRef.current = { id, secs: 0, counted: false };
+  }, []);
+  const countPlay = useCallback((id) => {
+    const prev = playCountsRef.current;
+    const next = { ...prev, [id]: { n: ((prev[id] && prev[id].n) || 0) + 1, last: Date.now() } };
+    playCountsRef.current = next;
+    setPlayCounts(next);
+    StorageService.savePlayCounts(next);
+  }, []);
   const isPlayingRef = useRef(false);
   const ambientPlayerRef = useRef(null);
   const ambientVolumeRef = useRef(0.5);
@@ -241,6 +255,20 @@ function SelahApp() {
     const timer = setInterval(() => {
       listenAccumRef.current += 1;
       if (listenAccumRef.current >= 30) flush();
+      // a song counts as "played" after 30 seconds (or half of a short song)
+      const track = currentTrackRef.current;
+      if (!track || !track.id) return;
+      if (songListenRef.current.id !== track.id) songListenRef.current = { id: track.id, secs: 0, counted: false };
+      const listen = songListenRef.current;
+      listen.secs += 1;
+      if (!listen.counted) {
+        const length = durationRef.current || track.duration || 0;
+        const needed = length > 0 ? Math.min(30, Math.max(5, length / 2)) : 30;
+        if (listen.secs >= needed) {
+          listen.counted = true;
+          countPlay(track.id);
+        }
+      }
     }, 1000);
     return () => {
       clearInterval(timer);
@@ -369,6 +397,12 @@ function SelahApp() {
 
         // Resume the last played track (paused, ready to continue)
         try {
+          const savedCounts = (await StorageService.getPlayCounts()) || {};
+          playCountsRef.current = { ...savedCounts, ...playCountsRef.current };
+          setPlayCounts(playCountsRef.current);
+        } catch {}
+
+        try {
           songPositionsRef.current = (await StorageService.getSongPositions()) || {};
           const last = await StorageService.getLastPlayed();
           if (last?.trackId) {
@@ -484,6 +518,7 @@ function SelahApp() {
     StorageService.recordTrackPlayed().then((stats) => {
       if (stats) setListeningStats(stats);
     });
+    startListenCount(track.id);
 
     // Clean up previous audio player so it stops immediately (e.g. when switching to YouTube or a new track)
     if (statusSubRef.current) {
@@ -593,6 +628,7 @@ function SelahApp() {
             }
             if (repeatModeRef.current === 'one') {
               try {
+                startListenCount(track.id); // every repeat is a new listen
                 player.seekTo(0);
                 player.play();
               } catch {
@@ -1330,6 +1366,7 @@ function SelahApp() {
             onDeletePlaylist={handleDeletePlaylist}
             onPlayPlaylist={handlePlayPlaylist}
             onToggleTrackInPlaylist={handleToggleTrackInPlaylist}
+            playCounts={playCounts}
           />
         )}
 

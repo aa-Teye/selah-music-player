@@ -334,6 +334,37 @@ export const StorageService = {
     }
   },
 
+  // How many times each song was really listened to: { [trackId]: { n, last } }
+  async getPlayCounts() {
+    try {
+      const data = await AsyncStorage.getItem('@selah_play_counts');
+      const parsed = data ? JSON.parse(data) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  async savePlayCounts(counts) {
+    try {
+      let out = counts || {};
+      const ids = Object.keys(out);
+      if (ids.length > 5000) {
+        // keep the 5,000 most recently played songs
+        out = {};
+        ids
+          .sort((a, b) => (counts[b].last || 0) - (counts[a].last || 0))
+          .slice(0, 5000)
+          .forEach((id) => {
+            out[id] = counts[id];
+          });
+      }
+      await AsyncStorage.setItem('@selah_play_counts', JSON.stringify(out));
+    } catch (e) {
+      console.log('Error saving play counts:', e);
+    }
+  },
+
   // Long songs (sermons, worship sets) remember their own spot
   async getSongPositions() {
     try {

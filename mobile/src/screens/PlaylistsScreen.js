@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import ShowMoreButton from '../components/ShowMoreButton';
+import SongThumb from '../components/SongThumb';
+import { buildSmartPlaylists, playsOf } from '../services/smartPlaylists';
 import { 
   View, 
   Text, 
@@ -23,7 +25,8 @@ function PlaylistsScreen({
   onCreatePlaylist,
   onDeletePlaylist,
   onPlayPlaylist,
-  onToggleTrackInPlaylist
+  onToggleTrackInPlaylist,
+  playCounts = {}
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -37,12 +40,19 @@ function PlaylistsScreen({
   // Favorite tracks list
   const favoriteTracks = tracks.filter((t) => favorites.includes(t.id));
 
-  // Find currently selected playlist
-  const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
+  // Playlists that fill themselves (most played, recently added, ...)
+  const smartLists = useMemo(() => buildSmartPlaylists(tracks, playCounts), [tracks, playCounts]);
+
+  // Find currently selected playlist (yours or a smart one)
+  const selectedPlaylist =
+    playlists.find((p) => p.id === selectedPlaylistId) || smartLists.find((p) => p.id === selectedPlaylistId);
+  const isSmart = Boolean(selectedPlaylist && selectedPlaylist.smart);
 
   // Get tracks inside selected playlist
   const selectedPlaylistTracks = selectedPlaylist
-    ? tracks.filter((t) => (selectedPlaylist.trackIds || []).includes(t.id))
+    ? isSmart
+      ? selectedPlaylist.tracks
+      : tracks.filter((t) => (selectedPlaylist.trackIds || []).includes(t.id))
     : [];
 
   // Tracks available for adding
@@ -119,86 +129,100 @@ function PlaylistsScreen({
         {/* Playlist Hero Banner */}
         <View style={styles.detailHero}>
           <View style={styles.detailIconBox}>
-            <MaterialCommunityIcons name="playlist-music" size={36} color="#34D399" />
+            {isSmart ? (
+              <Ionicons name={selectedPlaylist.icon} size={32} color="#34D399" />
+            ) : (
+              <MaterialCommunityIcons name="playlist-music" size={36} color="#34D399" />
+            )}
           </View>
           <View style={styles.detailHeroInfo}>
             <Text style={styles.detailTitle}>{selectedPlaylist.name}</Text>
             <Text style={styles.detailSubtitle}>
-              {selectedPlaylistTracks.length} song{selectedPlaylistTracks.length === 1 ? '' : 's'} • Custom Collection
+              {selectedPlaylistTracks.length} song{selectedPlaylistTracks.length === 1 ? '' : 's'} •{' '}
+              {isSmart ? 'Updates by itself' : 'Custom Collection'}
             </Text>
           </View>
 
-          <TouchableOpacity 
-            style={styles.detailDeleteBtn}
-            onPress={() => confirmDeletePlaylist(selectedPlaylist)}
-          >
-            <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          </TouchableOpacity>
+          {!isSmart && (
+            <TouchableOpacity
+              style={styles.detailDeleteBtn}
+              onPress={() => confirmDeletePlaylist(selectedPlaylist)}
+            >
+              <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Actions Row */}
         <View style={styles.detailActionRow}>
           {selectedPlaylistTracks.length > 0 && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.playAllBtn}
               onPress={() => handlePlayAll(selectedPlaylistTracks)}
               activeOpacity={0.8}
+              testID="playlist-play-all"
             >
               <Ionicons name="play" size={18} color="#FFFFFF" />
               <Text style={styles.playAllBtnText}>Play All Songs</Text>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity 
-            style={[styles.addSongsPillBtn, selectedPlaylistTracks.length === 0 && styles.addSongsPillBtnFull]}
-            onPress={() => setIsAddSongsVisible(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="add" size={18} color={c.ink} />
-            <Text style={styles.addSongsPillBtnText}>Add Songs</Text>
-          </TouchableOpacity>
+          {!isSmart && (
+            <TouchableOpacity
+              style={[styles.addSongsPillBtn, selectedPlaylistTracks.length === 0 && styles.addSongsPillBtnFull]}
+              onPress={() => setIsAddSongsVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={18} color={c.ink} />
+              <Text style={styles.addSongsPillBtnText}>Add Songs</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Songs in this playlist */}
         <View style={styles.tracksSection}>
-          <Text style={styles.sectionHeader}>Tracks in this Playlist</Text>
+          <Text style={styles.sectionHeader}>{isSmart ? 'Songs' : 'Tracks in this Playlist'}</Text>
 
           {selectedPlaylistTracks.length > 0 ? (
             selectedPlaylistTracks.map((item, idx) => {
               const isCurrent = currentTrack?.id === item.id;
+              const plays = playsOf(playCounts, item.id);
               return (
                 <View key={item.id || idx} style={[styles.trackRow, isCurrent && styles.trackRowActive]}>
-                  <TouchableOpacity 
-                    style={styles.trackPlayTouch} 
+                  <TouchableOpacity
+                    style={styles.trackPlayTouch}
                     onPress={() => onPlayTrack(item)}
                   >
-                    <View style={styles.trackIconBox}>
-                      <Ionicons 
-                        name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
-                        size={18} 
-                        color={isCurrent ? c.ink : c.textSubtle} 
-                      />
-                    </View>w>
+                    <SongThumb track={item} isCurrent={isCurrent} isPlaying={isPlaying} size={36} />
                     <View style={styles.trackInfo}>
                       <Text style={[styles.trackTitle, isCurrent && styles.trackTitleActive]} numberOfLines={1}>
                         {item.title}
                       </Text>
                       <Text style={styles.trackArtist} numberOfLines={1}>
                         {item.artist || 'Device Track'}
+                        {selectedPlaylist.id === 'smart-most' ? ` • ${plays} play${plays === 1 ? '' : 's'}` : ''}
                       </Text>
                     </View>
                   </TouchableOpacity>
 
                   {/* Remove from playlist button */}
-                  <TouchableOpacity 
-                    style={styles.removeTrackBtn}
-                    onPress={() => onToggleTrackInPlaylist && onToggleTrackInPlaylist(selectedPlaylist.id, item.id)}
-                  >
-                    <Ionicons name="close-circle-outline" size={20} color={c.textSubtle} />
-                  </TouchableOpacity>
+                  {!isSmart && (
+                    <TouchableOpacity
+                      style={styles.removeTrackBtn}
+                      onPress={() => onToggleTrackInPlaylist && onToggleTrackInPlaylist(selectedPlaylist.id, item.id)}
+                    >
+                      <Ionicons name="close-circle-outline" size={20} color={c.textSubtle} />
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
             })
+          ) : isSmart ? (
+            <View style={styles.emptyDetailBox}>
+              <Ionicons name={selectedPlaylist.icon} size={40} color={c.textSecondary} />
+              <Text style={styles.emptyDetailTitle}>Nothing here yet</Text>
+              <Text style={styles.emptyDetailSub}>{selectedPlaylist.empty}</Text>
+            </View>
           ) : (
             <View style={styles.emptyDetailBox}>
               <Ionicons name="musical-notes-outline" size={40} color={c.textSecondary} />
@@ -206,7 +230,7 @@ function PlaylistsScreen({
               <Text style={styles.emptyDetailSub}>
                 Add songs from your device library, imported music, or curated devotions.
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.emptyAddBtn}
                 onPress={() => setIsAddSongsVisible(true)}
                 activeOpacity={0.8}
@@ -316,7 +340,7 @@ function PlaylistsScreen({
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Playlists</Text>
-          <Text style={styles.subtitle}>Curated collections, devotions, & custom playlists</Text>
+          <Text style={styles.subtitle}>Your playlists, loved songs & smart lists</Text>
         </View>
 
         <TouchableOpacity 
@@ -440,32 +464,39 @@ function PlaylistsScreen({
         </View>
       )}
 
-      {/* Preset Curated Playlists */}
+      {/* Smart playlists: fill themselves from how you listen */}
       <View style={styles.curatedSection}>
-        <Text style={styles.sectionHeader}>Curated Praise & Devotion</Text>
-        {[
-          { title: "Morning Devotions", desc: "Praise & Thanksgiving to start your day", filter: "worship", icon: "sunny-outline" },
-          { title: "Peace & Meditation", desc: "Gentle acoustic strings & inner stillness", filter: "peace", icon: "leaf-outline" },
-          { title: "Deep Focus & Study", desc: "Scripture-inspired lo-fi & peaceful rhythms", filter: "lofi", icon: "book-outline" }
-        ].map((pl, idx) => {
-          const matching = tracks.filter((t) => t.category === pl.filter);
+        <Text style={styles.sectionHeader}>Smart playlists</Text>
+        {smartLists.map((pl) => {
+          const count = pl.tracks.length;
           return (
-            <TouchableOpacity 
-              key={idx} 
+            <TouchableOpacity
+              key={pl.id}
               style={styles.playlistCard}
-              onPress={() => handlePlayAll(matching.length > 0 ? matching : tracks)}
+              onPress={() => setSelectedPlaylistId(pl.id)}
               activeOpacity={0.8}
+              testID={pl.id}
             >
               <View style={styles.plIconCircle}>
                 <Ionicons name={pl.icon} size={22} color={c.ink} />
               </View>
               <View style={styles.plDetails}>
-                <Text style={styles.plTitle}>{pl.title}</Text>
-                <Text style={styles.plDesc}>{pl.desc}</Text>
+                <Text style={styles.plTitle}>{pl.name}</Text>
+                <Text style={styles.plDesc}>
+                  {count > 0 ? `${count} song${count === 1 ? '' : 's'} • ${pl.description}` : pl.description}
+                </Text>
               </View>
-              <View style={styles.plPlayArrow}>
-                <Ionicons name="play" size={14} color={c.ink} />
-              </View>
+              {count > 0 ? (
+                <TouchableOpacity
+                  style={styles.plPlayArrow}
+                  onPress={() => handlePlayAll(pl.tracks)}
+                  accessibilityLabel={`Play ${pl.name}`}
+                >
+                  <Ionicons name="play" size={14} color={c.ink} />
+                </TouchableOpacity>
+              ) : (
+                <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
+              )}
             </TouchableOpacity>
           );
         })}

@@ -324,6 +324,58 @@ androidOnly('YouTube pauses and never takes over when you play one of your own s
   expect(screen.getByText(/offline songs? on device/)).toBeTruthy(); // still on My Songs, not thrown to YouTube
 });
 
+androidOnly('smart playlists: a song counts as played after 30 seconds and shows in Most played', async () => {
+  media.__state.audio = phoneSongs(4);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Way Maker 2')[0]);
+  await act(async () => {
+    jest.advanceTimersByTime(10000); // 10 seconds: not a "play" yet
+  });
+
+  await tap(screen.getByTestId('tab-playlists'));
+  await tap(screen.getByTestId('smart-most'));
+  expect(screen.getByText('Nothing here yet')).toBeTruthy();
+  await tap(screen.getByText('All Playlists'));
+
+  await act(async () => {
+    jest.advanceTimersByTime(25000); // 35 seconds in total
+  });
+  await settle(4);
+  await tap(screen.getByTestId('smart-most'));
+  expect(screen.getByText('1 song • Updates by itself')).toBeTruthy();
+  expect(screen.getByText('Sinach • 1 play')).toBeTruthy();
+  await tap(screen.getByText('All Playlists'));
+
+  await tap(screen.getByTestId('smart-never'));
+  expect(screen.getByText('3 songs • Updates by itself')).toBeTruthy();
+  expect(screen.queryByText('Add Songs')).toBeNull(); // smart lists fill themselves
+  audio.createAudioPlayer.mockClear();
+  await tap(screen.getByTestId('playlist-play-all'));
+  expect(audio.createAudioPlayer).toHaveBeenCalled();
+
+  // the count is remembered
+  expect(JSON.parse(await AsyncStorage.getItem('@selah_play_counts'))['local-scan-3']).toMatchObject({ n: 1 });
+});
+
+androidOnly('opening your own playlist that has songs works (it used to crash)', async () => {
+  media.__state.audio = phoneSongs(3);
+  await AsyncStorage.setItem(
+    '@selah_playlists',
+    JSON.stringify([{ id: 'pl-sunday', name: 'Sunday Service', trackIds: ['local-scan-1', 'local-scan-2'] }])
+  );
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-playlists'));
+  await tap(screen.getByText('Sunday Service'));
+  expect(screen.getByText('2 songs • Custom Collection')).toBeTruthy();
+  expect(screen.getAllByText('Way Maker 0').length).toBeGreaterThan(0);
+  expect(JSON.stringify(screen.toJSON())).not.toContain('"w>"');
+});
+
 androidOnly('Home shows your own music: recently added, playlists and your songs', async () => {
   media.__state.audio = phoneSongs(30);
   await render(<App />);
