@@ -13,6 +13,16 @@ import ScanStatusBanner from '../components/ScanStatusBanner';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const HOME_SONG_LIMIT = 30;
+const FALLBACK_COVER = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
+
+/** "23 min left" / "1 h 5 min left" */
+export function timeLeft(position, length) {
+  const mins = Math.max(1, Math.round(Math.max(0, length - position) / 60));
+  if (mins < 60) return `${mins} min left`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m ? `${h} h ${m} min left` : `${h} h left`;
+}
 
 function HomeScreen({
   devotion,
@@ -35,7 +45,8 @@ function HomeScreen({
   playlists = [],
   onPlayPlaylist,
   onOpenPlaylists,
-  scanStatus
+  scanStatus,
+  continueListening = []
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -82,6 +93,44 @@ function HomeScreen({
       </View>
 
       <ScanStatusBanner status={scanStatus} />
+
+      {/* Continue listening: long songs and sermons you stopped part-way */}
+      {continueListening.length > 0 && (
+        <View style={{ marginBottom: 20 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Continue listening</Text>
+            <Text style={styles.sectionSubtitle}>Pick up where you stopped</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+            {continueListening.map(({ track, position, length }) => {
+              const isCurrent = currentTrack?.id === track.id;
+              const progress = Math.min(1, Math.max(0, position / length));
+              return (
+                <TouchableOpacity
+                  key={`continue-${track.id}`}
+                  testID={`continue-${track.id}`}
+                  style={styles.continueCard}
+                  onPress={() => onPlayTrack(track)}
+                  activeOpacity={0.8}
+                  accessibilityLabel={`Continue ${track.title}, ${timeLeft(position, length)}`}
+                >
+                  <View>
+                    <Image source={{ uri: track.coverUrl || FALLBACK_COVER }} style={styles.continueCover} />
+                    <View style={styles.continuePlay}>
+                      <Ionicons name={isCurrent && isPlaying ? 'volume-high' : 'play'} size={14} color="#FFFFFF" />
+                    </View>
+                  </View>
+                  <Text style={styles.recentTitle} numberOfLines={1}>{track.title}</Text>
+                  <Text style={styles.recentArtist} numberOfLines={1}>{timeLeft(position, length)}</Text>
+                  <View style={styles.continueBar}>
+                    <View style={[styles.continueBarFill, { width: `${Math.round(progress * 100)}%` }]} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Recently Played Horizontal Rail */}
       {recentTracks && recentTracks.length > 0 && (
@@ -562,6 +611,44 @@ const makeStyles = (c) => StyleSheet.create({
     height: 94,
     borderRadius: 8,
     marginBottom: 6
+  },
+  continueCard: {
+    width: 150,
+    marginRight: 12,
+    backgroundColor: c.surface,
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: c.border
+  },
+  continueCover: {
+    width: '100%',
+    height: 84,
+    borderRadius: 8,
+    marginBottom: 6,
+    backgroundColor: c.surfaceAlt
+  },
+  continuePlay: {
+    position: 'absolute',
+    right: 6,
+    bottom: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  continueBar: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.surfaceStrong,
+    overflow: 'hidden',
+    marginTop: 6
+  },
+  continueBarFill: {
+    height: '100%',
+    backgroundColor: c.text
   },
   recentTitle: {
     color: c.text,

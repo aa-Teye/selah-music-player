@@ -173,6 +173,7 @@ function SelahApp() {
   const currentTrackRef = useRef(null);
   const durationRef = useRef(0);
   const songPositionsRef = useRef({});
+  const [songSpots, setSongSpots] = useState({}); // same as songPositionsRef, for the screen
 
   // Queue: null = play through the whole library; array = custom queue (e.g. a playlist)
   const [queueOverride, setQueueOverride] = useState(null);
@@ -277,18 +278,37 @@ function SelahApp() {
   }, [isPlaying]);
 
   // Remember where you are: the last song (for reopening the app) and long songs (sermons, worship sets)
+  const saveSpots = useCallback((next) => {
+    songPositionsRef.current = next;
+    setSongSpots(next);
+    StorageService.saveSongPositions(next);
+  }, []);
+
   const rememberSpot = useCallback((track, position, total) => {
     if (!track || !track.id) return;
     StorageService.saveLastPlayed(track, position);
     const length = total || track.duration || 0;
     if (length >= LONG_TRACK_SECONDS) {
       const next = { ...songPositionsRef.current };
-      if (position > 30 && position < length - 30) next[track.id] = { position: Math.floor(position), at: Date.now() };
-      else delete next[track.id];
-      songPositionsRef.current = next;
-      StorageService.saveSongPositions(next);
+      if (position > 30 && position < length - 30) {
+        const spot = { position: Math.floor(position), at: Date.now(), length: Math.round(length) };
+        if (track.sourceType === 'youtube' || track.youtubeId) {
+          // videos aren't in your library, so keep what's needed to show and replay them
+          spot.track = {
+            id: track.id,
+            title: track.title,
+            artist: track.artist,
+            coverUrl: track.coverUrl,
+            youtubeId: track.youtubeId,
+            sourceType: 'youtube',
+            duration: Math.round(length)
+          };
+        }
+        next[track.id] = spot;
+      } else delete next[track.id];
+      saveSpots(next);
     }
-  }, []);
+  }, [saveSpots]);
 
   // While playing: save every 5 seconds. When paused: save right away.
   useEffect(() => {
@@ -404,6 +424,7 @@ function SelahApp() {
 
         try {
           songPositionsRef.current = (await StorageService.getSongPositions()) || {};
+          setSongSpots(songPositionsRef.current);
           const last = await StorageService.getLastPlayed();
           if (last?.trackId) {
             const pool = savedLocal || [];
@@ -623,8 +644,7 @@ function SelahApp() {
             if (songPositionsRef.current[track.id]) {
               const next = { ...songPositionsRef.current };
               delete next[track.id];
-              songPositionsRef.current = next;
-              StorageService.saveSongPositions(next);
+              saveSpots(next);
             }
             if (repeatModeRef.current === 'one') {
               try {
@@ -1174,6 +1194,22 @@ function SelahApp() {
     }
   };
 
+  // Long songs, sermons and videos you stopped part-way (newest first)
+  const continueListening = useMemo(() => {
+    const byId = new Map(tracks.map((t) => [t.id, t]));
+    return Object.keys(songSpots)
+      .map((id) => {
+        const spot = songSpots[id];
+        const track = byId.get(id) || (spot && spot.track);
+        const length = (track && track.duration) || (spot && spot.length) || 0;
+        if (!track || !spot || !(length > 0)) return null;
+        return { track, position: spot.position || 0, length, at: spot.at || 0 };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.at - a.at)
+      .slice(0, 10);
+  }, [songSpots, tracks]);
+
   // Filtered tracks
   const visibleTracks = useMemo(() => {
     if (!searchQuery) return tracks;
@@ -1256,6 +1292,7 @@ function SelahApp() {
             onPlayPlaylist={handlePlayPlaylist}
             onOpenPlaylists={openPlaylists}
             scanStatus={scanStatus}
+            continueListening={continueListening}
           />
         )}
 

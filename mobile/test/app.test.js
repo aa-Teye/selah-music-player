@@ -611,6 +611,56 @@ androidOnly('a long sermon continues where you left it after listening to someth
   expect(audio.__players[audio.__players.length - 1].seekTo).toHaveBeenCalledWith(1250);
 });
 
+androidOnly('Home: "Continue listening" shows a sermon you stopped, with the time left, and continues it', async () => {
+  media.__state.audio = [
+    {
+      id: '900',
+      filename: 'Pastor Kumuyi - Sunday Sermon.mp3',
+      uri: 'file:///storage/emulated/0/Sermons/Pastor%20Kumuyi%20-%20Sunday%20Sermon.mp3',
+      mediaType: 'audio',
+      duration: 3600,
+      modificationTime: 1700000000500
+    },
+    ...phoneSongs(1)
+  ];
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  expect(screen.queryByText('Continue listening')).toBeNull(); // nothing half-finished yet
+
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Sunday Sermon')[0]);
+  await act(async () => {
+    audio.__players[audio.__players.length - 1].emit('playbackStatusUpdate', {
+      isLoaded: true,
+      currentTime: 1250,
+      duration: 3600,
+      didJustFinish: false
+    });
+  });
+  await tap(screen.getAllByText('Way Maker 0')[0]); // listen to something else
+
+  await tap(screen.getByTestId('tab-home'));
+  expect(screen.getByText('Continue listening')).toBeTruthy();
+  expect(screen.getByText('39 min left')).toBeTruthy();
+  await tap(screen.getByTestId('continue-local-scan-900'));
+  expect(audio.__players[audio.__players.length - 1].seekTo).toHaveBeenCalledWith(1250);
+  await cleanup();
+
+  await render(<App />); // still there after reopening the app
+  await settle(25);
+  expect(screen.getByText('Continue listening')).toBeTruthy();
+  expect(screen.getByTestId('continue-local-scan-900')).toBeTruthy();
+});
+
+test('time left reads naturally', () => {
+  const { timeLeft } = require('../src/screens/HomeScreen');
+  expect(timeLeft(0, 600)).toBe('10 min left');
+  expect(timeLeft(10, 3910)).toBe('1 h 5 min left');
+  expect(timeLeft(0, 7200)).toBe('2 h left');
+  expect(timeLeft(599, 600)).toBe('1 min left');
+});
+
 test('a YouTube video continues where you stopped after reopening the app', async () => {
   await render(<App />);
   await settle(15);
