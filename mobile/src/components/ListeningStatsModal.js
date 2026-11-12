@@ -8,6 +8,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function ListeningStatsModal({
   visible,
@@ -16,6 +17,8 @@ export default function ListeningStatsModal({
   streakDays = 14,
   favoritesCount = 0
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const totalMinutes = Math.floor((stats?.totalSeconds || 0) / 60);
   const totalHours = (totalMinutes / 60).toFixed(1);
 
@@ -31,11 +34,11 @@ export default function ListeningStatsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Ionicons name="stats-chart" size={22} color="#12141A" />
+              <Ionicons name="stats-chart" size={22} color={c.ink} />
               <Text style={styles.title}>My Worship Journey</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#717886" />
+              <Ionicons name="close" size={22} color={c.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -49,7 +52,7 @@ export default function ListeningStatsModal({
               {/* Daily Streak */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="sparkles" size={22} color="#12141A" />
+                  <Ionicons name="sparkles" size={22} color={c.ink} />
                   <Text style={styles.badge}>ACTIVE</Text>
                 </View>
                 <Text style={styles.statNumber}>{streakDays}</Text>
@@ -59,7 +62,7 @@ export default function ListeningStatsModal({
               {/* Total Worship Minutes */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="time" size={22} color="#12141A" />
+                  <Ionicons name="time" size={22} color={c.ink} />
                   <Text style={styles.badge}>TIME</Text>
                 </View>
                 <Text style={styles.statNumber}>
@@ -71,7 +74,7 @@ export default function ListeningStatsModal({
               {/* Songs Played */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="musical-notes" size={22} color="#12141A" />
+                  <Ionicons name="musical-notes" size={22} color={c.ink} />
                   <Text style={styles.badge}>TRACKS</Text>
                 </View>
                 <Text style={styles.statNumber}>{stats?.tracksPlayedCount || 0}</Text>
@@ -81,7 +84,7 @@ export default function ListeningStatsModal({
               {/* Favorite Melodies */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="heart" size={22} color="#12141A" />
+                  <Ionicons name="heart" size={22} color={c.ink} />
                   <Text style={styles.badge}>FAVORITES</Text>
                 </View>
                 <Text style={styles.statNumber}>{favoritesCount}</Text>
@@ -91,7 +94,7 @@ export default function ListeningStatsModal({
 
             {/* Motivational Scripture Card */}
             <View style={styles.scriptureCard}>
-              <MaterialCommunityIcons name="book-open-page-variant" size={22} color="#12141A" />
+              <MaterialCommunityIcons name="book-open-page-variant" size={22} color={c.ink} />
               <Text style={styles.scriptureVerse}>
                 "I will sing to the Lord as long as I live; I will sing praise to my God while I have being."
               </Text>
@@ -100,7 +103,7 @@ export default function ListeningStatsModal({
 
             {/* Encouragement Banner */}
             <View style={styles.encouragementBanner}>
-              <Ionicons name="sunny" size={18} color="#12141A" />
+              <Ionicons name="sunny" size={18} color={c.ink} />
               <Text style={styles.encouragementText}>
                 Every melody lifted in faith strengthens the spirit and brings peace to your mind.
               </Text>
@@ -117,20 +120,20 @@ export default function ListeningStatsModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
     maxHeight: '85%',
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   header: {
     flexDirection: 'row',
@@ -146,13 +149,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   closeBtn: {
     padding: 6
   },
   subtitle: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 13,
     marginBottom: 20
   },
@@ -164,11 +167,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   cardIconRow: {
     flexDirection: 'row',
@@ -179,8 +182,8 @@ const styles = StyleSheet.create({
   badge: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#717886',
-    backgroundColor: '#E2E6EC',
+    color: c.textMuted,
+    backgroundColor: c.surfaceStrong,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6
@@ -188,31 +191,31 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#0F1115',
+    color: c.text,
     marginBottom: 4
   },
   statLabel: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     fontWeight: '600'
   },
   scriptureCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginBottom: 14,
     gap: 8
   },
   scriptureVerse: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontStyle: 'italic',
     lineHeight: 22
   },
   scriptureRef: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 12,
     fontWeight: '800',
     textAlign: 'right'
@@ -221,20 +224,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 14,
     borderRadius: 14,
     marginBottom: 20
   },
   encouragementText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 12,
     lineHeight: 18,
     flex: 1,
     fontWeight: '500'
   },
   doneBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center'

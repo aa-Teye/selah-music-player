@@ -3,7 +3,7 @@
  * They run twice: once as iPhone and once as Android (see "jest" in package.json).
  */
 import React from 'react';
-import { Platform, Alert } from 'react-native';
+import { Platform, Alert, StyleSheet } from 'react-native';
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import App from '../App';
@@ -350,4 +350,27 @@ androidOnly('repeat: off stops at the end of the list, all starts over, one repe
   await finish(player, 240);
   expect(player.seekTo).toHaveBeenCalledWith(0);
   expect(audio.createAudioPlayer).not.toHaveBeenCalled();
+});
+
+test('dark mode: switch from the menu, every screen still opens, and it switches back', async () => {
+  media.__state.audio = phoneSongs(5);
+  await render(<App />);
+  await settle(20);
+  const background = () => StyleSheet.flatten(screen.getByTestId('app-root').props.style).backgroundColor;
+  expect(background()).toBe('#F8F9FA');
+
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByTestId('theme-dark'));
+  expect(background()).toBe('#0B0D12');
+
+  for (const tab of ['library', 'youtube', 'playlists', 'home', 'player']) {
+    await tap(screen.getByTestId(`tab-${tab}`));
+  }
+  for (const view of ['lyrics', 'queue', 'library', 'now']) {
+    await tap(screen.getByTestId(`player-view-${view}`));
+  }
+  await tap(screen.getByTestId('tab-home'));
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByTestId('theme-light'));
+  expect(background()).toBe('#F8F9FA');
 });

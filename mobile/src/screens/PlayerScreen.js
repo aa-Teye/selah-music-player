@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PlayerPanel from '../components/PlayerPanel';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +37,8 @@ function LibraryBrowserImpl({
   onOpenFullPlayer,
   onOpenAddToPlaylist
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [activeCategory, setActiveCategory] = useState('suggested');
   const [songsLimit, setSongsLimit] = useState(80);
 
@@ -183,7 +186,7 @@ function LibraryBrowserImpl({
               onOpenAddToPlaylist(track);
             }}
           >
-            <Ionicons name="bookmark-outline" size={16} color="#9CA3AF" />
+            <Ionicons name="bookmark-outline" size={16} color={c.textSubtle} />
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -211,7 +214,7 @@ function LibraryBrowserImpl({
                 <Ionicons
                   name={cat.icon}
                   size={14}
-                  color={isActive ? '#FFFFFF' : '#717886'}
+                  color={isActive ? '#FFFFFF' : c.textMuted}
                   style={{ marginRight: 6 }}
                 />
                 <Text style={[styles.categoryText, isActive && styles.activeCategoryText]}>
@@ -257,7 +260,7 @@ function LibraryBrowserImpl({
               <Ionicons
                 name={isPlaying ? 'pause-circle' : 'play-circle'}
                 size={38}
-                color="#12141A"
+                color={c.ink}
               />
             </View>
           </TouchableOpacity>
@@ -381,7 +384,7 @@ function LibraryBrowserImpl({
                   <Text style={styles.artistName}>{art.name}</Text>
                   <Text style={styles.artistSub}>{art.count} songs</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
               </TouchableOpacity>
             ))}
           </View>
@@ -397,7 +400,7 @@ function LibraryBrowserImpl({
             {playlists.map((pl) => (
               <View key={pl.id} style={styles.playlistRow}>
                 <View style={styles.playlistIcon}>
-                  <Ionicons name="musical-notes" size={20} color="#12141A" />
+                  <Ionicons name="musical-notes" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.playlistName}>{pl.name}</Text>
@@ -424,12 +427,12 @@ function LibraryBrowserImpl({
                 style={styles.folderRow}
                 onPress={() => fld.tracks[0] && onPlayTrack(fld.tracks[0])}
               >
-                <Ionicons name="folder-outline" size={24} color="#12141A" style={{ marginRight: 12 }} />
+                <Ionicons name="folder-outline" size={24} color={c.ink} style={{ marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.folderName}>{fld.name}</Text>
                   <Text style={styles.folderCount}>{fld.count} audio tracks</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#717886" />
+                <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -464,15 +467,15 @@ function LibraryBrowserImpl({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   categoryBarWrap: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: c.border,
     paddingVertical: 10
   },
   categoryScroll: {
@@ -482,19 +485,19 @@ const styles = StyleSheet.create({
   categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   activeCategoryPill: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   categoryText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     fontWeight: '700'
   },
@@ -512,12 +515,12 @@ const styles = StyleSheet.create({
   nowPlayingHero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     padding: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -552,17 +555,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5
   },
   heroTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '800'
   },
   heroArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     marginTop: 1
   },
   heroHint: {
-    color: '#9AA0AC',
+    color: c.textFaint,
     fontSize: 10,
     marginTop: 3
   },
@@ -579,12 +582,12 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   sectionTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 16,
     fontWeight: '800'
   },
   sectionCount: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12
   },
   recentCard: {
@@ -596,27 +599,27 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 12,
     marginBottom: 6,
-    backgroundColor: '#EEF0F4'
+    backgroundColor: c.surfaceAlt
   },
   recentCardTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 12,
     fontWeight: '700'
   },
   recentCardArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 10,
     marginTop: 1
   },
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -624,30 +627,30 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   activeTrackRow: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   trackThumb: {
     width: 44,
     height: 44,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#EEF0F4'
+    backgroundColor: c.surfaceAlt
   },
   trackInfo: {
     flex: 1
   },
   trackTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '700'
   },
   activeTrackText: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '800'
   },
   trackArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2
   },
@@ -661,7 +664,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 6
@@ -677,11 +680,11 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: (width - 44) / 2,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -693,95 +696,95 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#EEF0F4'
+    backgroundColor: c.surfaceAlt
   },
   gridTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '700'
   },
   gridSub: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2
   },
   artistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   artistAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     marginRight: 12,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   artistName: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   artistSub: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2
   },
   playlistRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   playlistIcon: {
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   playlistName: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   playlistCount: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2
   },
   folderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   folderName: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   folderCount: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2
   }
@@ -800,6 +803,8 @@ const PLAYER_VIEWS = [
  * Player tab: Now Playing, Lyrics and Up Next (the full player) plus the Library browser.
  */
 export default function PlayerScreen(props) {
+  const c = useColors();
+  const viewStyles = useThemedStyles(makeViewStyles);
   const { view = 'now', onChangeView } = props;
   const openNowPlaying = useCallback(() => onChangeView && onChangeView('now'), [onChangeView]);
   return (
@@ -842,7 +847,7 @@ export default function PlayerScreen(props) {
         <PlayerPanel {...props} view={view} onChangeView={onChangeView} />
       ) : (
         <View style={viewStyles.emptyBox}>
-          <Ionicons name="musical-notes-outline" size={44} color="#9AA0AC" />
+          <Ionicons name="musical-notes-outline" size={44} color={c.textFaint} />
           <Text style={viewStyles.emptyTitle}>Nothing playing yet</Text>
           <Text style={viewStyles.emptySub}>Pick a song from your Library to start listening.</Text>
           <TouchableOpacity style={viewStyles.emptyBtn} onPress={() => onChangeView && onChangeView('library')}>
@@ -854,12 +859,12 @@ export default function PlayerScreen(props) {
   );
 }
 
-const viewStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+const makeViewStyles = (c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg },
   segmentWrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10 },
   segments: {
     flexDirection: 'row',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 22,
     padding: 3
   },
@@ -872,12 +877,12 @@ const viewStyles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 19
   },
-  segmentActive: { backgroundColor: '#12141A' },
-  segmentText: { color: '#717886', fontSize: 12, fontWeight: '800' },
+  segmentActive: { backgroundColor: c.inverse },
+  segmentText: { color: c.textMuted, fontSize: 12, fontWeight: '800' },
   segmentTextActive: { color: '#FFFFFF' },
   emptyBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
-  emptyTitle: { color: '#0F1115', fontSize: 18, fontWeight: '800' },
-  emptySub: { color: '#717886', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  emptyBtn: { marginTop: 6, backgroundColor: '#12141A', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 20 },
+  emptyTitle: { color: c.text, fontSize: 18, fontWeight: '800' },
+  emptySub: { color: c.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  emptyBtn: { marginTop: 6, backgroundColor: c.inverse, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 20 },
   emptyBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 }
 });

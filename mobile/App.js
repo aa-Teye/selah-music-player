@@ -29,6 +29,7 @@ import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/
 import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
+import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeContext';
 
 // Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
 const isScannedTrack = (t) => String(t.id).startsWith('local-scan-') || String(t.id).startsWith('local-doc-');
@@ -54,7 +55,9 @@ function mergeScan(prev, foundTracks) {
   return changed ? [...newFound, ...kept] : prev;
 }
 
-export default function App() {
+function SelahApp() {
+  const { colors: c, scheme } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const [activeTab, setActiveTab] = useState('home');
   const [tracks, setTracks] = useState([]);
   const [localTracks, setLocalTracks] = useState([]);
@@ -954,8 +957,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <SafeAreaView style={styles.container} testID="app-root">
+        <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.bg} />
 
       {/* Top Header */}
       {!isImmersivePlayer && (
@@ -1234,7 +1237,7 @@ export default function App() {
         animationType="slide"
         onRequestClose={() => setIsEqVisible(false)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#08090C' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: c.inverse }}>
           <EqualizerScreen
             onClose={() => setIsEqVisible(false)}
             sleepTimerRemaining={sleepTimerRemaining}
@@ -1267,7 +1270,7 @@ export default function App() {
                 <Text style={styles.libModalTitle}>Digital Libraries</Text>
               </View>
               <TouchableOpacity onPress={() => setIsDigitalLibrariesVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+                <Ionicons name="close-circle" size={24} color={c.textSubtle} />
               </TouchableOpacity>
             </View>
             <Text style={styles.libModalSub}>Connect with global Christian libraries, public-domain hymnals, and scripture study tools.</Text>
@@ -1287,7 +1290,7 @@ export default function App() {
                     onPress={() => Linking.openURL(lib.url).catch(() => Alert.alert("Notice", "Could not open browser."))}
                   >
                     <Text style={styles.libOpenText}>Open</Text>
-                    <Ionicons name="open-outline" size={14} color="#08090C" />
+                    <Ionicons name="open-outline" size={14} color={c.text} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -1334,10 +1337,10 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   mainContent: {
     flex: 1
@@ -1348,13 +1351,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   libModalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   libModalHeader: {
     flexDirection: 'row',
@@ -1363,43 +1366,43 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   libModalTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 18,
     fontWeight: '800'
   },
   libModalSub: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 13,
     lineHeight: 18
   },
   libCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12
   },
   libIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center'
   },
   libName: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   libDesc: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2,
     lineHeight: 15
@@ -1407,7 +1410,7 @@ const styles = StyleSheet.create({
   libOpenBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
@@ -1419,3 +1422,11 @@ const styles = StyleSheet.create({
     fontSize: 12
   }
 });
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <SelahApp />
+    </ThemeProvider>
+  );
+}

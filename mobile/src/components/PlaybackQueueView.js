@@ -9,6 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function PlaybackQueueView({
   queue = [],
@@ -18,6 +19,8 @@ export default function PlaybackQueueView({
   onRemoveFromQueue,
   onClearQueue
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const handleConfirmClear = () => {
     Alert.alert(
       "Clear Queue",
@@ -38,7 +41,7 @@ export default function PlaybackQueueView({
       {/* Queue Header */}
       <View style={styles.headerBar}>
         <View style={styles.titleGroup}>
-          <MaterialCommunityIcons name="playlist-play" size={20} color="#12141A" />
+          <MaterialCommunityIcons name="playlist-play" size={20} color={c.ink} />
           <Text style={styles.headerTitle}>Playback Queue</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>{queue.length} Tracks</Text>
@@ -65,7 +68,7 @@ export default function PlaybackQueueView({
       >
         {queue.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="music-box-multiple-outline" size={48} color="#8A919E" />
+            <MaterialCommunityIcons name="music-box-multiple-outline" size={48} color={c.textSubtle} />
             <Text style={styles.emptyTitle}>Queue is Empty</Text>
             <Text style={styles.emptySubtitle}>
               Select any song from Home, Local Library, or YouTube to start queuing.
@@ -87,7 +90,7 @@ export default function PlaybackQueueView({
                     <Ionicons 
                       name={isPlaying ? "volume-high" : "pause"} 
                       size={16} 
-                      color="#12141A" 
+                      color={c.ink} 
                     />
                   ) : (
                     <Text style={styles.indexText}>{idx + 1}</Text>
@@ -134,7 +137,7 @@ export default function PlaybackQueueView({
                     }}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="close" size={18} color="#717886" />
+                    <Ionicons name="close" size={18} color={c.textMuted} />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -146,7 +149,7 @@ export default function PlaybackQueueView({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 8
@@ -158,10 +161,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   titleGroup: {
     flexDirection: 'row',
@@ -169,18 +172,18 @@ const styles = StyleSheet.create({
     gap: 8
   },
   headerTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 15,
     fontWeight: '800'
   },
   countBadge: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10
   },
   countBadgeText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 11,
     fontWeight: '800'
   },
@@ -211,13 +214,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24
   },
   emptyTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 16,
     fontWeight: '700',
     marginTop: 12
   },
   emptySubtitle: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 13,
     textAlign: 'center',
     marginTop: 6,
@@ -226,18 +229,18 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12
   },
   activeTrackRow: {
-    borderColor: '#12141A',
-    backgroundColor: '#EEF0F4'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   indexCol: {
     width: 24,
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   indexText: {
-    color: '#8A919E',
+    color: c.textSubtle,
     fontSize: 12,
     fontWeight: '700'
   },
@@ -253,18 +256,18 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#EEF0F4'
+    backgroundColor: c.surfaceAlt
   },
   trackDetails: {
     flex: 1
   },
   trackTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '700'
   },
   activeTrackTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '800'
   },
   artistRow: {
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     marginTop: 3
   },
   trackArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11
   },
   ytPill: {
@@ -289,13 +292,13 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localPill: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4
   },
   localPillText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 9,
     fontWeight: '800'
   },

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function MiniPlayerBar({
   currentTrack,
@@ -11,6 +12,8 @@ export default function MiniPlayerBar({
   currentPosition,
   duration
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const spinAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function MiniPlayerBar({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={20} 
-              color="#12141A" 
+              color={c.ink} 
               style={{ marginLeft: isPlaying ? 0 : 2 }}
             />
           </TouchableOpacity>
@@ -117,11 +120,11 @@ export default function MiniPlayerBar({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderTopWidth: 1,
-    borderTopColor: '#1E2026',
+    borderTopColor: c.inverse,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#FFFFFF'
+    backgroundColor: c.surface
   },
   innerContent: {
     flexDirection: 'row',
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#111',
+    backgroundColor: c.inverse,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -165,7 +168,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.4)'
   },
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   localBadge: {
-    backgroundColor: '#242833',
+    backgroundColor: c.inverse,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4
@@ -208,7 +211,7 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   },
   trackArtist: {
-    color: '#9CA3AF',
+    color: c.textSubtle,
     fontSize: 11,
     marginTop: 2
   },
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center'
   },

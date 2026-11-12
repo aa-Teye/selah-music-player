@@ -9,12 +9,15 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function AiDiscoveryScreen({
   onPlayTrack,
   currentTrack,
   onBack
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
@@ -111,7 +114,7 @@ export default function AiDiscoveryScreen({
           onPress={onBack}
           activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={20} color="#12141A" />
+          <Ionicons name="arrow-back" size={20} color={c.ink} />
           <Text style={styles.backButtonText}>Back to Home</Text>
         </TouchableOpacity>
       )}
@@ -119,7 +122,7 @@ export default function AiDiscoveryScreen({
       {/* AI Hero Banner */}
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
-          <MaterialCommunityIcons name="creation" size={14} color="#12141A" />
+          <MaterialCommunityIcons name="creation" size={14} color={c.ink} />
           <Text style={styles.heroBadgeText}>AI MUSIC DISCOVERY</Text>
         </View>
         <Text style={styles.heroTitle}>Find Music for Any Mood or Scripture</Text>
@@ -131,7 +134,7 @@ export default function AiDiscoveryScreen({
         <View style={styles.inputRow}>
           <TextInput
             placeholder="e.g. Peaceful acoustic worship for anxiety..."
-            placeholderTextColor="#8A919E"
+            placeholderTextColor={c.textSubtle}
             value={prompt}
             onChangeText={setPrompt}
             style={styles.textInput}
@@ -208,20 +211,20 @@ export default function AiDiscoveryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   content: {
     padding: 16,
     paddingBottom: 40
   },
   heroCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
@@ -237,19 +240,19 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   heroBadgeText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '800',
     fontSize: 11,
     letterSpacing: 0.8
   },
   heroTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 18,
     fontWeight: '800',
     marginBottom: 6
   },
   heroSubtitle: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     lineHeight: 18,
     marginBottom: 16
@@ -261,11 +264,11 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     borderRadius: 20,
-    color: '#0F1115',
+    color: c.text,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 13
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -286,9 +289,9 @@ const styles = StyleSheet.create({
   promptPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     fontSize: 12
   },
   promptText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '600'
   },
@@ -306,14 +309,14 @@ const styles = StyleSheet.create({
     marginTop: 8
   },
   resultHeader: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 14,
     borderRadius: 12,
     marginBottom: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#12141A',
+    borderLeftColor: c.inverse,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -321,23 +324,23 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   resultTheme: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 15,
     fontWeight: '800',
     marginBottom: 4
   },
   resultInsight: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     lineHeight: 17
   },
   trackCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -345,8 +348,8 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   activeCard: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   cardHeader: {
     flexDirection: 'row',
@@ -355,41 +358,41 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   cardTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   cardArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     marginTop: 2
   },
   genrePill: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10
   },
   genreText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 10,
     fontWeight: '700'
   },
   reasonBox: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 8,
     borderRadius: 8,
     marginBottom: 12,
     borderLeftWidth: 2,
-    borderLeftColor: '#12141A'
+    borderLeftColor: c.inverse
   },
   reasonLabel: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 10,
     fontWeight: '800'
   },
   reasonText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     marginTop: 2,
     lineHeight: 16
@@ -398,7 +401,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 9,
     borderRadius: 10,
     gap: 6
@@ -415,7 +418,7 @@ const styles = StyleSheet.create({
     gap: 6
   },
   backButtonText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '700',
     fontSize: 14
   }

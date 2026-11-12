@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useTheme, useThemedStyles } from '../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,6 +21,9 @@ export default function HeaderMenuModal({
   onOpenSleepTimer,
   streakDays = 14
 }) {
+  const c = useColors();
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <Modal
       visible={visible}
@@ -34,17 +38,17 @@ export default function HeaderMenuModal({
               {/* Header Profile Brand */}
               <View style={styles.drawerHeader}>
                 <View style={styles.profileAvatar}>
-                  <Ionicons name="person" size={20} color="#12141A" />
+                  <Ionicons name="person" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.profileName}>Selah</Text>
                   <View style={styles.streakRow}>
-                    <Ionicons name="sparkles-outline" size={13} color="#12141A" />
+                    <Ionicons name="sparkles-outline" size={13} color={c.ink} />
                     <Text style={styles.streakText}>Day {streakDays} Daily Worship</Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={20} color="#717886" />
+                  <Ionicons name="close" size={20} color={c.textMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -59,13 +63,13 @@ export default function HeaderMenuModal({
                 }}
               >
                 <View style={styles.menuIconWrap}>
-                  <Ionicons name="options" size={20} color="#12141A" />
+                  <Ionicons name="options" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Sound Equalizer &amp; Presets</Text>
                   <Text style={styles.menuSub}>5-Band EQ, Worship, Bass Boost, Clarity</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
+                <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -76,13 +80,13 @@ export default function HeaderMenuModal({
                 }}
               >
                 <View style={styles.menuIconWrap}>
-                  <Ionicons name="stats-chart" size={20} color="#12141A" />
+                  <Ionicons name="stats-chart" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Listening Statistics</Text>
                   <Text style={styles.menuSub}>Session minutes, devotionals, top frequency</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
+                <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -93,14 +97,40 @@ export default function HeaderMenuModal({
                 }}
               >
                 <View style={styles.menuIconWrap}>
-                  <Ionicons name="moon" size={20} color="#12141A" />
+                  <Ionicons name="moon" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Bedtime Sleep Timer</Text>
                   <Text style={styles.menuSub}>Auto fade-out (15m, 30m, 45m, 60m)</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#8A919E" />
+                <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
+
+              {/* Appearance: match phone / light / dark */}
+              <View style={styles.themeSection}>
+                <Text style={styles.themeLabel}>Appearance</Text>
+                <View style={styles.themeRow}>
+                  {[
+                    { id: 'system', label: 'Match phone', icon: 'phone-portrait-outline' },
+                    { id: 'light', label: 'Light', icon: 'sunny-outline' },
+                    { id: 'dark', label: 'Dark', icon: 'moon-outline' }
+                  ].map((opt) => {
+                    const active = themeMode === opt.id;
+                    return (
+                      <TouchableOpacity
+                        key={opt.id}
+                        testID={`theme-${opt.id}`}
+                        style={[styles.themePill, active && styles.themePillActive]}
+                        onPress={() => setThemeMode(opt.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name={opt.icon} size={15} color={active ? '#FFFFFF' : c.ink} />
+                        <Text style={[styles.themePillText, active && styles.themePillTextActive]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
 
               {/* Version & Badge Footer */}
               <View style={styles.drawerFooter}>
@@ -115,7 +145,30 @@ export default function HeaderMenuModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
+  themeSection: { marginTop: 12, marginBottom: 6 },
+  themeLabel: {
+    color: c.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 8
+  },
+  themeRow: { flexDirection: 'row', gap: 8 },
+  themePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: c.surfaceAlt,
+    borderRadius: 14,
+    paddingVertical: 10
+  },
+  themePillActive: { backgroundColor: c.inverse },
+  themePillText: { color: c.ink, fontSize: 12, fontWeight: '800' },
+  themePillTextActive: { color: '#FFFFFF' },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
@@ -125,9 +178,9 @@ const styles = StyleSheet.create({
   menuDrawer: {
     width: Math.min(width * 0.82, 340),
     height: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderLeftWidth: 1,
-    borderLeftColor: '#E5E7EB',
+    borderLeftColor: c.border,
     paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 30,
@@ -146,15 +199,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   profileName: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '800'
   },
@@ -165,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   streakText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '700'
   },
@@ -174,18 +227,18 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: c.surfaceStrong,
     marginBottom: 20
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -199,17 +252,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   menuTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '700'
   },
   menuSub: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 10,
     marginTop: 2
   },
@@ -221,10 +274,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB'
+    borderTopColor: c.border
   },
   footerText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '600'
   }

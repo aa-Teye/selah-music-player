@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, PanResponder, StyleSheet } from 'react-native';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 const formatTime = (secs) => {
   if (!secs || isNaN(secs) || secs < 0) return '0:00';
@@ -16,6 +17,7 @@ const formatTime = (secs) => {
  * moving to, and only jumps when you let go.
  */
 export default function Scrubber({ position = 0, duration = 0, onSeek }) {
+  const styles = useThemedStyles(makeStyles);
   const [width, setWidth] = useState(0);
   const [dragRatio, setDragRatio] = useState(null);
   const widthRef = useRef(0);
@@ -102,21 +104,21 @@ export default function Scrubber({ position = 0, duration = 0, onSeek }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   wrap: { alignSelf: 'stretch' },
   touchArea: { height: 40, justifyContent: 'center' },
-  track: { height: 5, borderRadius: 3, backgroundColor: '#E2E6EC', overflow: 'hidden' },
+  track: { height: 5, borderRadius: 3, backgroundColor: c.surfaceStrong, overflow: 'hidden' },
   trackActive: { height: 8, borderRadius: 4 },
-  fill: { height: '100%', backgroundColor: '#12141A' },
+  fill: { height: '100%', backgroundColor: c.inverse },
   thumb: {
     position: 'absolute',
     top: 12,
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: c.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.25,
@@ -130,10 +132,10 @@ const styles = StyleSheet.create({
     width: 56,
     paddingVertical: 3,
     borderRadius: 8,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     alignItems: 'center'
   },
   bubbleText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
   timesRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 },
-  time: { color: '#717886', fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] }
+  time: { color: c.textMuted, fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] }
 });

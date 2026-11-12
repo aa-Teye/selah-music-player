@@ -8,6 +8,7 @@ import {
   StatusBar
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function CarModeModal({
   visible,
@@ -20,6 +21,8 @@ export default function CarModeModal({
   isFavorite,
   onToggleFavorite
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   if (!currentTrack) return null;
 
   return (
@@ -75,7 +78,7 @@ export default function CarModeModal({
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
               size={58} 
-              color="#12141A" 
+              color={c.ink} 
             />
           </TouchableOpacity>
 
@@ -98,12 +101,12 @@ export default function CarModeModal({
             <Ionicons 
               name={isFavorite ? "heart" : "heart-outline"} 
               size={32} 
-              color={isFavorite ? "#EF4444" : "#8A919E"} 
+              color={isFavorite ? "#EF4444" : c.textSubtle} 
             />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.exitPill} onPress={onClose}>
-            <Ionicons name="arrow-back" size={18} color="#12141A" />
+            <Ionicons name="arrow-back" size={18} color={c.ink} />
             <Text style={styles.exitPillText}>Exit Car Mode</Text>
           </TouchableOpacity>
         </View>
@@ -112,10 +115,10 @@ export default function CarModeModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 36,
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#1E222B',
+    backgroundColor: c.inverse,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
   },
   exitBtn: {
     padding: 8,
-    backgroundColor: '#1E222B',
+    backgroundColor: c.inverse,
     borderRadius: 24
   },
   trackCard: {
@@ -161,14 +164,14 @@ const styles = StyleSheet.create({
   artist: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: c.textSubtle,
     textAlign: 'center',
     marginBottom: 6
   },
   album: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#717886',
+    color: c.textMuted,
     textAlign: 'center'
   },
   controlsRow: {
@@ -181,17 +184,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#1E222B',
+    backgroundColor: c.inverse,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#2D323E'
+    borderColor: c.inverse
   },
   giantPlayBtn: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000000',
@@ -207,20 +210,20 @@ const styles = StyleSheet.create({
   },
   favBtn: {
     padding: 12,
-    backgroundColor: '#1E222B',
+    backgroundColor: c.inverse,
     borderRadius: 24
   },
   exitPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 30
   },
   exitPillText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 15,
     fontWeight: '800'
   }

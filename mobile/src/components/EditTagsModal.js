@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Id3Service } from '../services/id3Service';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function EditTagsModal({
   visible,
@@ -18,6 +19,8 @@ export default function EditTagsModal({
   onClose,
   onSaveTrack
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [album, setAlbum] = useState('');
@@ -77,14 +80,14 @@ export default function EditTagsModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="tag-text-outline" size={22} color="#12141A" />
+              <MaterialCommunityIcons name="tag-text-outline" size={22} color={c.ink} />
               <View>
                 <Text style={styles.title}>Edit Audio Tags</Text>
                 <Text style={styles.subtitle}>Clean metadata on your device</Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#717886" />
+              <Ionicons name="close" size={22} color={c.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -111,7 +114,7 @@ export default function EditTagsModal({
               value={title}
               onChangeText={setTitle}
               placeholder="e.g. Goodness of God"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
             />
 
             <Text style={styles.fieldLabel}>Artist / Worship Leader</Text>
@@ -120,7 +123,7 @@ export default function EditTagsModal({
               value={artist}
               onChangeText={setArtist}
               placeholder="e.g. CeCe Winans"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
             />
 
             <Text style={styles.fieldLabel}>Album Name</Text>
@@ -129,7 +132,7 @@ export default function EditTagsModal({
               value={album}
               onChangeText={setAlbum}
               placeholder="e.g. Believe For It"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
             />
 
             <Text style={styles.fieldLabel}>Genre Category</Text>
@@ -168,19 +171,19 @@ export default function EditTagsModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   header: {
     flexDirection: 'row',
@@ -194,12 +197,12 @@ const styles = StyleSheet.create({
     gap: 10
   },
   title: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 18,
     fontWeight: '800'
   },
   subtitle: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12
   },
   closeBtn: {
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 12,
     borderRadius: 14,
     marginBottom: 16
@@ -218,13 +221,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 10,
-    backgroundColor: '#E2E6EC'
+    backgroundColor: c.surfaceStrong
   },
   artworkActions: {
     flex: 1
   },
   artworkLabel: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 6
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -248,20 +251,20 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   fieldLabel: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 4,
     textTransform: 'uppercase'
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     marginBottom: 12
   },
@@ -274,16 +277,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   activeGenrePill: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   genreText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '700'
   },
@@ -302,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   cancelText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 13,
     fontWeight: '600'
   },
@@ -310,7 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 10

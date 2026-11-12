@@ -17,6 +17,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import YouTubeService, { extractVideoId, searchYouTube } from '../services/youtubeService';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -103,6 +104,8 @@ function YouTubeWatchScreen({
   isActive = false,
   onVideoProgress
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [activeChip, setActiveChip] = useState('curated');
   const [searchResults, setSearchResults] = useState([]);
@@ -420,7 +423,7 @@ function YouTubeWatchScreen({
               <Ionicons 
                 name="videocam" 
                 size={14} 
-                color={playMode === 'video' ? '#FFFFFF' : '#717886'} 
+                color={playMode === 'video' ? '#FFFFFF' : c.textMuted} 
               />
               <Text style={[styles.modeTabText, playMode === 'video' && styles.modeTabTextActive]}>
                 Video Mode
@@ -435,7 +438,7 @@ function YouTubeWatchScreen({
               <Ionicons 
                 name="musical-notes" 
                 size={14} 
-                color={playMode === 'mp3' ? '#FFFFFF' : '#717886'} 
+                color={playMode === 'mp3' ? '#FFFFFF' : c.textMuted} 
               />
               <Text style={[styles.modeTabText, playMode === 'mp3' && styles.modeTabTextActive]}>
                 Play as MP3
@@ -514,7 +517,7 @@ function YouTubeWatchScreen({
                 onPress={() => onOpenAddToPlaylist(currentTrack || DEFAULT_FEATURED[0])}
                 title="Add to Playlist"
               >
-                <Ionicons name="bookmark-outline" size={18} color="#12141A" />
+                <Ionicons name="bookmark-outline" size={18} color={c.ink} />
               </TouchableOpacity>
             )}
 
@@ -523,7 +526,7 @@ function YouTubeWatchScreen({
               onPress={() => handleShareVideo(currentTrack || DEFAULT_FEATURED[0])}
               title="Share"
             >
-              <Ionicons name="share-social-outline" size={18} color="#717886" />
+              <Ionicons name="share-social-outline" size={18} color={c.textMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -547,7 +550,7 @@ function YouTubeWatchScreen({
             <Ionicons 
               name="shuffle" 
               size={20} 
-              color={isShuffle ? "#12141A" : "#8A919E"} 
+              color={isShuffle ? c.ink : c.textSubtle} 
             />
             {isShuffle && <View style={styles.ctrlActiveDot} />}
           </TouchableOpacity>
@@ -558,7 +561,7 @@ function YouTubeWatchScreen({
             onPress={handlePrevVideo}
             activeOpacity={0.7}
           >
-            <Ionicons name="play-skip-back" size={20} color="#12141A" />
+            <Ionicons name="play-skip-back" size={20} color={c.ink} />
           </TouchableOpacity>
 
           {/* Master Play/Pause */}
@@ -582,7 +585,7 @@ function YouTubeWatchScreen({
             onPress={() => handleNextVideo(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="play-skip-forward" size={20} color="#12141A" />
+            <Ionicons name="play-skip-forward" size={20} color={c.ink} />
           </TouchableOpacity>
 
           {/* Loop/Repeat Mode Toggle */}
@@ -594,7 +597,7 @@ function YouTubeWatchScreen({
             <MaterialCommunityIcons 
               name={repeatMode === 'one' ? "repeat-once" : "repeat"} 
               size={22} 
-              color={repeatMode !== 'off' ? "#12141A" : "#8A919E"} 
+              color={repeatMode !== 'off' ? c.ink : c.textSubtle} 
             />
             {repeatMode !== 'off' && (
               <View style={styles.repeatBadge}>
@@ -610,10 +613,10 @@ function YouTubeWatchScreen({
       {/* ── 2. SEARCH BAR & QUICK CHIPS ─────────────────────────────── */}
       <View style={styles.searchSection}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#717886" style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color={c.textMuted} style={styles.searchIcon} />
           <TextInput
             placeholder="Search YouTube worship, praise, songs..."
-            placeholderTextColor="#8A919E"
+            placeholderTextColor={c.textSubtle}
             value={localSearch}
             onChangeText={(text) => {
               setLocalSearch(text);
@@ -631,10 +634,10 @@ function YouTubeWatchScreen({
             style={styles.searchInput}
           />
           {isSearching ? (
-            <ActivityIndicator size="small" color="#12141A" style={{ marginRight: 6 }} />
+            <ActivityIndicator size="small" color={c.ink} style={{ marginRight: 6 }} />
           ) : localSearch ? (
             <TouchableOpacity onPress={handleClearSearch} style={styles.clearBtn}>
-              <Ionicons name="close-circle" size={18} color="#717886" />
+              <Ionicons name="close-circle" size={18} color={c.textMuted} />
             </TouchableOpacity>
           ) : null}
           <TouchableOpacity 
@@ -677,12 +680,12 @@ function YouTubeWatchScreen({
 
         {isSearching && displayVideos.length === 0 ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#12141A" />
+            <ActivityIndicator size="large" color={c.ink} />
             <Text style={styles.loadingText}>Searching YouTube live...</Text>
           </View>
         ) : displayVideos.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Ionicons name="musical-notes-outline" size={36} color="#8A919E" />
+            <Ionicons name="musical-notes-outline" size={36} color={c.textSubtle} />
             <Text style={styles.emptyTitle}>No songs found for "{localSearch}"</Text>
             <Text style={styles.emptySub}>Try searching an artist like "Brandon Lake" or "CeCe Winans"</Text>
           </View>
@@ -708,7 +711,7 @@ function YouTubeWatchScreen({
                     </View>
                     {isSelected && isPlaying && (
                       <View style={styles.playingOverlay}>
-                        <Ionicons name="volume-high" size={20} color="#12141A" />
+                        <Ionicons name="volume-high" size={20} color={c.ink} />
                       </View>
                     )}
                   </View>
@@ -734,7 +737,7 @@ function YouTubeWatchScreen({
                     <Ionicons 
                       name={isSelected && isPlaying ? "pause-circle" : "play-circle"} 
                       size={28} 
-                      color={isSelected ? "#12141A" : "#8A919E"} 
+                      color={isSelected ? c.ink : c.textSubtle} 
                     />
                   </View>
                 </TouchableOpacity>
@@ -752,13 +755,13 @@ function YouTubeWatchScreen({
           activeOpacity={0.8}
         >
           <View style={styles.customHeaderLeft}>
-            <Ionicons name="link-outline" size={18} color="#12141A" />
+            <Ionicons name="link-outline" size={18} color={c.ink} />
             <Text style={styles.customHeaderText}>Paste Direct YouTube Link or ID</Text>
           </View>
           <Ionicons 
             name={isCustomExpanded ? "chevron-up" : "chevron-down"} 
             size={18} 
-            color="#717886" 
+            color={c.textMuted} 
           />
         </TouchableOpacity>
 
@@ -767,7 +770,7 @@ function YouTubeWatchScreen({
             <TextInput
               style={styles.customInput}
               placeholder="e.g. https://www.youtube.com/watch?v=dQ3Cj8-7M3Y"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
               value={inputUrl}
               onChangeText={setInputUrl}
               autoCapitalize="none"
@@ -776,7 +779,7 @@ function YouTubeWatchScreen({
             <TextInput
               style={styles.customInput}
               placeholder="Song title (optional)"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
               value={videoTitle}
               onChangeText={setVideoTitle}
             />
@@ -795,10 +798,10 @@ function YouTubeWatchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   content: {
     paddingBottom: 120
@@ -806,12 +809,12 @@ const styles = StyleSheet.create({
 
   /* Hero Player */
   heroPlayerSection: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB'
+    borderBottomColor: c.border
   },
   modeSwitchRow: {
     flexDirection: 'row',
@@ -821,11 +824,11 @@ const styles = StyleSheet.create({
   },
   modeTabs: {
     flexDirection: 'row',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 16,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   modeTab: {
     flexDirection: 'row',
@@ -836,11 +839,11 @@ const styles = StyleSheet.create({
     gap: 5
   },
   modeTabActive: {
-    backgroundColor: '#12141A'
+    backgroundColor: c.inverse
   },
   modeTabText: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     fontWeight: '700'
   },
   modeTabTextActive: {
@@ -855,7 +858,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000000',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -876,10 +879,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -887,10 +890,10 @@ const styles = StyleSheet.create({
   },
   mp3PlayerCard: {
     height: (width - 32) * (9 / 16),
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -910,9 +913,9 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 2,
-    borderColor: '#12141A',
+    borderColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -931,9 +934,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 2,
-    borderColor: '#12141A'
+    borderColor: c.inverse
   },
   mp3Info: {
     flex: 1
@@ -946,19 +949,19 @@ const styles = StyleSheet.create({
   },
   mp3BadgeText: {
     fontSize: 9,
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '800',
     letterSpacing: 0.8
   },
   mp3Title: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115',
+    color: c.text,
     marginBottom: 4
   },
   mp3Artist: {
     fontSize: 13,
-    color: '#717886'
+    color: c.textMuted
   },
   playingBar: {
     flexDirection: 'row',
@@ -982,11 +985,11 @@ const styles = StyleSheet.create({
   playingTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   playingArtist: {
     fontSize: 12,
-    color: '#717886'
+    color: c.textMuted
   },
   playingActions: {
     flexDirection: 'row',
@@ -997,23 +1000,23 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   controlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -1026,13 +1029,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     position: 'relative'
   },
   ctrlBtnActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1.5,
-    borderColor: '#12141A'
+    borderColor: c.inverse
   },
   ctrlActiveDot: {
     position: 'absolute',
@@ -1040,7 +1043,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#12141A'
+    backgroundColor: c.inverse
   },
   ctrlSkipBtn: {
     width: 42,
@@ -1053,7 +1056,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#12141A',
@@ -1066,7 +1069,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderRadius: 6,
     paddingHorizontal: 3,
     paddingVertical: 1
@@ -1086,10 +1089,10 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     paddingHorizontal: 12,
     height: 44,
     shadowColor: '#000',
@@ -1103,7 +1106,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     height: '100%'
   },
@@ -1114,7 +1117,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 6
@@ -1123,21 +1126,21 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   chip: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     marginRight: 8
   },
   chipActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   chipText: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     fontWeight: '600'
   },
   chipTextActive: {
@@ -1159,12 +1162,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F1115',
+    color: c.text,
     letterSpacing: 0.3
   },
   sectionSubtitle: {
     fontSize: 11,
-    color: '#717886'
+    color: c.textMuted
   },
   loadingBox: {
     alignItems: 'center',
@@ -1172,7 +1175,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 10
   },
   emptyBox: {
@@ -1182,12 +1185,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     marginTop: 10
   },
   emptySub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 4
   },
   videoList: {
@@ -1196,11 +1199,11 @@ const styles = StyleSheet.create({
   videoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -1208,8 +1211,8 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   videoCardSelected: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   thumbWrapper: {
     width: 90,
@@ -1250,15 +1253,15 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     lineHeight: 17
   },
   videoTitleSelected: {
-    color: '#12141A'
+    color: c.ink
   },
   videoArtist: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 3
   },
   nowPlayingTag: {
@@ -1287,10 +1290,10 @@ const styles = StyleSheet.create({
   customSection: {
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -1312,7 +1315,7 @@ const styles = StyleSheet.create({
   customHeaderText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   customBody: {
     padding: 14,
@@ -1320,17 +1323,17 @@ const styles = StyleSheet.create({
     gap: 10
   },
   customInput: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   loadBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

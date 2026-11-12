@@ -10,12 +10,15 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function SetRingtoneModal({
   visible,
   track,
   onClose
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [selectedType, setSelectedType] = useState('ringtone'); // 'ringtone' | 'notification' | 'alarm'
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -72,17 +75,17 @@ export default function SetRingtoneModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="phone-incoming" size={22} color="#12141A" />
+              <MaterialCommunityIcons name="phone-incoming" size={22} color={c.ink} />
               <Text style={styles.title}>Set Caller Tune & Ringtone</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#717886" />
+              <Ionicons name="close" size={22} color={c.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Track Preview Box */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#12141A" />
+            <Ionicons name="musical-note" size={20} color={c.ink} />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Audio'}</Text>
@@ -100,13 +103,13 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="call" size={20} color="#12141A" />
+                <Ionicons name="call" size={20} color={c.ink} />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Phone Caller Ringtone</Text>
                 <Text style={styles.optionDesc}>Plays as your main incoming call melody</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#8A919E" />
+              <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
             </TouchableOpacity>
 
             {/* Notification Sound */}
@@ -116,13 +119,13 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="notifications" size={20} color="#12141A" />
+                <Ionicons name="notifications" size={20} color={c.ink} />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Message & Notification Tone</Text>
                 <Text style={styles.optionDesc}>Alert sound for SMS and app notifications</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#8A919E" />
+              <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
             </TouchableOpacity>
 
             {/* Alarm Sound */}
@@ -132,13 +135,13 @@ export default function SetRingtoneModal({
               activeOpacity={0.7}
             >
               <View style={styles.optionIconBox}>
-                <Ionicons name="alarm" size={20} color="#12141A" />
+                <Ionicons name="alarm" size={20} color={c.ink} />
               </View>
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>Morning Devotion Alarm</Text>
                 <Text style={styles.optionDesc}>Gentle wake-up worship sound for your alarms</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#8A919E" />
+              <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
             </TouchableOpacity>
           </View>
 
@@ -152,19 +155,19 @@ export default function SetRingtoneModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   header: {
     flexDirection: 'row',
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   closeBtn: {
     padding: 6
@@ -188,27 +191,27 @@ const styles = StyleSheet.create({
   trackCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#12141A'
+    borderLeftColor: c.inverse
   },
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   trackArtist: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   sectionSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginBottom: 12
   },
   optionsList: {
@@ -218,20 +221,20 @@ const styles = StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12
   },
   optionIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -241,21 +244,21 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   optionDesc: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   cancelBtn: {
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#EEF0F4'
+    backgroundColor: c.surfaceAlt
   },
   cancelBtnText: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '700',
     fontSize: 13
   }

@@ -10,6 +10,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function AddToPlaylistModal({
   visible,
@@ -19,6 +20,8 @@ export default function AddToPlaylistModal({
   onToggleTrackInPlaylist,
   onCreatePlaylist
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -48,11 +51,11 @@ export default function AddToPlaylistModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Ionicons name="musical-notes" size={20} color="#12141A" />
+              <Ionicons name="musical-notes" size={20} color={c.ink} />
               <Text style={styles.title}>Add to Playlist</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#717886" />
+              <Ionicons name="close" size={22} color={c.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -68,7 +71,7 @@ export default function AddToPlaylistModal({
               <TextInput
                 style={styles.createInput}
                 placeholder="New playlist name..."
-                placeholderTextColor="#8A919E"
+                placeholderTextColor={c.textSubtle}
                 value={newPlaylistName}
                 onChangeText={setNewPlaylistName}
                 autoFocus
@@ -80,7 +83,7 @@ export default function AddToPlaylistModal({
                 style={styles.cancelBtn} 
                 onPress={() => setIsCreating(false)}
               >
-                <Ionicons name="close" size={18} color="#717886" />
+                <Ionicons name="close" size={18} color={c.textMuted} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -88,7 +91,7 @@ export default function AddToPlaylistModal({
               style={styles.createTriggerBtn} 
               onPress={() => setIsCreating(true)}
             >
-              <Ionicons name="add-circle-outline" size={20} color="#12141A" />
+              <Ionicons name="add-circle-outline" size={20} color={c.ink} />
               <Text style={styles.createTriggerText}>Create New Playlist</Text>
             </TouchableOpacity>
           )}
@@ -110,7 +113,7 @@ export default function AddToPlaylistModal({
                       <Ionicons 
                         name={isInPlaylist ? "folder" : "folder-outline"} 
                         size={22} 
-                        color={isInPlaylist ? "#12141A" : "#8A919E"} 
+                        color={isInPlaylist ? c.ink : c.textSubtle} 
                       />
                       <View style={styles.plTextWrap}>
                         <Text style={[styles.plName, isInPlaylist && styles.plNameActive]} numberOfLines={1}>
@@ -146,20 +149,20 @@ export default function AddToPlaylistModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
     maxHeight: '75%',
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   header: {
     flexDirection: 'row',
@@ -175,64 +178,64 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   closeBtn: {
     padding: 6
   },
   trackCard: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#12141A'
+    borderLeftColor: c.inverse
   },
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   trackArtist: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   createTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     padding: 12,
     borderRadius: 12,
     marginBottom: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   createTriggerText: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '700',
     fontSize: 13
   },
   createBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 12,
     padding: 8,
     marginBottom: 14,
     borderWidth: 1.5,
-    borderColor: '#12141A',
+    borderColor: c.inverse,
     gap: 8
   },
   createInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     paddingHorizontal: 8
   },
   saveBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8
@@ -248,7 +251,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#717886',
+    color: c.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 10
@@ -263,16 +266,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   playlistRowActive: {
-    borderColor: '#12141A',
-    backgroundColor: '#EEF0F4'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   plInfo: {
     flexDirection: 'row',
@@ -286,14 +289,14 @@ const styles = StyleSheet.create({
   plName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   plNameActive: {
-    color: '#0F1115'
+    color: c.text
   },
   plSub: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   checkbox: {
@@ -301,31 +304,31 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: c.border,
     justifyContent: 'center',
     alignItems: 'center'
   },
   checkboxActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   emptyWrap: {
     padding: 20,
     alignItems: 'center'
   },
   emptyText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     fontWeight: '600'
   },
   emptySub: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     textAlign: 'center',
     marginTop: 4
   },
   doneBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',

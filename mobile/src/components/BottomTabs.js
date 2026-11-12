@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const tabs = [
     { id: 'home', label: 'Home', iconType: 'ion', icon: 'home-sharp' },
     { id: 'library', label: 'Library', iconType: 'ion', icon: 'musical-notes' },
@@ -20,7 +23,7 @@ function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
     <View style={styles.container}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
-        const color = isActive ? '#12141A' : '#8A919E';
+        const color = isActive ? c.ink : c.textSubtle;
 
         return (
           <TouchableOpacity
@@ -44,13 +47,13 @@ function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     height: 64,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: c.border,
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingBottom: 4
@@ -72,7 +75,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     shadowColor: '#12141A',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,

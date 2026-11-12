@@ -12,6 +12,7 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 // The player reports whole seconds, so look slightly ahead to feel in time
 const LOOKAHEAD = 0.5;
@@ -42,6 +43,7 @@ function sourceLabel(lyrics) {
 }
 
 function Pill({ icon, label, onPress, disabled }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity
       style={[styles.pill, disabled && styles.pillDisabled]}
@@ -60,6 +62,8 @@ function Pill({ icon, label, onPress, disabled }) {
  * text size, timing adjustment, other versions, and your own lyrics.
  */
 export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, onSeek }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [fontScale, setFontScale] = useState(1);
   const [editVisible, setEditVisible] = useState(false);
   const [editText, setEditText] = useState('');
@@ -104,7 +108,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
     if (lyrics.status === 'loading') {
       return (
         <View style={styles.centerBox}>
-          <ActivityIndicator color="#12141A" />
+          <ActivityIndicator color={c.ink} />
           <Text style={styles.centerTitle}>Looking for lyrics…</Text>
         </View>
       );
@@ -179,7 +183,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
         <MaterialCommunityIcons
           name={lyrics.instrumental ? 'music-clef-treble' : isError ? 'wifi-off' : 'music-note-off'}
           size={36}
-          color="#8A919E"
+          color={c.textSubtle}
         />
         <Text style={styles.centerTitle}>
           {lyrics.instrumental
@@ -203,7 +207,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.secondaryBtn} onPress={openEditor}>
-            <Ionicons name="add" size={16} color="#12141A" />
+            <Ionicons name="add" size={16} color={c.ink} />
             <Text style={styles.secondaryBtnText}>Add lyrics</Text>
           </TouchableOpacity>
         </View>
@@ -217,7 +221,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
     <View style={styles.container}>
       <View style={styles.topBar}>
         <View style={styles.badge}>
-          <MaterialCommunityIcons name="microphone-variant" size={13} color="#12141A" />
+          <MaterialCommunityIcons name="microphone-variant" size={13} color={c.ink} />
           <Text style={styles.badgeText}>{sourceLabel(lyrics)}</Text>
         </View>
         {lyrics.matched && lyrics.source === 'lrclib' && (
@@ -234,36 +238,36 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
           style={styles.pillRow}
           contentContainerStyle={styles.pillRowContent}
         >
-          <Pill icon={<Ionicons name="pencil" size={13} color="#12141A" />} label="Edit" onPress={openEditor} />
+          <Pill icon={<Ionicons name="pencil" size={13} color={c.ink} />} label="Edit" onPress={openEditor} />
           {lyrics.canSearch && (
-            <Pill icon={<Ionicons name="refresh" size={13} color="#12141A" />} label="Search again" onPress={lyrics.refresh} />
+            <Pill icon={<Ionicons name="refresh" size={13} color={c.ink} />} label="Search again" onPress={lyrics.refresh} />
           )}
           {lyrics.source === 'lrclib' && lyrics.versionCount > 1 && (
             <Pill
-              icon={<Ionicons name="swap-horizontal" size={14} color="#12141A" />}
+              icon={<Ionicons name="swap-horizontal" size={14} color={c.ink} />}
               label={`Version ${(lyrics.versionIndex % lyrics.versionCount) + 1}/${lyrics.versionCount}`}
               onPress={lyrics.nextVersion}
             />
           )}
           {lyrics.mode === 'synced' && (
             <>
-              <Pill icon={<Ionicons name="remove" size={14} color="#12141A" />} label="Earlier" onPress={() => lyrics.adjustOffset(-0.5)} />
+              <Pill icon={<Ionicons name="remove" size={14} color={c.ink} />} label="Earlier" onPress={() => lyrics.adjustOffset(-0.5)} />
               <View style={styles.offsetChip}>
                 <Text style={styles.offsetText}>
                   {lyrics.offset > 0 ? '+' : ''}
                   {lyrics.offset.toFixed(1)}s
                 </Text>
               </View>
-              <Pill icon={<Ionicons name="add" size={14} color="#12141A" />} label="Later" onPress={() => lyrics.adjustOffset(0.5)} />
+              <Pill icon={<Ionicons name="add" size={14} color={c.ink} />} label="Later" onPress={() => lyrics.adjustOffset(0.5)} />
             </>
           )}
           <Pill
-            icon={<Ionicons name="text" size={13} color="#12141A" />}
+            icon={<Ionicons name="text" size={13} color={c.ink} />}
             label="A−"
             onPress={() => setFontScale((s) => Math.max(0.8, Math.round((s - 0.1) * 10) / 10))}
           />
           <Pill
-            icon={<Ionicons name="text" size={17} color="#12141A" />}
+            icon={<Ionicons name="text" size={17} color={c.ink} />}
             label="A+"
             onPress={() => setFontScale((s) => Math.min(1.6, Math.round((s + 0.1) * 10) / 10))}
           />
@@ -281,7 +285,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Your lyrics</Text>
               <TouchableOpacity onPress={() => setEditVisible(false)}>
-                <Ionicons name="close" size={22} color="#717886" />
+                <Ionicons name="close" size={22} color={c.textMuted} />
               </TouchableOpacity>
             </View>
             <Text style={styles.modalSub} numberOfLines={2}>
@@ -293,7 +297,7 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
               value={editText}
               onChangeText={setEditText}
               placeholder="Paste lyrics here…"
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
               textAlignVertical="top"
             />
             <View style={styles.modalFooter}>
@@ -325,13 +329,15 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
 
 /** Small card for the Now Playing page: previous / current / next line */
 export function LyricsPreview({ lyrics, currentPosition = 0, onPress }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const position = currentPosition + (lyrics.offset || 0) + LOOKAHEAD;
   let body;
 
   if (lyrics.status === 'loading') {
     body = (
       <View style={styles.previewRow}>
-        <ActivityIndicator size="small" color="#717886" />
+        <ActivityIndicator size="small" color={c.textMuted} />
         <Text style={styles.previewMuted}>  Looking for lyrics…</Text>
       </View>
     );
@@ -374,17 +380,17 @@ export function LyricsPreview({ lyrics, currentPosition = 0, onPress }) {
     <TouchableOpacity style={styles.previewCard} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.previewHeader}>
         <View style={styles.previewTitleRow}>
-          <MaterialCommunityIcons name="microphone-variant" size={13} color="#12141A" />
+          <MaterialCommunityIcons name="microphone-variant" size={13} color={c.ink} />
           <Text style={styles.previewTitle}>LYRICS</Text>
         </View>
-        <Ionicons name="expand" size={15} color="#8A919E" />
+        <Ionicons name="expand" size={15} color={c.textSubtle} />
       </View>
       {body}
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: { flex: 1 },
   topBar: {
     flexDirection: 'row',
@@ -397,53 +403,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12
   },
-  badgeText: { color: '#12141A', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  matchText: { color: '#8A919E', fontSize: 12, fontWeight: '600', maxWidth: 150 },
+  badgeText: { color: c.ink, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  matchText: { color: c.textSubtle, fontSize: 12, fontWeight: '600', maxWidth: 150 },
   pillRow: { flexGrow: 0, marginBottom: 8 },
   pillRowContent: { paddingHorizontal: 2, gap: 8, alignItems: 'center' },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16
   },
   pillDisabled: { opacity: 0.4 },
-  pillText: { color: '#12141A', fontSize: 12, fontWeight: '700' },
+  pillText: { color: c.ink, fontSize: 12, fontWeight: '700' },
   offsetChip: { paddingHorizontal: 4 },
-  offsetText: { color: '#717886', fontSize: 12, fontWeight: '700' },
+  offsetText: { color: c.textMuted, fontSize: 12, fontWeight: '700' },
   body: { flex: 1 },
   scroll: { flex: 1 },
   lineBox: { paddingVertical: 8 },
-  lineText: { textAlign: 'center', color: '#8A919E', fontWeight: '700' },
-  pastLine: { color: '#B6BCC8' },
-  activeLine: { color: '#12141A', fontWeight: '900' },
+  lineText: { textAlign: 'center', color: c.textSubtle, fontWeight: '700' },
+  pastLine: { color: c.textFaint },
+  activeLine: { color: c.ink, fontWeight: '900' },
   plainNote: {
-    color: '#8A919E',
+    color: c.textSubtle,
     fontSize: 12,
     textAlign: 'center',
     marginBottom: 16,
     fontStyle: 'italic'
   },
-  plainLine: { color: '#12141A', textAlign: 'center', fontWeight: '600' },
+  plainLine: { color: c.ink, textAlign: 'center', fontWeight: '600' },
   centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, gap: 10 },
-  centerTitle: { color: '#12141A', fontSize: 16, fontWeight: '800', textAlign: 'center' },
-  centerSub: { color: '#717886', fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  centerTitle: { color: c.ink, fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  centerSub: { color: c.textMuted, fontSize: 13, lineHeight: 19, textAlign: 'center' },
   centerActions: { flexDirection: 'row', gap: 10, marginTop: 6 },
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 18
@@ -453,46 +459,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 18
   },
-  secondaryBtnText: { color: '#12141A', fontWeight: '800', fontSize: 13 },
+  secondaryBtnText: { color: c.ink, fontWeight: '800', fontSize: 13 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 17, 21, 0.5)', justifyContent: 'flex-end' },
   modalBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '85%'
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalTitle: { color: '#0F1115', fontSize: 18, fontWeight: '800' },
-  modalSub: { color: '#717886', fontSize: 12, lineHeight: 17, marginTop: 6, marginBottom: 12 },
+  modalTitle: { color: c.text, fontSize: 18, fontWeight: '800' },
+  modalSub: { color: c.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6, marginBottom: 12 },
   textInput: {
     height: 260,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     borderRadius: 14,
     padding: 12,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 15
   },
   modalFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
   removeBtn: { paddingVertical: 10, paddingHorizontal: 4 },
   removeBtnText: { color: '#EF4444', fontWeight: '700', fontSize: 13 },
   cancelBtn: { paddingVertical: 10, paddingHorizontal: 16 },
-  cancelBtnText: { color: '#717886', fontWeight: '700', fontSize: 14 },
-  saveBtn: { backgroundColor: '#12141A', paddingVertical: 10, paddingHorizontal: 22, borderRadius: 18 },
+  cancelBtnText: { color: c.textMuted, fontWeight: '700', fontSize: 14 },
+  saveBtn: { backgroundColor: c.inverse, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 18 },
   saveBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
 
   previewCard: {
     alignSelf: 'stretch',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 12
@@ -504,9 +510,9 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   previewTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  previewTitle: { color: '#12141A', fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
+  previewTitle: { color: c.ink, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
   previewRow: { flexDirection: 'row', alignItems: 'center' },
-  previewActive: { color: '#12141A', fontSize: 17, fontWeight: '800', lineHeight: 24, marginVertical: 2 },
-  previewDim: { color: '#9AA1AE', fontSize: 14, fontWeight: '600', lineHeight: 20 },
-  previewMuted: { color: '#717886', fontSize: 14, lineHeight: 20 }
+  previewActive: { color: c.ink, fontSize: 17, fontWeight: '800', lineHeight: 24, marginVertical: 2 },
+  previewDim: { color: c.textFaint, fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  previewMuted: { color: c.textMuted, fontSize: 14, lineHeight: 20 }
 });

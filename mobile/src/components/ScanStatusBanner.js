@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Easing, StyleSheet, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 /**
  * Shows what the music scan is doing: live count + latest song found (with a moving
  * progress effect), "music access is off", errors, or the final result.
  */
 export default function ScanStatusBanner({ status, showDone = false }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const sweep = useRef(new Animated.Value(0)).current;
   const scanning = status?.state === 'scanning';
 
@@ -33,7 +36,7 @@ export default function ScanStatusBanner({ status, showDone = false }) {
     return (
       <View style={styles.banner} testID="scan-banner">
         <View style={styles.row}>
-          <Ionicons name="musical-notes" size={16} color="#12141A" />
+          <Ionicons name="musical-notes" size={16} color={c.ink} />
           <Text style={styles.title}>
             Finding your music… {count} song{count === 1 ? '' : 's'}
           </Text>
@@ -59,7 +62,7 @@ export default function ScanStatusBanner({ status, showDone = false }) {
         testID="scan-banner"
       >
         <View style={styles.row}>
-          <Ionicons name="lock-closed-outline" size={16} color="#B45309" />
+          <Ionicons name="lock-closed-outline" size={16} color={c.warnText} />
           <Text style={[styles.title, styles.warnText]}>Music access is off</Text>
         </View>
         <Text style={[styles.sub, styles.warnText]}>
@@ -73,7 +76,7 @@ export default function ScanStatusBanner({ status, showDone = false }) {
     return (
       <View style={[styles.banner, styles.warn]} testID="scan-banner">
         <View style={styles.row}>
-          <Ionicons name="alert-circle-outline" size={16} color="#B45309" />
+          <Ionicons name="alert-circle-outline" size={16} color={c.warnText} />
           <Text style={[styles.title, styles.warnText]}>The scan had a problem</Text>
         </View>
         <Text style={[styles.sub, styles.warnText]} numberOfLines={2}>
@@ -100,11 +103,11 @@ export default function ScanStatusBanner({ status, showDone = false }) {
   return null;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   banner: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -112,10 +115,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden'
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: '#12141A', fontSize: 14, fontWeight: '800', flexShrink: 1 },
-  sub: { color: '#717886', fontSize: 12, marginTop: 4 },
-  track: { height: 4, borderRadius: 2, backgroundColor: '#EEF0F4', marginTop: 10, overflow: 'hidden' },
-  sweep: { width: 120, height: 4, borderRadius: 2, backgroundColor: '#12141A' },
-  warn: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' },
-  warnText: { color: '#92400E' }
+  title: { color: c.ink, fontSize: 14, fontWeight: '800', flexShrink: 1 },
+  sub: { color: c.textMuted, fontSize: 12, marginTop: 4 },
+  track: { height: 4, borderRadius: 2, backgroundColor: c.surfaceAlt, marginTop: 10, overflow: 'hidden' },
+  sweep: { width: 120, height: 4, borderRadius: 2, backgroundColor: c.inverse },
+  warn: { backgroundColor: c.warnBg, borderColor: c.warnBorder },
+  warnText: { color: c.warnText }
 });

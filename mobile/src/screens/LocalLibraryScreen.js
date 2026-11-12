@@ -16,6 +16,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ScannerService } from '../services/scannerService';
 import ScanStatusBanner from '../components/ScanStatusBanner';
 import ShowMoreButton from '../components/ShowMoreButton';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 function LocalLibraryScreen({
   localTracks = [],
@@ -32,6 +33,8 @@ function LocalLibraryScreen({
   scanStatus,
   onScan
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
   const [selectedFolder, setSelectedFolder] = useState(null);
   const isScanning = scanStatus?.state === 'scanning';
@@ -191,10 +194,10 @@ function LocalLibraryScreen({
             disabled={isScanning}
           >
             {isScanning ? (
-              <ActivityIndicator size="small" color="#12141A" />
+              <ActivityIndicator size="small" color={c.ink} />
             ) : (
               <>
-                <Ionicons name="refresh" size={16} color="#12141A" />
+                <Ionicons name="refresh" size={16} color={c.ink} />
                 <Text style={styles.scanBtnText}>Rescan</Text>
               </>
             )}
@@ -213,7 +216,7 @@ function LocalLibraryScreen({
       {localTracks.length === 0 && (
         <View style={styles.emptyCard}>
           <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name="folder-music" size={32} color="#12141A" />
+            <MaterialCommunityIcons name="folder-music" size={32} color={c.ink} />
           </View>
           <Text style={styles.emptyTitle}>No Local Songs Found Yet</Text>
           <Text style={styles.emptySub}>
@@ -238,7 +241,7 @@ function LocalLibraryScreen({
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.heroImportBtn} onPress={handlePickAudio}>
-            <Ionicons name="folder-open-outline" size={16} color="#12141A" />
+            <Ionicons name="folder-open-outline" size={16} color={c.ink} />
             <Text style={styles.heroImportBtnText}>Import from Files</Text>
           </TouchableOpacity>
         </View>
@@ -249,17 +252,17 @@ function LocalLibraryScreen({
         <>
           {/* Search bar */}
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={16} color="#717886" />
+            <Ionicons name="search" size={16} color={c.textMuted} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search your phone library..."
-              placeholderTextColor="#8A919E"
+              placeholderTextColor={c.textSubtle}
               value={filterQuery}
               onChangeText={setFilterQuery}
             />
             {filterQuery ? (
               <TouchableOpacity onPress={() => setFilterQuery('')}>
-                <Ionicons name="close-circle" size={16} color="#717886" />
+                <Ionicons name="close-circle" size={16} color={c.textMuted} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -310,7 +313,7 @@ function LocalLibraryScreen({
                       <Ionicons 
                         name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
                         size={20} 
-                        color={isCurrent ? "#12141A" : "#8A919E"} 
+                        color={isCurrent ? c.ink : c.textSubtle} 
                       />
                     </View>
 
@@ -333,7 +336,7 @@ function LocalLibraryScreen({
                           style={styles.actionIconBtn}
                           onPress={() => onOpenEditTags(item)}
                         >
-                          <MaterialCommunityIcons name="tag-outline" size={18} color="#717886" />
+                          <MaterialCommunityIcons name="tag-outline" size={18} color={c.textMuted} />
                         </TouchableOpacity>
                       )}
 
@@ -343,7 +346,7 @@ function LocalLibraryScreen({
                           style={styles.actionIconBtn}
                           onPress={() => onOpenSetRingtone(item)}
                         >
-                          <Ionicons name="notifications-outline" size={18} color="#717886" />
+                          <Ionicons name="notifications-outline" size={18} color={c.textMuted} />
                         </TouchableOpacity>
                       )}
 
@@ -353,7 +356,7 @@ function LocalLibraryScreen({
                           style={styles.actionIconBtn}
                           onPress={() => onOpenAddToPlaylist(item)}
                         >
-                          <Ionicons name="bookmark-outline" size={18} color="#12141A" />
+                          <Ionicons name="bookmark-outline" size={18} color={c.ink} />
                         </TouchableOpacity>
                       )}
 
@@ -362,7 +365,7 @@ function LocalLibraryScreen({
                         style={styles.actionIconBtn}
                         onPress={() => onDeleteTrack && onDeleteTrack(item.id)}
                       >
-                        <Ionicons name="trash-outline" size={18} color="#8A919E" />
+                        <Ionicons name="trash-outline" size={18} color={c.textSubtle} />
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -382,12 +385,12 @@ function LocalLibraryScreen({
                     style={styles.folderBackBtn} 
                     onPress={() => setSelectedFolder(null)}
                   >
-                    <Ionicons name="arrow-back" size={18} color="#12141A" />
+                    <Ionicons name="arrow-back" size={18} color={c.ink} />
                     <Text style={styles.folderBackText}>All Folders</Text>
                   </TouchableOpacity>
 
                   <View style={styles.folderHeaderCard}>
-                    <Ionicons name="folder-open" size={28} color="#12141A" />
+                    <Ionicons name="folder-open" size={28} color={c.ink} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.folderHeaderTitle}>{selectedFolder}</Text>
                       <Text style={styles.folderHeaderSub}>
@@ -422,7 +425,7 @@ function LocalLibraryScreen({
                             <Ionicons 
                               name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
                               size={20} 
-                              color={isCurrent ? "#12141A" : "#8A919E"} 
+                              color={isCurrent ? c.ink : c.textSubtle} 
                             />
                           </View>
                           <View style={styles.songInfo}>
@@ -436,17 +439,17 @@ function LocalLibraryScreen({
                           <View style={styles.cardActions}>
                             {onOpenEditTags && (
                               <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenEditTags(item)}>
-                                <MaterialCommunityIcons name="tag-outline" size={18} color="#717886" />
+                                <MaterialCommunityIcons name="tag-outline" size={18} color={c.textMuted} />
                               </TouchableOpacity>
                             )}
                             {onOpenSetRingtone && (
                               <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenSetRingtone(item)}>
-                                <Ionicons name="notifications-outline" size={18} color="#717886" />
+                                <Ionicons name="notifications-outline" size={18} color={c.textMuted} />
                               </TouchableOpacity>
                             )}
                             {onOpenAddToPlaylist && (
                               <TouchableOpacity style={styles.actionIconBtn} onPress={() => onOpenAddToPlaylist(item)}>
-                                <Ionicons name="bookmark-outline" size={18} color="#12141A" />
+                                <Ionicons name="bookmark-outline" size={18} color={c.ink} />
                               </TouchableOpacity>
                             )}
                           </View>
@@ -475,13 +478,13 @@ function LocalLibraryScreen({
                         activeOpacity={0.7}
                       >
                         <View style={styles.folderIconBox}>
-                          <Ionicons name="folder" size={26} color="#12141A" />
+                          <Ionicons name="folder" size={26} color={c.ink} />
                         </View>
                         <View style={styles.folderDetails}>
                           <Text style={styles.folderName} numberOfLines={1}>{folderName}</Text>
                           <Text style={styles.folderCount}>{count} track{count === 1 ? '' : 's'}</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={18} color="#8A919E" />
+                        <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
                       </TouchableOpacity>
                     );
                   })}
@@ -508,7 +511,7 @@ function LocalLibraryScreen({
                     style={styles.artistPlayBtn}
                     onPress={() => onPlayTrack(artistsMap[artistName][0])}
                   >
-                    <Ionicons name="play" size={16} color="#12141A" />
+                    <Ionicons name="play" size={16} color={c.ink} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -521,10 +524,10 @@ function LocalLibraryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   content: {
     padding: 16,
@@ -539,11 +542,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   subtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   actionBtns: {
@@ -554,26 +557,26 @@ const styles = StyleSheet.create({
   scanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 5
   },
   btnDisabled: {
     opacity: 0.6
   },
   scanBtnText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '700',
     fontSize: 12
   },
   importBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
@@ -585,12 +588,12 @@ const styles = StyleSheet.create({
     fontSize: 12
   },
   emptyCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginTop: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -602,22 +605,22 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   emptyTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     marginBottom: 6
   },
   emptySub: {
     fontSize: 13,
-    color: '#717886',
+    color: c.textMuted,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20
@@ -625,7 +628,7 @@ const styles = StyleSheet.create({
   heroScanBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -648,40 +651,40 @@ const styles = StyleSheet.create({
     gap: 8,
     width: '100%',
     justifyContent: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   heroImportBtnText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '700',
     fontSize: 13
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 8
   },
   searchInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13
   },
   subTabsRow: {
     flexDirection: 'row',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 12,
     padding: 3,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   subTab: {
     flex: 1,
@@ -690,12 +693,12 @@ const styles = StyleSheet.create({
     borderRadius: 9
   },
   subTabActive: {
-    backgroundColor: '#12141A'
+    backgroundColor: c.inverse
   },
   subTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#717886'
+    color: c.textMuted
   },
   subTabTextActive: {
     color: '#FFFFFF',
@@ -707,11 +710,11 @@ const styles = StyleSheet.create({
   songCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -720,18 +723,18 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   songCardActive: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   songIconBox: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   songInfo: {
     flex: 1
@@ -739,14 +742,14 @@ const styles = StyleSheet.create({
   songTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   songTitleActive: {
-    color: '#12141A'
+    color: c.ink
   },
   songArtist: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   cardActions: {
@@ -771,11 +774,11 @@ const styles = StyleSheet.create({
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -787,11 +790,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   folderDetails: {
     flex: 1
@@ -799,11 +802,11 @@ const styles = StyleSheet.create({
   folderName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   folderCount: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   folderBackBtn: {
@@ -813,18 +816,18 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   folderBackText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '700',
     fontSize: 13
   },
   folderHeaderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginBottom: 12,
     gap: 12,
     shadowColor: '#000',
@@ -836,17 +839,17 @@ const styles = StyleSheet.create({
   folderHeaderTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   folderHeaderSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   playFolderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -863,11 +866,11 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -879,16 +882,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   artistInitial: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#12141A'
+    color: c.ink
   },
   artistDetails: {
     flex: 1
@@ -896,22 +899,22 @@ const styles = StyleSheet.create({
   artistNameText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     marginBottom: 2
   },
   artistCountText: {
     fontSize: 12,
-    color: '#717886'
+    color: c.textMuted
   },
   artistPlayBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   }
 });
 

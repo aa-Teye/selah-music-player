@@ -16,6 +16,7 @@ import PlaybackQueueView from './PlaybackQueueView';
 import Scrubber from './Scrubber';
 import AudioVisualizer from './AudioVisualizer';
 import useTrackLyrics from '../hooks/useTrackLyrics';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const FALLBACK_COVER =
   'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80';
@@ -48,6 +49,7 @@ function formatBadge(track) {
 }
 
 function Pill({ icon, label, onPress, active }) {
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity
       style={[styles.pill, active && styles.pillActive]}
@@ -100,6 +102,8 @@ export default function PlayerPanel({
   activeSoundscape,
   bookmarksCount = 0
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const lyrics = useTrackLyrics(currentTrack, { duration });
   const [showSleepModal, setShowSleepModal] = useState(false);
   const [bodyHeight, setBodyHeight] = useState(0);
@@ -210,7 +214,7 @@ export default function PlayerPanel({
           <Ionicons
             name={isFavorite ? 'heart' : 'heart-outline'}
             size={28}
-            color={isFavorite ? '#EF4444' : '#717886'}
+            color={isFavorite ? '#EF4444' : c.textMuted}
           />
         </TouchableOpacity>
       </View>
@@ -260,7 +264,7 @@ export default function PlayerPanel({
               <Text style={styles.miniTitle} numberOfLines={1}>{currentTrack.title}</Text>
               <Text style={styles.miniArtist} numberOfLines={1}>{currentTrack.artist}</Text>
             </View>
-            <Ionicons name="chevron-up" size={18} color="#8A919E" />
+            <Ionicons name="chevron-up" size={18} color={c.textSubtle} />
           </TouchableOpacity>
         )}
 
@@ -268,14 +272,14 @@ export default function PlayerPanel({
 
         <View style={styles.transport}>
           <TouchableOpacity onPress={onToggleShuffle} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <Ionicons name="shuffle" size={22} color={isShuffle ? '#12141A' : '#B0B6C2'} />
+            <Ionicons name="shuffle" size={22} color={isShuffle ? c.ink : c.textFaint} />
             {isShuffle && <View style={styles.activeDot} />}
           </TouchableOpacity>
           <TouchableOpacity onPress={onPrev} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <Ionicons name="play-skip-back" size={28} color="#12141A" />
+            <Ionicons name="play-skip-back" size={28} color={c.ink} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => skipBy(-10)} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name="rewind-10" size={30} color="#12141A" />
+            <MaterialCommunityIcons name="rewind-10" size={30} color={c.ink} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.playBtn} onPress={onTogglePlay} activeOpacity={0.85}>
             <Ionicons
@@ -286,10 +290,10 @@ export default function PlayerPanel({
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => skipBy(10)} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name="fast-forward-10" size={30} color="#12141A" />
+            <MaterialCommunityIcons name="fast-forward-10" size={30} color={c.ink} />
           </TouchableOpacity>
           <TouchableOpacity onPress={onNext} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <Ionicons name="play-skip-forward" size={28} color="#12141A" />
+            <Ionicons name="play-skip-forward" size={28} color={c.ink} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onToggleRepeat}
@@ -300,7 +304,7 @@ export default function PlayerPanel({
             <MaterialCommunityIcons
               name={repeatMode === 'one' ? 'repeat-once' : repeatMode === 'all' ? 'repeat' : 'repeat-off'}
               size={24}
-              color={repeatMode !== 'off' ? '#12141A' : '#B0B6C2'}
+              color={repeatMode !== 'off' ? c.ink : c.textFaint}
             />
             {repeatMode !== 'off' && <View style={styles.activeDot} />}
           </TouchableOpacity>
@@ -314,27 +318,27 @@ export default function PlayerPanel({
             contentContainerStyle={styles.pillBarContent}
           >
             <Pill
-              icon={<Ionicons name="speedometer-outline" size={15} color={playbackSpeed !== 1 ? '#FFFFFF' : '#12141A'} />}
+              icon={<Ionicons name="speedometer-outline" size={15} color={playbackSpeed !== 1 ? '#FFFFFF' : c.ink} />}
               label={`${playbackSpeed}x`}
               active={playbackSpeed !== 1}
               onPress={cycleSpeed}
             />
             <Pill
-              icon={<MaterialCommunityIcons name="sleep" size={16} color={sleepTimerRemaining ? '#FFFFFF' : '#12141A'} />}
+              icon={<MaterialCommunityIcons name="sleep" size={16} color={sleepTimerRemaining ? '#FFFFFF' : c.ink} />}
               label={sleepTimerRemaining ? formatClock(sleepTimerRemaining) : 'Sleep'}
               active={Boolean(sleepTimerRemaining)}
               onPress={() => setShowSleepModal(true)}
             />
             {onOpenAddToPlaylist && (
               <Pill
-                icon={<Ionicons name="bookmark-outline" size={15} color="#12141A" />}
+                icon={<Ionicons name="bookmark-outline" size={15} color={c.ink} />}
                 label="Playlist"
                 onPress={() => onOpenAddToPlaylist(currentTrack)}
               />
             )}
             {onOpenAmbientSoundscapes && (
               <Pill
-                icon={<MaterialCommunityIcons name="weather-night" size={15} color={activeSoundscape ? '#FFFFFF' : '#12141A'} />}
+                icon={<MaterialCommunityIcons name="weather-night" size={15} color={activeSoundscape ? '#FFFFFF' : c.ink} />}
                 label={activeSoundscape ? activeSoundscape : 'Ambience'}
                 active={Boolean(activeSoundscape)}
                 onPress={onOpenAmbientSoundscapes}
@@ -342,7 +346,7 @@ export default function PlayerPanel({
             )}
             {onOpenPrayerBookmarks && (
               <Pill
-                icon={<MaterialCommunityIcons name="book-cross" size={15} color={bookmarksCount > 0 ? '#FFFFFF' : '#12141A'} />}
+                icon={<MaterialCommunityIcons name="book-cross" size={15} color={bookmarksCount > 0 ? '#FFFFFF' : c.ink} />}
                 label={bookmarksCount > 0 ? `${bookmarksCount} Pins` : 'Prayer pin'}
                 active={bookmarksCount > 0}
                 onPress={onOpenPrayerBookmarks}
@@ -350,28 +354,28 @@ export default function PlayerPanel({
             )}
             {onOpenEqualizer && (
               <Pill
-                icon={<MaterialCommunityIcons name="tune-vertical" size={15} color="#12141A" />}
+                icon={<MaterialCommunityIcons name="tune-vertical" size={15} color={c.ink} />}
                 label="Sound"
                 onPress={onOpenEqualizer}
               />
             )}
             {onOpenCarMode && (
               <Pill
-                icon={<MaterialCommunityIcons name="car" size={16} color="#12141A" />}
+                icon={<MaterialCommunityIcons name="car" size={16} color={c.ink} />}
                 label="Car mode"
                 onPress={onOpenCarMode}
               />
             )}
             {onOpenSetRingtone && (
               <Pill
-                icon={<MaterialCommunityIcons name="phone-incoming" size={15} color="#12141A" />}
+                icon={<MaterialCommunityIcons name="phone-incoming" size={15} color={c.ink} />}
                 label="Ringtone"
                 onPress={() => onOpenSetRingtone(currentTrack)}
               />
             )}
             {onOpenAudioTrimmer && (
               <Pill
-                icon={<MaterialCommunityIcons name="content-cut" size={15} color="#12141A" />}
+                icon={<MaterialCommunityIcons name="content-cut" size={15} color={c.ink} />}
                 label="Cutter"
                 onPress={() => onOpenAudioTrimmer(currentTrack)}
               />
@@ -418,14 +422,14 @@ export default function PlayerPanel({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20 },
   body: { flex: 1 },
   nowScroll: { flex: 1 },
   nowContent: { alignItems: 'center', gap: 14, paddingTop: 4, paddingBottom: 10 },
 
   vinylWrap: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -434,32 +438,32 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   disc: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 6,
-    borderColor: '#EEF0F4'
+    borderColor: c.border
   },
   discHole: {
     position: 'absolute',
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderWidth: 2,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
 
   titleRow: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center' },
-  title: { color: '#0F1115', fontSize: 24, fontWeight: '900' },
-  artist: { color: '#4B5160', fontSize: 16, fontWeight: '600', marginTop: 2 },
+  title: { color: c.text, fontSize: 24, fontWeight: '900' },
+  artist: { color: c.textSecondary, fontSize: 16, fontWeight: '600', marginTop: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  album: { color: '#8A919E', fontSize: 13, fontWeight: '600', flexShrink: 1 },
-  badge: { backgroundColor: '#EEF0F4', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
-  badgeText: { color: '#4B5160', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  album: { color: c.textSubtle, fontSize: 13, fontWeight: '600', flexShrink: 1 },
+  badge: { backgroundColor: c.surfaceAlt, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  badgeText: { color: c.textSecondary, fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   heartBtn: { paddingLeft: 12 },
 
   footer: { paddingTop: 6, paddingBottom: 8 },
@@ -467,16 +471,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     borderRadius: 14,
     padding: 8,
     marginBottom: 4
   },
-  miniCover: { width: 38, height: 38, borderRadius: 8, backgroundColor: '#EEF0F4' },
-  miniTitle: { color: '#0F1115', fontSize: 14, fontWeight: '800' },
-  miniArtist: { color: '#717886', fontSize: 12, marginTop: 1 },
+  miniCover: { width: 38, height: 38, borderRadius: 8, backgroundColor: c.surfaceAlt },
+  miniTitle: { color: c.text, fontSize: 14, fontWeight: '800' },
+  miniArtist: { color: c.textMuted, fontSize: 12, marginTop: 1 },
 
   transport: {
     flexDirection: 'row',
@@ -490,7 +494,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -504,7 +508,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     marginTop: 3
   },
 
@@ -514,13 +518,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 13,
     paddingVertical: 9,
     borderRadius: 18
   },
-  pillActive: { backgroundColor: '#12141A' },
-  pillText: { color: '#12141A', fontSize: 12, fontWeight: '800', textTransform: 'capitalize' },
+  pillActive: { backgroundColor: c.inverse },
+  pillText: { color: c.ink, fontSize: 12, fontWeight: '800', textTransform: 'capitalize' },
   pillTextActive: { color: '#FFFFFF' },
 
   sleepOverlay: {
@@ -530,18 +534,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24
   },
-  sleepBox: { width: '100%', backgroundColor: '#FFFFFF', borderRadius: 24, padding: 22 },
+  sleepBox: { width: '100%', backgroundColor: c.surface, borderRadius: 24, padding: 22 },
   sleepHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sleepTitle: { color: '#0F1115', fontSize: 18, fontWeight: '800' },
-  sleepSub: { color: '#717886', fontSize: 13, marginTop: 6, marginBottom: 16 },
+  sleepTitle: { color: c.text, fontSize: 18, fontWeight: '800' },
+  sleepSub: { color: c.textMuted, fontSize: 13, marginTop: 6, marginBottom: 16 },
   presetGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   presetBtn: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 16
   },
-  presetText: { color: '#12141A', fontWeight: '800', fontSize: 14 },
+  presetText: { color: c.ink, fontWeight: '800', fontSize: 14 },
   sleepCancel: { alignSelf: 'center', marginTop: 18, padding: 8 },
-  sleepCancelText: { color: '#717886', fontWeight: '700', fontSize: 14 }
+  sleepCancelText: { color: c.textMuted, fontWeight: '700', fontSize: 14 }
 });

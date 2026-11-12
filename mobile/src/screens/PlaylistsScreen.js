@@ -11,6 +11,7 @@ import {
   Modal
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 function PlaylistsScreen({
   tracks = [],
@@ -24,6 +25,8 @@ function PlaylistsScreen({
   onPlayPlaylist,
   onToggleTrackInPlaylist
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
@@ -151,7 +154,7 @@ function PlaylistsScreen({
             onPress={() => setIsAddSongsVisible(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="add" size={18} color="#12141A" />
+            <Ionicons name="add" size={18} color={c.ink} />
             <Text style={styles.addSongsPillBtnText}>Add Songs</Text>
           </TouchableOpacity>
         </View>
@@ -173,7 +176,7 @@ function PlaylistsScreen({
                       <Ionicons 
                         name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
                         size={18} 
-                        color={isCurrent ? "#12141A" : "#8A919E"} 
+                        color={isCurrent ? c.ink : c.textSubtle} 
                       />
                     </View>w>
                     <View style={styles.trackInfo}>
@@ -191,14 +194,14 @@ function PlaylistsScreen({
                     style={styles.removeTrackBtn}
                     onPress={() => onToggleTrackInPlaylist && onToggleTrackInPlaylist(selectedPlaylist.id, item.id)}
                   >
-                    <Ionicons name="close-circle-outline" size={20} color="#9CA3AF" />
+                    <Ionicons name="close-circle-outline" size={20} color={c.textSubtle} />
                   </TouchableOpacity>
                 </View>
               );
             })
           ) : (
             <View style={styles.emptyDetailBox}>
-              <Ionicons name="musical-notes-outline" size={40} color="#4B5563" />
+              <Ionicons name="musical-notes-outline" size={40} color={c.textSecondary} />
               <Text style={styles.emptyDetailTitle}>This playlist is empty</Text>
               <Text style={styles.emptyDetailSub}>
                 Add songs from your device library, imported music, or curated devotions.
@@ -230,23 +233,23 @@ function PlaylistsScreen({
                   <Text style={styles.modalSub}>{selectedPlaylist.name} • {selectedPlaylistTracks.length} song{selectedPlaylistTracks.length === 1 ? '' : 's'} included</Text>
                 </View>
                 <TouchableOpacity onPress={() => setIsAddSongsVisible(false)} style={styles.modalCloseBtn}>
-                  <Ionicons name="close" size={22} color="#9CA3AF" />
+                  <Ionicons name="close" size={22} color={c.textSubtle} />
                 </TouchableOpacity>
               </View>
 
               {/* Search Bar inside Modal */}
               <View style={styles.modalSearchBox}>
-                <Ionicons name="search" size={16} color="#9CA3AF" />
+                <Ionicons name="search" size={16} color={c.textSubtle} />
                 <TextInput
                   placeholder="Filter songs by title or artist..."
-                  placeholderTextColor="#6B7280"
+                  placeholderTextColor={c.textSecondary}
                   value={songSearchQuery}
                   onChangeText={setSongSearchQuery}
                   style={styles.modalSearchInput}
                 />
                 {songSearchQuery ? (
                   <TouchableOpacity onPress={() => setSongSearchQuery('')}>
-                    <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                    <Ionicons name="close-circle" size={16} color={c.textSubtle} />
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -267,7 +270,7 @@ function PlaylistsScreen({
                           <Ionicons 
                             name={isIn ? "musical-notes" : "musical-note-outline"} 
                             size={18} 
-                            color={isIn ? "#34D399" : "#9CA3AF"} 
+                            color={isIn ? "#34D399" : c.textSubtle} 
                           />
                         </View>
                         <View style={styles.modalSongInfo}>
@@ -279,14 +282,14 @@ function PlaylistsScreen({
                           </Text>
                         </View>
                         <View style={[styles.modalCheckbox, isIn && styles.modalCheckboxActive]}>
-                          {isIn && <Ionicons name="checkmark" size={16} color="#08090C" />}
+                          {isIn && <Ionicons name="checkmark" size={16} color={c.text} />}
                         </View>
                       </TouchableOpacity>
                     );
                   })
                 ) : (
                   <View style={{ padding: 20, alignItems: 'center' }}>
-                    <Text style={{ color: '#9CA3AF', fontSize: 13 }}>No songs matching search.</Text>
+                    <Text style={{ color: c.textSubtle, fontSize: 13 }}>No songs matching search.</Text>
                   </View>
                 )}
                 <ShowMoreButton remaining={filteredAvailableTracks.length - pickerLimit} onPress={() => setPickerLimit((n) => n + 80)} />
@@ -331,7 +334,7 @@ function PlaylistsScreen({
           <TextInput
             style={styles.createInput}
             placeholder="Name your playlist (e.g. Sunday Morning)..."
-            placeholderTextColor="#6B7280"
+            placeholderTextColor={c.textSecondary}
             value={newPlaylistName}
             onChangeText={setNewPlaylistName}
             autoFocus
@@ -382,7 +385,7 @@ function PlaylistsScreen({
                 activeOpacity={0.8}
               >
                 <View style={styles.userPlIconCircle}>
-                  <MaterialCommunityIcons name="folder-music-outline" size={24} color="#12141A" />
+                  <MaterialCommunityIcons name="folder-music-outline" size={24} color={c.ink} />
                 </View>
 
                 <View style={styles.userPlInfo}>
@@ -412,9 +415,9 @@ function PlaylistsScreen({
                       confirmDeletePlaylist(pl);
                     }}
                   >
-                    <Ionicons name="trash-outline" size={16} color="#717886" />
+                    <Ionicons name="trash-outline" size={16} color={c.textMuted} />
                   </TouchableOpacity>
-                  <Ionicons name="chevron-forward" size={18} color="#8A919E" />
+                  <Ionicons name="chevron-forward" size={18} color={c.textSubtle} />
                 </View>
               </TouchableOpacity>
             );
@@ -422,7 +425,7 @@ function PlaylistsScreen({
         </View>
       ) : (
         <View style={styles.emptyPlaylistsCard}>
-          <MaterialCommunityIcons name="playlist-plus" size={32} color="#12141A" />
+          <MaterialCommunityIcons name="playlist-plus" size={32} color={c.ink} />
           <Text style={styles.emptyPlaylistsTitle}>No Custom Playlists Yet</Text>
           <Text style={styles.emptyPlaylistsSub}>
             Create your own playlists for study, morning prayer, or offline road trips.
@@ -454,14 +457,14 @@ function PlaylistsScreen({
               activeOpacity={0.8}
             >
               <View style={styles.plIconCircle}>
-                <Ionicons name={pl.icon} size={22} color="#12141A" />
+                <Ionicons name={pl.icon} size={22} color={c.ink} />
               </View>
               <View style={styles.plDetails}>
                 <Text style={styles.plTitle}>{pl.title}</Text>
                 <Text style={styles.plDesc}>{pl.desc}</Text>
               </View>
               <View style={styles.plPlayArrow}>
-                <Ionicons name="play" size={14} color="#12141A" />
+                <Ionicons name="play" size={14} color={c.ink} />
               </View>
             </TouchableOpacity>
           );
@@ -471,10 +474,10 @@ function PlaylistsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   content: {
     padding: 16,
@@ -489,17 +492,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   subtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   createBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 18,
@@ -512,12 +515,12 @@ const styles = StyleSheet.create({
   },
   createBox: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 10,
     borderRadius: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -527,12 +530,12 @@ const styles = StyleSheet.create({
   },
   createInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     paddingHorizontal: 8
   },
   saveBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
@@ -546,11 +549,11 @@ const styles = StyleSheet.create({
   favCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginBottom: 20,
     gap: 14,
     shadowColor: '#000',
@@ -563,11 +566,11 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 14,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   favDetails: {
     flex: 1
@@ -575,18 +578,18 @@ const styles = StyleSheet.create({
   favTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   favSubtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   favPlayBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 2
@@ -597,7 +600,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     textTransform: 'uppercase',
     letterSpacing: 0.5
   },
@@ -608,11 +611,11 @@ const styles = StyleSheet.create({
   userPlaylistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -624,11 +627,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   userPlInfo: {
     flex: 1
@@ -636,11 +639,11 @@ const styles = StyleSheet.create({
   userPlTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   userPlSubtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   userPlActions: {
@@ -652,7 +655,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 1
@@ -661,23 +664,23 @@ const styles = StyleSheet.create({
     padding: 4
   },
   emptyPlaylistsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     alignItems: 'center',
     marginBottom: 24
   },
   emptyPlaylistsTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     marginTop: 8
   },
   emptyPlaylistsSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     textAlign: 'center',
     marginTop: 4,
     lineHeight: 18,
@@ -686,7 +689,7 @@ const styles = StyleSheet.create({
   emptyCreateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingHorizontal: 16,
     paddingVertical: 9,
     borderRadius: 12,
@@ -704,11 +707,11 @@ const styles = StyleSheet.create({
   playlistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 12,
     marginTop: 8,
     shadowColor: '#000',
@@ -721,11 +724,11 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   plDetails: {
     flex: 1
@@ -733,22 +736,22 @@ const styles = StyleSheet.create({
   plTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   plDesc: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   plPlayArrow: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
 
   // Detail View Styles
@@ -759,18 +762,18 @@ const styles = StyleSheet.create({
     gap: 6
   },
   backText: {
-    color: '#12141A',
+    color: c.ink,
     fontWeight: '700',
     fontSize: 14
   },
   detailHero: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 18,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginBottom: 16,
     gap: 14,
     shadowColor: '#000',
@@ -783,11 +786,11 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 14,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   detailHeroInfo: {
     flex: 1
@@ -795,11 +798,11 @@ const styles = StyleSheet.create({
   detailTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   detailSubtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   detailDeleteBtn: {
@@ -816,7 +819,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8
@@ -830,19 +833,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     gap: 6
   },
   addSongsPillBtnFull: {
     flex: 1
   },
   addSongsPillBtnText: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '700',
     fontSize: 13
   },
@@ -852,11 +855,11 @@ const styles = StyleSheet.create({
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -864,8 +867,8 @@ const styles = StyleSheet.create({
     elevation: 1
   },
   trackRowActive: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   trackPlayTouch: {
     flexDirection: 'row',
@@ -877,11 +880,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   trackInfo: {
     flex: 1
@@ -889,15 +892,15 @@ const styles = StyleSheet.create({
   trackTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   trackTitleActive: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '800'
   },
   trackArtist: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   removeTrackBtn: {
@@ -906,21 +909,21 @@ const styles = StyleSheet.create({
   emptyDetailBox: {
     alignItems: 'center',
     padding: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     marginTop: 10
   },
   emptyDetailTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     marginTop: 12
   },
   emptyDetailSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18
@@ -928,7 +931,7 @@ const styles = StyleSheet.create({
   emptyAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 12,
@@ -946,13 +949,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     maxHeight: '82%',
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   modalHeader: {
     flexDirection: 'row',
@@ -963,11 +966,11 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   modalSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   modalCloseBtn: {
@@ -976,18 +979,18 @@ const styles = StyleSheet.create({
   modalSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 42,
     marginBottom: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   modalSearchInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13
   },
   modalSongsList: {
@@ -997,28 +1000,28 @@ const styles = StyleSheet.create({
   modalSongRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderRadius: 12,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     gap: 10
   },
   modalSongRowActive: {
-    borderColor: '#12141A',
-    backgroundColor: '#F1F3F7'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   modalSongIcon: {
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center'
   },
   modalSongIconActive: {
-    backgroundColor: '#E2E6EC'
+    backgroundColor: c.surfaceStrong
   },
   modalSongInfo: {
     flex: 1
@@ -1026,15 +1029,15 @@ const styles = StyleSheet.create({
   modalSongTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   modalSongTitleActive: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '800'
   },
   modalSongArtist: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   modalCheckbox: {
@@ -1047,11 +1050,11 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   modalCheckboxActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   modalDoneBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 13,
     borderRadius: 14,
     alignItems: 'center',

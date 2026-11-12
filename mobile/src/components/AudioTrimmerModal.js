@@ -8,6 +8,7 @@ import {
   Alert
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function AudioTrimmerModal({
   visible,
@@ -17,6 +18,8 @@ export default function AudioTrimmerModal({
   onPlayPreview,
   onApplyRingtone
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [startTime, setStartTime] = useState(0);
   const [trimDuration, setTrimDuration] = useState(30); // 30s standard ringtone
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -105,17 +108,17 @@ export default function AudioTrimmerModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <MaterialCommunityIcons name="content-cut" size={22} color="#12141A" />
+              <MaterialCommunityIcons name="content-cut" size={22} color={c.ink} />
               <Text style={styles.title}>Audio Trimmer & Ringtone Cutter</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#717886" />
+              <Ionicons name="close" size={22} color={c.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Track Name */}
           <View style={styles.trackCard}>
-            <Ionicons name="musical-note" size={20} color="#12141A" />
+            <Ionicons name="musical-note" size={20} color={c.ink} />
             <View style={{ flex: 1 }}>
               <Text style={styles.trackTitle} numberOfLines={1}>{track.title}</Text>
               <Text style={styles.trackArtist} numberOfLines={1}>{track.artist || 'Local Track'}</Text>
@@ -149,7 +152,7 @@ export default function AudioTrimmerModal({
                 <Text style={styles.flagTime}>{formatTime(startTime)}</Text>
               </View>
               <View style={styles.clipDurationBadge}>
-                <Ionicons name="time-outline" size={12} color="#12141A" />
+                <Ionicons name="time-outline" size={12} color={c.ink} />
                 <Text style={styles.clipDurationText}>{trimDuration}s clip</Text>
               </View>
               <View style={styles.timeFlag}>
@@ -207,7 +210,7 @@ export default function AudioTrimmerModal({
               <Ionicons 
                 name={isPreviewing ? "stop" : "play"} 
                 size={18} 
-                color={isPreviewing ? "#FFFFFF" : "#12141A"} 
+                color={isPreviewing ? "#FFFFFF" : c.ink} 
               />
               <Text style={[styles.previewBtnText, isPreviewing && styles.previewBtnTextActive]}>
                 {isPreviewing ? "Stop Preview" : "Preview Clip"}
@@ -225,19 +228,19 @@ export default function AudioTrimmerModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
     justifyContent: 'flex-end'
   },
   modalBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 20,
     borderTopWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   header: {
     flexDirection: 'row',
@@ -253,7 +256,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F1115'
+    color: c.text
   },
   closeBtn: {
     padding: 6
@@ -261,34 +264,34 @@ const styles = StyleSheet.create({
   trackCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 14,
     padding: 12,
     gap: 12,
     marginBottom: 16
   },
   trackTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '700'
   },
   trackArtist: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     marginTop: 2
   },
   totalLengthBadge: {
-    color: '#8A919E',
+    color: c.textSubtle,
     fontSize: 12,
     fontWeight: '600'
   },
   waveformBox: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   waveformRow: {
     flexDirection: 'row',
@@ -302,49 +305,49 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   waveBarActive: {
-    backgroundColor: '#12141A'
+    backgroundColor: c.inverse
   },
   waveBarDim: {
-    backgroundColor: '#E2E6EC'
+    backgroundColor: c.surfaceStrong
   },
   rangeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: c.border,
     paddingTop: 10
   },
   timeFlag: {
     alignItems: 'center'
   },
   flagLabel: {
-    color: '#8A919E',
+    color: c.textSubtle,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5
   },
   flagTime: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '800'
   },
   clipDurationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4
   },
   clipDurationText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 11,
     fontWeight: '800'
   },
   sectionLabel: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 8
@@ -356,26 +359,26 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   adjustBtn: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10
   },
   adjustBtnText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 12,
     fontWeight: '700'
   },
   currentStartBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#12141A'
+    borderColor: c.inverse
   },
   currentStartText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 15,
     fontWeight: '800'
   },
@@ -386,7 +389,7 @@ const styles = StyleSheet.create({
   },
   lengthPill: {
     flex: 1,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 12,
@@ -394,11 +397,11 @@ const styles = StyleSheet.create({
     borderColor: 'transparent'
   },
   lengthPillActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   lengthText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '600'
   },
@@ -415,19 +418,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8
   },
   previewBtnActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   previewBtnText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 14,
     fontWeight: '800'
   },
@@ -439,7 +442,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 14,
     borderRadius: 14,
     gap: 8

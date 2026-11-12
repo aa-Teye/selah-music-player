@@ -9,6 +9,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +45,8 @@ export default function OnboardingArtistsModal({
   onFinish,
   onComplete
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [localDismissed, setLocalDismissed] = useState(false);
   const [selectedArtists, setSelectedArtists] = useState(['maverick', 'brandon', 'cece']);
   const [selectedVibe, setSelectedVibe] = useState('worship');
@@ -102,7 +105,7 @@ export default function OnboardingArtistsModal({
                   onPress={handleFinish}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                  <Ionicons name="close-circle" size={26} color="#717886" />
+                  <Ionicons name="close-circle" size={26} color={c.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -132,7 +135,7 @@ export default function OnboardingArtistsModal({
                     <Ionicons
                       name={v.icon}
                       size={15}
-                      color={isActive ? '#FFFFFF' : '#717886'}
+                      color={isActive ? '#FFFFFF' : c.textMuted}
                       style={{ marginRight: 6 }}
                     />
                     <Text style={[styles.vibeText, isActive && styles.vibeTextActive]}>
@@ -165,7 +168,7 @@ export default function OnboardingArtistsModal({
                       <Ionicons
                         name="person"
                         size={18}
-                        color={isSelected ? '#FFFFFF' : '#717886'}
+                        color={isSelected ? '#FFFFFF' : c.textMuted}
                       />
                     </View>
                     <View style={styles.artistInfo}>
@@ -202,7 +205,7 @@ export default function OnboardingArtistsModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 17, 21, 0.45)',
@@ -214,10 +217,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '88%',
     maxHeight: 720,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     padding: 18,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   headerDoneBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -248,21 +251,21 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     justifyContent: 'center',
     alignItems: 'center'
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F1115',
+    color: c.text,
     letterSpacing: 0.5,
     marginBottom: 4,
     textAlign: 'center'
   },
   subtitle: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 10
@@ -274,13 +277,13 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#0F1115',
+    color: c.text,
     letterSpacing: 1,
     marginBottom: 10
   },
   sectionHint: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginBottom: 12
   },
   vibesGrid: {
@@ -291,20 +294,20 @@ const styles = StyleSheet.create({
   vibePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   vibePillActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   vibeText: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     fontWeight: '600'
   },
   vibeTextActive: {
@@ -317,30 +320,30 @@ const styles = StyleSheet.create({
   artistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     padding: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB'
+    borderColor: c.border
   },
   artistCardSelected: {
-    borderColor: '#12141A',
-    backgroundColor: '#EEF0F4'
+    borderColor: c.inverse,
+    backgroundColor: c.surfaceAlt
   },
   artistAvatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12
   },
   artistAvatarSelected: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   artistInfo: {
     flex: 1
@@ -348,14 +351,14 @@ const styles = StyleSheet.create({
   artistName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F1115'
+    color: c.text
   },
   artistNameSelected: {
-    color: '#0F1115'
+    color: c.text
   },
   artistGenre: {
     fontSize: 11,
-    color: '#717886',
+    color: c.textMuted,
     marginTop: 2
   },
   checkbox: {
@@ -363,21 +366,21 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: '#D1D5DB',
+    borderColor: c.border,
     justifyContent: 'center',
     alignItems: 'center'
   },
   checkboxSelected: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   footer: {
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB'
+    borderTopColor: c.border
   },
   submitBtn: {
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

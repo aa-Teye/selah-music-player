@@ -7,6 +7,7 @@ import {
   StyleSheet 
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function EqualizerScreen({
   onClose,
@@ -19,6 +20,8 @@ export default function EqualizerScreen({
   activeSoundscape,
   onOpenAmbientSoundscapes
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   const [activePreset, setActivePreset] = useState('worship');
 
   const presets = [
@@ -66,7 +69,7 @@ export default function EqualizerScreen({
       <View style={styles.headerRow}>
         {onClose && (
           <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={24} color="#0F1115" />
+            <Ionicons name="arrow-back" size={24} color={c.text} />
           </TouchableOpacity>
         )}
         <View style={{ flex: 1 }}>
@@ -78,7 +81,7 @@ export default function EqualizerScreen({
       {/* Bedtime Sleep Timer Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color="#12141A" />
+          <MaterialCommunityIcons name="moon-waning-crescent" size={20} color={c.ink} />
           <Text style={styles.cardTitle}>Bedtime Sleep Timer</Text>
           {sleepTimerRemaining ? (
             <View style={styles.timerBadge}>
@@ -111,7 +114,7 @@ export default function EqualizerScreen({
       {/* Bedtime Ambient Soundscapes Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="weather-night" size={20} color="#12141A" />
+          <MaterialCommunityIcons name="weather-night" size={20} color={c.ink} />
           <Text style={styles.cardTitle}>Bedtime Ambient Soundscapes</Text>
           {activeSoundscape && (
             <View style={styles.timerBadge}>
@@ -140,7 +143,7 @@ export default function EqualizerScreen({
       {/* Audio Crossfade Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="swap-horizontal" size={20} color="#12141A" />
+          <Ionicons name="swap-horizontal" size={20} color={c.ink} />
           <Text style={styles.cardTitle}>Seamless Audio Crossfade</Text>
           {crossfadeSeconds > 0 && (
             <View style={styles.timerBadge}>
@@ -171,7 +174,7 @@ export default function EqualizerScreen({
       {/* Audio Playback Speed Card */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="speedometer-outline" size={20} color="#12141A" />
+          <Ionicons name="speedometer-outline" size={20} color={c.ink} />
           <Text style={styles.cardTitle}>Playback Speed</Text>
         </View>
         <Text style={styles.cardSub}>Great for audiobooks, sermons, and acoustic study</Text>
@@ -197,7 +200,7 @@ export default function EqualizerScreen({
       {/* 5-Band Equalizer */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
-          <Ionicons name="options-outline" size={20} color="#12141A" />
+          <Ionicons name="options-outline" size={20} color={c.ink} />
           <Text style={styles.cardTitle}>5-Band Graphic Equalizer</Text>
         </View>
         <Text style={styles.cardSub}>Tailored audio profiles for worship and headphones</Text>
@@ -268,10 +271,10 @@ export default function EqualizerScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: c.bg
   },
   content: {
     padding: 16,
@@ -287,30 +290,30 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   title: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 20,
     fontWeight: '800'
   },
   subtitle: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     marginTop: 2,
     marginBottom: 20
   },
   settingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 18,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -326,24 +329,24 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F1115',
+    color: c.text,
     flex: 1
   },
   cardSub: {
     fontSize: 12,
-    color: '#717886',
+    color: c.textMuted,
     marginBottom: 14
   },
   timerBadge: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   timerBadgeText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 12,
     fontWeight: '800'
   },
@@ -356,16 +359,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   miniPillActive: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   miniPillText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 13,
     fontWeight: '700'
   },
@@ -380,19 +383,19 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   presetBtn: {
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   },
   activePresetBtn: {
-    backgroundColor: '#12141A',
-    borderColor: '#12141A'
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
   },
   presetText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     fontWeight: '700'
   },
@@ -410,21 +413,21 @@ const styles = StyleSheet.create({
     gap: 6
   },
   gainText: {
-    color: '#12141A',
+    color: c.ink,
     fontSize: 11,
     fontWeight: '700'
   },
   sliderTrack: {
     width: 6,
     height: 100,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 3,
     position: 'relative',
     justifyContent: 'flex-end'
   },
   sliderFill: {
     width: '100%',
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     borderRadius: 3
   },
   sliderThumb: {
@@ -433,28 +436,28 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderWidth: 2,
-    borderColor: '#12141A'
+    borderColor: c.inverse
   },
   freqText: {
-    color: '#0F1115',
+    color: c.text,
     fontSize: 11,
     fontWeight: '700',
     marginTop: 4
   },
   labelText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 9
   },
   complianceCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: c.surface,
     borderRadius: 18,
     padding: 16,
     borderLeftWidth: 3,
     borderLeftColor: '#10B981',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: c.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
@@ -468,7 +471,7 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   complianceTitle: {
-    color: '#0F1115',
+    color: c.text,
     fontWeight: '800',
     fontSize: 13
   },
@@ -479,7 +482,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   pointText: {
-    color: '#717886',
+    color: c.textMuted,
     fontSize: 12,
     lineHeight: 17,
     flex: 1
@@ -489,7 +492,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#12141A',
+    backgroundColor: c.inverse,
     paddingVertical: 10,
     borderRadius: 12,
     marginTop: 6

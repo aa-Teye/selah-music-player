@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, Easing, StyleSheet } from 'react-native';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const REST = 0.12;
 
@@ -7,7 +8,10 @@ const REST = 0.12;
  * Decorative equalizer bars that dance while music plays and settle when it stops.
  * (They are an animation, not a live reading of the audio.)
  */
-export default function AudioVisualizer({ playing, bars = 28, height = 34, color = '#12141A' }) {
+export default function AudioVisualizer({ playing, bars = 28, height = 34, color }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
+  const barColor = color || c.ink;
   const values = useRef(Array.from({ length: bars }, () => new Animated.Value(REST))).current;
 
   useEffect(() => {
@@ -49,14 +53,14 @@ export default function AudioVisualizer({ playing, bars = 28, height = 34, color
       {values.map((v, i) => (
         <Animated.View
           key={i}
-          style={[styles.bar, { height, backgroundColor: color, transform: [{ scaleY: v }] }]}
+          style={[styles.bar, { height, backgroundColor: barColor, transform: [{ scaleY: v }] }]}
         />
       ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   bar: { width: 4, borderRadius: 2, opacity: 0.85 }
 });

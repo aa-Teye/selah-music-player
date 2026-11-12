@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 export default function TopHeader({
   streakDays,
@@ -8,6 +9,8 @@ export default function TopHeader({
   onSearchChange,
   onOpenMenu
 }) {
+  const c = useColors();
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
@@ -18,8 +21,9 @@ export default function TopHeader({
         <View style={styles.actionsRow}>
           {/* Hamburger Menu Drawer Button */}
           {onOpenMenu && (
-            <TouchableOpacity onPress={onOpenMenu} style={styles.menuBtn} activeOpacity={0.7}>
-              <Ionicons name="menu-outline" size={22} color="#0F1115" />
+            <TouchableOpacity onPress={onOpenMenu}
+          testID="open-menu" style={styles.menuBtn} activeOpacity={0.7}>
+              <Ionicons name="menu-outline" size={22} color={c.text} />
             </TouchableOpacity>
           )}
         </View>
@@ -27,10 +31,10 @@ export default function TopHeader({
 
       {/* Global Search Bar */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={16} color="#717886" style={styles.searchIcon} />
+        <Ionicons name="search" size={16} color={c.textMuted} style={styles.searchIcon} />
         <TextInput
           placeholder="Search songs, scriptures, or YouTube..."
-          placeholderTextColor="#8A919E"
+          placeholderTextColor={c.textSubtle}
           value={searchQuery}
           onChangeText={onSearchChange}
           style={styles.searchInput}
@@ -38,7 +42,7 @@ export default function TopHeader({
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => onSearchChange('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={16} color="#8A919E" />
+            <Ionicons name="close-circle" size={16} color={c.textSubtle} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -46,14 +50,14 @@ export default function TopHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: c.bg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB'
+    borderBottomColor: c.border
   },
   topRow: {
     flexDirection: 'row',
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#0F1115',
+    color: c.text,
     letterSpacing: 0.5
   },
   actionsRow: {
@@ -79,10 +83,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E2E6EC',
+    borderColor: c.border,
     paddingHorizontal: 12,
     height: 42
   },
@@ -91,7 +95,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#0F1115',
+    color: c.text,
     fontSize: 13,
     paddingVertical: 0
   },
@@ -100,9 +104,9 @@ const styles = StyleSheet.create({
   },
   menuBtn: {
     padding: 8,
-    backgroundColor: '#EEF0F4',
+    backgroundColor: c.surfaceAlt,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E6EC'
+    borderColor: c.border
   }
 });
