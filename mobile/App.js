@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +26,7 @@ import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
 import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 
-import { DAILY_DEVOTION, DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
+import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, INITIAL_TRACKS, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
 import { ScannerService } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
@@ -253,7 +253,7 @@ export default function App() {
         } catch {}
 
         // Automatic background auto-scan for all phone MP3s & audio files
-        ScannerService.scanDeviceAudio(40, 200).then((scanResult) => {
+        if (Platform.OS === 'android') ScannerService.scanDeviceAudio(40, 200).then((scanResult) => {
           if (scanResult && scanResult.success && scanResult.tracks.length > 0) {
             const foundTracks = scanResult.tracks;
             const foundUris = new Set(foundTracks.map((t) => t.uri));

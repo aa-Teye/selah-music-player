@@ -276,11 +276,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: '#0F1115',
     fontSize: 17,
-    fontWeight: '800'
+    fontWeight: '800',
+    flexShrink: 0
   },
   sectionSubtitle: {
     color: '#717886',
-    fontSize: 12
+    fontSize: 12,
+    flexShrink: 1,
+    marginLeft: 10,
+    textAlign: 'right'
   },
   moodScroll: {
     marginBottom: 24

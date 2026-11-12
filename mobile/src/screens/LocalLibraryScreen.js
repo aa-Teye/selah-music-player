@@ -8,7 +8,8 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
-  Linking
+  Linking,
+  Platform
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -90,7 +91,7 @@ export default function LocalLibraryScreen({
 
   // Auto-scan on component mount if no local tracks loaded yet
   React.useEffect(() => {
-    if (localTracks.length === 0) {
+    if (Platform.OS === 'android' && localTracks.length === 0) {
       handleAutoScanDevice(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
