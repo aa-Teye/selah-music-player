@@ -809,7 +809,6 @@ export default function PlayerScreen(props) {
                 onPress={() => onChangeView && onChangeView(v.id)}
                 activeOpacity={0.8}
               >
-                <Ionicons name={v.icon} size={14} color={active ? '#FFFFFF' : '#717886'} />
                 <Text style={[viewStyles.segmentText, active && viewStyles.segmentTextActive]} numberOfLines={1}>
                   {v.label}
                 </Text>

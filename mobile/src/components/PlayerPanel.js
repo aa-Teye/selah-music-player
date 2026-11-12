@@ -297,76 +297,78 @@ export default function PlayerPanel({
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.pillBar}
-          contentContainerStyle={styles.pillBarContent}
-        >
-          <Pill
-            icon={<Ionicons name="speedometer-outline" size={15} color={playbackSpeed !== 1 ? '#FFFFFF' : '#12141A'} />}
-            label={`${playbackSpeed}x`}
-            active={playbackSpeed !== 1}
-            onPress={cycleSpeed}
-          />
-          <Pill
-            icon={<MaterialCommunityIcons name="sleep" size={16} color={sleepTimerRemaining ? '#FFFFFF' : '#12141A'} />}
-            label={sleepTimerRemaining ? formatClock(sleepTimerRemaining) : 'Sleep'}
-            active={Boolean(sleepTimerRemaining)}
-            onPress={() => setShowSleepModal(true)}
-          />
-          {onOpenAddToPlaylist && (
+        {view === 'now' && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.pillBar}
+            contentContainerStyle={styles.pillBarContent}
+          >
             <Pill
-              icon={<Ionicons name="bookmark-outline" size={15} color="#12141A" />}
-              label="Playlist"
-              onPress={() => onOpenAddToPlaylist(currentTrack)}
+              icon={<Ionicons name="speedometer-outline" size={15} color={playbackSpeed !== 1 ? '#FFFFFF' : '#12141A'} />}
+              label={`${playbackSpeed}x`}
+              active={playbackSpeed !== 1}
+              onPress={cycleSpeed}
             />
-          )}
-          {onOpenAmbientSoundscapes && (
             <Pill
-              icon={<MaterialCommunityIcons name="weather-night" size={15} color={activeSoundscape ? '#FFFFFF' : '#12141A'} />}
-              label={activeSoundscape ? activeSoundscape : 'Ambience'}
-              active={Boolean(activeSoundscape)}
-              onPress={onOpenAmbientSoundscapes}
+              icon={<MaterialCommunityIcons name="sleep" size={16} color={sleepTimerRemaining ? '#FFFFFF' : '#12141A'} />}
+              label={sleepTimerRemaining ? formatClock(sleepTimerRemaining) : 'Sleep'}
+              active={Boolean(sleepTimerRemaining)}
+              onPress={() => setShowSleepModal(true)}
             />
-          )}
-          {onOpenPrayerBookmarks && (
-            <Pill
-              icon={<MaterialCommunityIcons name="book-cross" size={15} color={bookmarksCount > 0 ? '#FFFFFF' : '#12141A'} />}
-              label={bookmarksCount > 0 ? `${bookmarksCount} Pins` : 'Prayer pin'}
-              active={bookmarksCount > 0}
-              onPress={onOpenPrayerBookmarks}
-            />
-          )}
-          {onOpenEqualizer && (
-            <Pill
-              icon={<MaterialCommunityIcons name="tune-vertical" size={15} color="#12141A" />}
-              label="Sound"
-              onPress={onOpenEqualizer}
-            />
-          )}
-          {onOpenCarMode && (
-            <Pill
-              icon={<MaterialCommunityIcons name="car" size={16} color="#12141A" />}
-              label="Car mode"
-              onPress={onOpenCarMode}
-            />
-          )}
-          {onOpenSetRingtone && (
-            <Pill
-              icon={<MaterialCommunityIcons name="phone-incoming" size={15} color="#12141A" />}
-              label="Ringtone"
-              onPress={() => onOpenSetRingtone(currentTrack)}
-            />
-          )}
-          {onOpenAudioTrimmer && (
-            <Pill
-              icon={<MaterialCommunityIcons name="content-cut" size={15} color="#12141A" />}
-              label="Cutter"
-              onPress={() => onOpenAudioTrimmer(currentTrack)}
-            />
-          )}
-        </ScrollView>
+            {onOpenAddToPlaylist && (
+              <Pill
+                icon={<Ionicons name="bookmark-outline" size={15} color="#12141A" />}
+                label="Playlist"
+                onPress={() => onOpenAddToPlaylist(currentTrack)}
+              />
+            )}
+            {onOpenAmbientSoundscapes && (
+              <Pill
+                icon={<MaterialCommunityIcons name="weather-night" size={15} color={activeSoundscape ? '#FFFFFF' : '#12141A'} />}
+                label={activeSoundscape ? activeSoundscape : 'Ambience'}
+                active={Boolean(activeSoundscape)}
+                onPress={onOpenAmbientSoundscapes}
+              />
+            )}
+            {onOpenPrayerBookmarks && (
+              <Pill
+                icon={<MaterialCommunityIcons name="book-cross" size={15} color={bookmarksCount > 0 ? '#FFFFFF' : '#12141A'} />}
+                label={bookmarksCount > 0 ? `${bookmarksCount} Pins` : 'Prayer pin'}
+                active={bookmarksCount > 0}
+                onPress={onOpenPrayerBookmarks}
+              />
+            )}
+            {onOpenEqualizer && (
+              <Pill
+                icon={<MaterialCommunityIcons name="tune-vertical" size={15} color="#12141A" />}
+                label="Sound"
+                onPress={onOpenEqualizer}
+              />
+            )}
+            {onOpenCarMode && (
+              <Pill
+                icon={<MaterialCommunityIcons name="car" size={16} color="#12141A" />}
+                label="Car mode"
+                onPress={onOpenCarMode}
+              />
+            )}
+            {onOpenSetRingtone && (
+              <Pill
+                icon={<MaterialCommunityIcons name="phone-incoming" size={15} color="#12141A" />}
+                label="Ringtone"
+                onPress={() => onOpenSetRingtone(currentTrack)}
+              />
+            )}
+            {onOpenAudioTrimmer && (
+              <Pill
+                icon={<MaterialCommunityIcons name="content-cut" size={15} color="#12141A" />}
+                label="Cutter"
+                onPress={() => onOpenAudioTrimmer(currentTrack)}
+              />
+            )}
+          </ScrollView>
+        )}
       </View>
 
       {/* Sleep timer picker */}
