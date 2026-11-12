@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
 import MiniPlayerBar from './src/components/MiniPlayerBar';
-import FullPlayerModal from './src/components/FullPlayerModal';
 
 import HomeScreen from './src/screens/HomeScreen';
 import PlayerScreen from './src/screens/PlayerScreen';
@@ -59,7 +58,7 @@ export default function App() {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [favorites, setFavorites] = useState(['track-1', 'track-2']);
-  const [isFullPlayerVisible, setIsFullPlayerVisible] = useState(false);
+  const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
   const [streakData, setStreakData] = useState({ streakDays: 1 });
@@ -818,18 +817,31 @@ export default function App() {
     );
   });
 
+  // The Player tab is the full player (Now Playing / Lyrics / Up Next / Library)
+  const openNowPlaying = () => {
+    if (currentTrack?.sourceType === 'youtube' || currentTrack?.youtubeId) {
+      setActiveTab('youtube');
+    } else {
+      setPlayerView('now');
+      setActiveTab('player');
+    }
+  };
+  const isImmersivePlayer = activeTab === 'player' && playerView !== 'library';
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
 
       {/* Top Header */}
-      <TopHeader
-        streakDays={streakData.streakDays || 1}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenMenu={() => setIsHeaderMenuVisible(true)}
-      />
+      {!isImmersivePlayer && (
+        <TopHeader
+          streakDays={streakData.streakDays || 1}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenMenu={() => setIsHeaderMenuVisible(true)}
+        />
+      )}
 
       {/* Active Screen View */}
       <View style={styles.mainContent}>
@@ -859,6 +871,8 @@ export default function App() {
 
         {activeTab === 'player' && (
           <PlayerScreen
+            view={playerView}
+            onChangeView={setPlayerView}
             tracks={tracks}
             localTracks={localTracks}
             recentTracks={recentTracks}
@@ -867,14 +881,35 @@ export default function App() {
             currentTrack={currentTrack}
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
-            onOpenFullPlayer={() => {
-              if (currentTrack?.sourceType === 'youtube' || currentTrack?.youtubeId) {
-                setActiveTab('youtube');
-              } else {
-                setIsFullPlayerVisible(true);
-              }
-            }}
+            onPlayQueueTrack={(t) => handlePlayTrack(t, { keepQueue: true })}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
+            onTogglePlay={handleTogglePlay}
+            onNext={handleNextTrack}
+            onPrev={handlePrevTrack}
+            isShuffle={isShuffle}
+            onToggleShuffle={() => setIsShuffle((prev) => !prev)}
+            isRepeat={isRepeat}
+            onToggleRepeat={() => setIsRepeat((prev) => !prev)}
+            isFavorite={favorites.includes(currentTrack?.id)}
+            onToggleFavorite={handleToggleFavorite}
+            currentPosition={currentPosition}
+            duration={duration}
+            onSeek={handleSeek}
+            playbackSpeed={playbackSpeed}
+            onSetSpeed={handleSetSpeed}
+            sleepTimerRemaining={sleepTimerRemaining}
+            onSetSleepTimer={handleSetSleepTimer}
+            onOpenSetRingtone={handleOpenSetRingtone}
+            onOpenAudioTrimmer={(t) => setTrimmerModalTrack(t || currentTrack)}
+            onOpenCarMode={() => setIsCarModeVisible(true)}
+            onOpenEqualizer={() => setIsEqVisible(true)}
+            queue={queue}
+            onRemoveFromQueue={(trackId) => setQueueOverride((prev) => (prev ?? tracks).filter((t) => t.id !== trackId))}
+            onClearQueue={() => setQueueOverride(currentTrack ? [currentTrack] : [])}
+            onOpenPrayerBookmarks={() => setIsBookmarksModalVisible(true)}
+            onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
+            activeSoundscape={activeSoundscape}
+            bookmarksCount={bookmarks.filter((b) => b.trackId === currentTrack?.id).length}
           />
         )}
 
@@ -950,57 +985,17 @@ export default function App() {
       </View>
 
       {/* Selah Floating Bottom Mini-Player Bar */}
-      <MiniPlayerBar
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onNext={handleNextTrack}
-        onOpenFullPlayer={() => {
-          if (currentTrack?.sourceType === 'youtube' || currentTrack?.youtubeId) {
-            setActiveTab('youtube');
-          } else {
-            setIsFullPlayerVisible(true);
-          }
-        }}
-        currentPosition={currentPosition}
-        duration={duration}
-      />
-
-      {/* Selah Expandable Full Player Modal */}
-      <FullPlayerModal
-        visible={isFullPlayerVisible}
-        onClose={() => setIsFullPlayerVisible(false)}
-        currentTrack={currentTrack}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onNext={handleNextTrack}
-        onPrev={handlePrevTrack}
-        isShuffle={isShuffle}
-        onToggleShuffle={() => setIsShuffle((prev) => !prev)}
-        isRepeat={isRepeat}
-        onToggleRepeat={() => setIsRepeat((prev) => !prev)}
-        isFavorite={favorites.includes(currentTrack?.id)}
-        onToggleFavorite={handleToggleFavorite}
-        currentPosition={currentPosition}
-        duration={duration}
-        onSeek={handleSeek}
-        playbackSpeed={playbackSpeed}
-        onSetSpeed={handleSetSpeed}
-        sleepTimerRemaining={sleepTimerRemaining}
-        onSetSleepTimer={handleSetSleepTimer}
-        onOpenAddToPlaylist={handleOpenAddToPlaylist}
-        onOpenSetRingtone={handleOpenSetRingtone}
-        onOpenAudioTrimmer={(t) => setTrimmerModalTrack(t || currentTrack)}
-        onOpenCarMode={() => setIsCarModeVisible(true)}
-        queue={queue}
-        onPlayTrack={(t) => handlePlayTrack(t, { keepQueue: true })}
-        onRemoveFromQueue={(trackId) => setQueueOverride((prev) => (prev ?? tracks).filter((t) => t.id !== trackId))}
-        onClearQueue={() => setQueueOverride(currentTrack ? [currentTrack] : [])}
-        onOpenPrayerBookmarks={() => setIsBookmarksModalVisible(true)}
-        onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
-        activeSoundscape={activeSoundscape}
-        bookmarksCount={bookmarks.filter(b => b.trackId === currentTrack?.id).length}
-      />
+      {!isImmersivePlayer && (
+        <MiniPlayerBar
+          currentTrack={currentTrack}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onNext={handleNextTrack}
+          onOpenFullPlayer={openNowPlaying}
+          currentPosition={currentPosition}
+          duration={duration}
+        />
+      )}
 
       {/* Add To Playlist Modal */}
       <AddToPlaylistModal

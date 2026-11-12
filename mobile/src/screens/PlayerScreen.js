@@ -8,7 +8,8 @@ import {
   StyleSheet,
   Dimensions
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import PlayerPanel from '../components/PlayerPanel';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +23,7 @@ const PLAYER_CATEGORIES = [
   { id: 'genres', label: 'Genres', icon: 'options' }
 ];
 
-export default function PlayerScreen({
+function LibraryBrowser({
   tracks = [],
   localTracks = [],
   recentTracks = [],
@@ -781,4 +782,71 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 2
   }
+});
+
+const PLAYER_VIEWS = [
+  { id: 'now', label: 'Now Playing', icon: 'disc' },
+  { id: 'lyrics', label: 'Lyrics', icon: 'text' },
+  { id: 'queue', label: 'Up Next', icon: 'list' },
+  { id: 'library', label: 'Library', icon: 'library' }
+];
+
+/**
+ * Player tab: Now Playing, Lyrics and Up Next (the full player) plus the Library browser.
+ */
+export default function PlayerScreen(props) {
+  const { view = 'now', onChangeView } = props;
+  return (
+    <View style={viewStyles.container}>
+      <View style={viewStyles.segmentWrap}>
+        <View style={viewStyles.segments}>
+          {PLAYER_VIEWS.map((v) => {
+            const active = view === v.id;
+            return (
+              <TouchableOpacity
+                key={v.id}
+                style={[viewStyles.segment, active && viewStyles.segmentActive]}
+                onPress={() => onChangeView && onChangeView(v.id)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name={v.icon} size={14} color={active ? '#FFFFFF' : '#717886'} />
+                <Text style={[viewStyles.segmentText, active && viewStyles.segmentTextActive]} numberOfLines={1}>
+                  {v.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {view === 'library' ? (
+        <LibraryBrowser {...props} onOpenFullPlayer={() => onChangeView && onChangeView('now')} />
+      ) : (
+        <PlayerPanel {...props} view={view} onChangeView={onChangeView} />
+      )}
+    </View>
+  );
+}
+
+const viewStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  segmentWrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10 },
+  segments: {
+    flexDirection: 'row',
+    backgroundColor: '#EEF0F4',
+    borderRadius: 22,
+    padding: 3
+  },
+  segment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 9,
+    borderRadius: 19
+  },
+  segmentActive: { backgroundColor: '#12141A' },
+  segmentText: { color: '#717886', fontSize: 12, fontWeight: '800' },
+  segmentTextActive: { color: '#FFFFFF' }
 });

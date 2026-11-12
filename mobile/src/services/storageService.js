@@ -149,6 +149,46 @@ export const StorageService = {
     }
   },
 
+  // Lyrics lookup cache (so we only ask the lyrics service once per song)
+  async getLyricsCache(trackId) {
+    if (!trackId) return null;
+    try {
+      const raw = await AsyncStorage.getItem(`@selah_lyrics_cache_${trackId}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async saveLyricsCache(trackId, data) {
+    if (!trackId) return;
+    try {
+      await AsyncStorage.setItem(`@selah_lyrics_cache_${trackId}`, JSON.stringify(data));
+    } catch (e) {
+      console.log('Error saving lyrics cache:', e);
+    }
+  },
+
+  // Per-song lyrics timing adjustment (seconds)
+  async getLyricsOffset(trackId) {
+    if (!trackId) return 0;
+    try {
+      const raw = await AsyncStorage.getItem(`@selah_lyrics_offset_${trackId}`);
+      return raw ? Number(raw) || 0 : 0;
+    } catch (e) {
+      return 0;
+    }
+  },
+
+  async saveLyricsOffset(trackId, seconds) {
+    if (!trackId) return;
+    try {
+      await AsyncStorage.setItem(`@selah_lyrics_offset_${trackId}`, String(seconds));
+    } catch (e) {
+      console.log('Error saving lyrics offset:', e);
+    }
+  },
+
   // Devotion Listening Statistics
   async getListeningStats() {
     try {
