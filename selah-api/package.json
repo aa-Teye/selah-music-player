@@ -1,0 +1,19 @@
+{
+  "name": "selah-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Selah's small cloud service on Vercel: backup & restore, and lyrics shared between Selah users.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.0"
+  }
+}

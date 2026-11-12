@@ -9,11 +9,14 @@ import {
   Modal,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import LyricCardModal from './LyricCardModal';
+import { parseLrc } from '../services/lyricsService';
+import { isCloudReady, shareLyrics, reportSharedLyrics } from '../services/cloudService';
 
 // The player reports whole seconds, so look slightly ahead to feel in time
 const LOOKAHEAD = 0.5;
@@ -41,6 +44,7 @@ function sourceLabel(lyrics) {
   if (lyrics.source === 'custom') return synced ? 'YOUR LYRICS · SYNCED' : 'YOUR LYRICS';
   if (lyrics.source === 'lrclib') return synced ? 'SYNCED · LRCLIB' : 'LYRICS · LRCLIB';
   if (lyrics.source === 'file') return synced ? 'SYNCED · FROM THE FILE' : 'LYRICS · FROM THE FILE';
+  if (lyrics.source === 'selah') return synced ? 'SYNCED · SHARED BY SELAH USERS' : 'SHARED BY SELAH USERS';
   return synced ? 'SYNCED LYRICS' : 'LYRICS';
 }
 
@@ -110,8 +114,53 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
   };
 
   const saveEditor = async () => {
+    const text = (editText || '').trim();
     await lyrics.saveCustom(editText);
     setEditVisible(false);
+    // Offer to help other Selah users who have the same song
+    const artistKnown = track && track.artist && !/^unknown artist$/i.test(track.artist);
+    if (text.length >= 20 && track && track.title && artistKnown && isCloudReady()) {
+      Alert.alert('Share these lyrics?', 'Other Selah users with this song will see them too. Only the words and the song name are shared.', [
+        { text: 'Not now', style: 'cancel' },
+        {
+          text: 'Share',
+          onPress: async () => {
+            try {
+              await shareLyrics({
+                title: track.title,
+                artist: track.artist,
+                duration: Math.round(track.duration || 0),
+                text,
+                synced: parseLrc(text).length > 0
+              });
+              Alert.alert('Thank you!', 'Your lyrics are now shared with other Selah users.');
+            } catch (err) {
+              Alert.alert('Not shared', err?.message || 'Please try again later.');
+            }
+          }
+        }
+      ]);
+    }
+  };
+
+  const reportLyrics = () => {
+    const id = lyrics.matched && lyrics.matched.selahId;
+    if (!id) return;
+    Alert.alert('Report these lyrics?', 'Tell us if they are wrong or offensive. Lyrics reported by several people are hidden.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Report',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await reportSharedLyrics(id);
+            Alert.alert('Thank you', 'We have received your report.');
+          } catch (err) {
+            Alert.alert('Not sent', err?.message || 'Please try again later.');
+          }
+        }
+      }
+    ]);
   };
 
   const fontSize = 20 * fontScale;
@@ -268,6 +317,9 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
             onPress={() => openCard(activeIndex >= 0 ? activeIndex : 0)}
           />
           <Pill icon={<Ionicons name="pencil" size={13} color={c.ink} />} label="Edit" onPress={openEditor} />
+          {lyrics.source === 'selah' && (
+            <Pill icon={<Ionicons name="flag-outline" size={13} color={c.ink} />} label="Report" onPress={reportLyrics} />
+          )}
           {lyrics.canSearch && (
             <Pill icon={<Ionicons name="refresh" size={13} color={c.ink} />} label="Search again" onPress={lyrics.refresh} />
           )}

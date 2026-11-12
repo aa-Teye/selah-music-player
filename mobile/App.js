@@ -37,6 +37,8 @@ import {
 import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
+import { isCloudReady, autoBackupIfDue } from './src/services/cloudService';
+import BackupModal from './src/components/BackupModal';
 import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeContext';
 
 // Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
@@ -128,6 +130,7 @@ function SelahApp() {
   const [repeatMode, setRepeatMode] = useState('off'); // 'off' | 'all' | 'one'
   const isRepeat = repeatMode !== 'off';
   const [favorites, setFavorites] = useState([]);
+  const [isBackupVisible, setIsBackupVisible] = useState(false);
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [scanStatus, setScanStatus] = useState({ state: 'idle', count: 0, latest: '' });
   const [deepScan, setDeepScan] = useState({ visible: false, state: 'idle' });
@@ -161,6 +164,7 @@ function SelahApp() {
   const [playCounts, setPlayCounts] = useState({});
   const playCountsRef = useRef({});
   const songListenRef = useRef({ id: null, secs: 0, counted: false });
+  const backupStateRef = useRef({ tracks: [], playlists: [], favorites: [], playCounts: {} });
   const startListenCount = useCallback((id) => {
     songListenRef.current = { id, secs: 0, counted: false };
   }, []);
@@ -340,6 +344,7 @@ function SelahApp() {
     const sub = AppState.addEventListener('change', (next) => {
       if (next === 'background' || next === 'inactive') {
         rememberSpot(currentTrackRef.current, positionRef.current, durationRef.current);
+        if (next === 'background') autoBackupIfDue(backupStateRef.current); // only if you turned it on
       } else if (next === 'active') {
         const now = dayNumber();
         if (todayRef.current !== now) {
@@ -1125,6 +1130,39 @@ function SelahApp() {
     });
   }, []);
 
+  // Restore from Selah cloud: adds playlists, loved songs, play counts and your lyrics
+  const handleRestore = useCallback(async (result) => {
+    setPlaylists((prev) => {
+      const byId = new Map(prev.map((p) => [p.id, p]));
+      result.playlists.forEach((pl) => {
+        const existing = byId.get(pl.id);
+        byId.set(
+          pl.id,
+          existing
+            ? { ...existing, name: pl.name || existing.name, trackIds: [...new Set([...(existing.trackIds || []), ...pl.trackIds])] }
+            : { id: pl.id, name: pl.name || 'Restored playlist', trackIds: pl.trackIds, createdAt: new Date().toISOString() }
+        );
+      });
+      const updated = [...byId.values()];
+      StorageService.savePlaylists(updated);
+      return updated;
+    });
+    setFavorites((prev) => {
+      const updated = [...new Set([...prev, ...result.favorites])];
+      StorageService.saveFavorites(updated);
+      return updated;
+    });
+    const counts = { ...playCountsRef.current };
+    Object.keys(result.playCounts).forEach((id) => {
+      const restored = result.playCounts[id];
+      if (!counts[id] || (restored.n || 0) > (counts[id].n || 0)) counts[id] = restored;
+    });
+    playCountsRef.current = counts;
+    setPlayCounts(counts);
+    StorageService.savePlayCounts(counts);
+    await Promise.all(Object.keys(result.lyrics).map((id) => StorageService.saveCustomLyrics(id, result.lyrics[id])));
+  }, []);
+
   // Toggle track inside a playlist
   const handleToggleTrackInPlaylist = useCallback((playlistId, trackId) => {
     setPlaylists((prev) => {
@@ -1217,6 +1255,9 @@ function SelahApp() {
       setCurrentTrack(updatedTrack);
     }
   };
+
+  // What a cloud backup contains, always up to date (read when backing up)
+  backupStateRef.current = { tracks, playlists, favorites, playCounts };
 
   // Long songs, sermons and videos you stopped part-way (newest first)
   const continueListening = useMemo(() => {
@@ -1559,7 +1600,15 @@ function SelahApp() {
         onOpenEq={() => setIsEqVisible(true)}
         onOpenStats={openStats}
         onOpenSleepTimer={() => setIsEqVisible(true)}
+        onOpenBackup={isCloudReady() ? () => setIsBackupVisible(true) : undefined}
         streakDays={streakData?.streakDays || 1}
+      />
+
+      <BackupModal
+        visible={isBackupVisible}
+        onClose={() => setIsBackupVisible(false)}
+        getState={() => backupStateRef.current}
+        onRestore={handleRestore}
       />
 
       {/* Equalizer & Sound Settings Modal */}

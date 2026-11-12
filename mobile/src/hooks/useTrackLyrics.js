@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { StorageService } from '../services/storageService';
+import { findSharedLyrics } from '../services/cloudService';
 import {
   searchLyrics,
   searchLyricsForVideo,
@@ -46,6 +47,8 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
   });
   const [offset, setOffset] = useState(0);
   const requestRef = useRef(0);
+  const durationRef = useRef(duration);
+  durationRef.current = (track && track.duration) || duration;
 
   const load = useCallback(
     async (force) => {
@@ -98,7 +101,27 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
           ? await searchLyricsForVideo(trackTitle, trackArtist)
           : await searchLyrics({ title: trackTitle, artist: trackArtist });
         if (requestId !== requestRef.current) return;
-        const usable = found.filter((c) => c.synced || c.plain || c.instrumental);
+        let usable = found.filter((c) => c.synced || c.plain || c.instrumental);
+        if (usable.length === 0 && !builtInText) {
+          // not in the LRCLIB library: maybe another Selah user typed them
+          const shared = await findSharedLyrics({ title: trackTitle, artist: trackArtist, duration: durationRef.current });
+          if (requestId !== requestRef.current) return;
+          if (shared && shared.text) {
+            usable = [
+              {
+                id: `selah-${shared.id}`,
+                selahId: shared.id,
+                community: true,
+                trackName: shared.title,
+                artistName: shared.artist,
+                duration: shared.duration || 0,
+                synced: shared.synced ? shared.text : null,
+                plain: shared.synced ? null : shared.text,
+                instrumental: false
+              }
+            ];
+          }
+        }
         StorageService.saveLyricsCache(trackId, {
           candidates: usable,
           fetchedAt: Date.now(),
@@ -160,7 +183,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         mode: lines.length > 0 ? 'synced' : plainLines.length > 0 ? 'plain' : 'none',
         lines,
         plainLines,
-        source: 'lrclib',
+        source: chosen.community ? 'selah' : 'lrclib',
         rawText: chosen.synced || chosen.plain || '',
         matched: chosen,
         versionCount: ordered.length,

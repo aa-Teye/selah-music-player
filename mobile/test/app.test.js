@@ -166,6 +166,111 @@ androidOnly('song for today comes from your own music and plays with one tap', a
   expect(audio.createAudioPlayer).toHaveBeenCalledWith(expect.stringContaining('Way%20Maker'));
 });
 
+test('Backup & Restore: hidden until Selah cloud is set up, then backs up and restores playlists', async () => {
+  const cloud = require('../src/services/cloudService');
+  fs.__reset({
+    'file:///docs/': { dirs: ['Selah Music'], files: {} },
+    'file:///docs/Selah%20Music/': { dirs: [], files: { 'track01.mp3': { bytes: fx.mp3WithTags() } } } // Way Maker, Sinach, 0:26
+  });
+  await render(<App />);
+  await settle(25);
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('open-menu'));
+  expect(screen.queryByTestId('open-backup')).toBeNull(); // not set up yet: nothing to see
+  await cleanup();
+
+  cloud.setApiUrlForTests('https://selah-api.test');
+  const OLD_PHONE = {
+    songs: { 'old-id': { t: 'Way Maker', a: 'Sinach', d: 26 } },
+    playlists: [{ id: 'pl-old', name: 'From my old phone', trackIds: ['old-id'] }],
+    favorites: ['old-id'],
+    playCounts: { 'old-id': { n: 9, last: 1 } },
+    lyrics: {}
+  };
+  global.fetch = jest.fn(async (url, options = {}) => {
+    const u = String(url);
+    if (u.includes('selah-api.test/api/backup') && options.method === 'PUT') {
+      return { ok: true, status: 200, json: async () => ({ savedAt: '2026-11-12T10:00:00.000Z', size: 99 }) };
+    }
+    if (u.includes('selah-api.test/api/backup')) {
+      return { ok: true, status: 200, json: async () => ({ savedAt: '2026-11-11T10:00:00.000Z', data: OLD_PHONE }) };
+    }
+    return { ok: true, status: 200, json: async () => (u.includes('lrclib') ? [LYRICS] : []), text: async () => '' };
+  });
+  try {
+    await render(<App />);
+    await settle(25);
+    await tap(screen.getByTestId('open-menu'));
+    await tap(screen.getByTestId('open-backup'));
+    expect(screen.getByTestId('backup-code').props.children).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){4}$/);
+
+    await tap(screen.getByTestId('backup-now'));
+    await settle(4);
+    const put = global.fetch.mock.calls.find(([u, o]) => String(u).includes('/api/backup') && o && o.method === 'PUT');
+    expect(put).toBeTruthy();
+    expect(Alert.alert).toHaveBeenCalledWith('Backed up', expect.any(String));
+
+    await fireEvent.changeText(screen.getByTestId('restore-code'), 'wxyz-2345-6789-abcd-efgh');
+    await tap(screen.getByTestId('restore-now'));
+    await settle(6);
+    expect(Alert.alert).toHaveBeenCalledWith('Restored', expect.stringContaining('1 playlist'));
+    expect(screen.getByTestId('backup-code').props.children).toBe('WXYZ-2345-6789-ABCD-EFGH'); // keeps backing up there
+
+    await tap(screen.getByTestId('backup-close'));
+    await tap(screen.getByTestId('tab-playlists'));
+    await tap(screen.getByText('From my old phone'));
+    expect(screen.getByText('1 song • Custom Collection')).toBeTruthy();
+    await tap(screen.getByText('All Playlists'));
+    await tap(screen.getByTestId('smart-most'));
+    expect(screen.getByText('Sinach • 9 plays')).toBeTruthy(); // play counts came back too
+  } finally {
+    cloud.setApiUrlForTests(null);
+  }
+});
+
+androidOnly('lyrics typed by other Selah users show when LRCLIB has none, and can be reported', async () => {
+  const cloud = require('../src/services/cloudService');
+  cloud.setApiUrlForTests('https://selah-api.test');
+  global.fetch = jest.fn(async (url, options = {}) => {
+    const u = String(url);
+    if (u.includes('selah-api.test/api/lyrics/report')) return { ok: true, status: 200, json: async () => ({ reported: true }) };
+    if (u.includes('selah-api.test/api/lyrics')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          found: true,
+          lyrics: { id: 42, title: 'Way Maker 1', artist: 'Sinach', duration: 241, synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' }
+        })
+      };
+    }
+    return { ok: true, status: 200, json: async () => [], text: async () => '' }; // LRCLIB has nothing
+  });
+  try {
+    media.__state.audio = phoneSongs(2);
+    await render(<App />);
+    await settle(25);
+    await tap(screen.getByTestId('deep-scan-done'));
+    await tap(screen.getByTestId('tab-library'));
+    await tap(screen.getAllByText('Way Maker 1')[0]);
+    await tap(screen.getByTestId('tab-player'));
+    await settle(10);
+    await tap(screen.getByTestId('player-view-lyrics'));
+    expect(screen.getByText('SHARED BY SELAH USERS')).toBeTruthy();
+    expect(screen.getByText('Your love is so amazing')).toBeTruthy();
+
+    await tap(screen.getByText('Report'));
+    const confirm = Alert.alert.mock.calls.find((c) => c[0] === 'Report these lyrics?');
+    await act(async () => {
+      await confirm[2].find((b) => b.text === 'Report').onPress();
+    });
+    const sent = global.fetch.mock.calls.find(([u]) => String(u).includes('/api/lyrics/report'));
+    expect(JSON.parse(sent[1].body)).toEqual({ id: 42 });
+  } finally {
+    cloud.setApiUrlForTests(null);
+  }
+});
+
 test('Sound screen is honest: no fake equalizer; Android opens the phone equalizer', async () => {
   const { Linking } = require('react-native');
   const intent = jest.spyOn(Linking, 'sendIntent').mockImplementation(async () => {});

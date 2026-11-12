@@ -19,6 +19,7 @@ export default function HeaderMenuModal({
   onOpenEq,
   onOpenStats,
   onOpenSleepTimer,
+  onOpenBackup,
   streakDays = 14
 }) {
   const c = useColors();
@@ -105,10 +106,30 @@ export default function HeaderMenuModal({
                 <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
 
+              {onOpenBackup && (
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  testID="open-backup"
+                  onPress={() => {
+                    onClose();
+                    onOpenBackup();
+                  }}
+                >
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons name="cloud-upload-outline" size={20} color={c.ink} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuTitle}>Backup &amp; Restore</Text>
+                    <Text style={styles.menuSub}>Keep your playlists safe, move to a new phone</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
+                </TouchableOpacity>
+              )}
+
               {/* Version & Badge Footer */}
               <View style={styles.drawerFooter}>
                 <Ionicons name="shield-checkmark" size={14} color="#10B981" />
-                <Text style={styles.footerText}>Selah v1.0 • Offline Storage &amp; Worship</Text>
+                <Text style={styles.footerText}>Selah v1.0 • Your music stays on your phone</Text>
               </View>
             </View>
           </TouchableWithoutFeedback>

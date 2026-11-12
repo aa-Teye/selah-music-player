@@ -84,6 +84,7 @@
       "expo-sharing"
     ],
     "extra": {
+      "selahApiUrl": "",
       "eas": {
         "projectId": "72220d9c-cf3f-43aa-9f34-492dfccce201"
       }
