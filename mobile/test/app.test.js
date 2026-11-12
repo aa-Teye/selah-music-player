@@ -219,6 +219,47 @@ iphoneOnly("finds songs in Selah's folder without asking for Photos access", asy
   expect(media.getAssetsAsync).not.toHaveBeenCalled();
 });
 
+test("songs show their own cover from inside the file, after a restart too, and it comes back if the phone clears it", async () => {
+  const COVERS = 'file:///cache/selah-covers/';
+  const FRONT = fx.jpeg(7);
+  fs.__reset({
+    'file:///docs/': { dirs: ['Selah Music'], files: {} },
+    'file:///docs/Selah%20Music/': { dirs: [], files: { 'track 01.mp3': { bytes: fx.mp3WithCovers(FRONT, fx.jpeg(8)) } } }
+  });
+  const shown = () => JSON.stringify(screen.toJSON());
+
+  await render(<App />);
+  await settle(30);
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+
+  const names = Object.keys(fs.__FS[COVERS].files);
+  expect(names).toHaveLength(1); // only the front cover is kept
+  expect(Array.from(fs.__FS[COVERS].files[names[0]].bytes)).toEqual(FRONT);
+  const coverUri = COVERS + names[0];
+  expect(shown()).toContain(coverUri); // Home shows the song with its own picture
+
+  await tap(screen.getByTestId('tab-library'));
+  expect(screen.getAllByText('Jehovah Overdo').length).toBeGreaterThan(0);
+  expect(screen.getAllByTestId('song-cover').length).toBeGreaterThan(0);
+
+  // the saved library only keeps the picture's name (the full address can change on iPhone)
+  const saved = JSON.parse(fs.__FS['file:///docs/.selah/'].files['library.json'].content);
+  expect(saved[0]).toMatchObject({ title: 'Jehovah Overdo', coverFile: names[0] });
+  expect(saved[0].coverUrl).toBeUndefined();
+  await cleanup();
+
+  await render(<App />); // restart
+  await settle(25);
+  expect(shown()).toContain(coverUri);
+  await cleanup();
+
+  delete fs.__FS[COVERS]; // the phone cleared its cache
+  await render(<App />);
+  await settle(30);
+  expect(Object.keys(fs.__FS[COVERS].files)).toEqual(names); // read again from the song
+  expect(shown()).toContain(coverUri);
+});
+
 const OCEANS = {
   id: 2,
   trackName: 'Oceans (Where Feet May Fail)',

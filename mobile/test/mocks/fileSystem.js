@@ -34,6 +34,11 @@ class Directory {
   get exists() {
     return Boolean(FS[this.uri]);
   }
+  get size() {
+    const node = FS[this.uri];
+    if (!node) return null;
+    return Object.values(node.files).reduce((sum, e) => sum + (e.bytes ? e.bytes.length : e.size || 0), 0);
+  }
   create() {
     if (!FS[this.uri]) FS[this.uri] = { dirs: [], files: {} };
     const [parent, name] = split(this.uri);
@@ -97,10 +102,21 @@ class File {
     if (!e) throw new Error(`File does not exist: ${this.uri}`);
     return e.content;
   }
-  async write(content) {
+  writeSync(content) {
     const [dir, name] = split(this.uri);
     if (!FS[dir]) throw new Error(`Folder missing for ${this.uri}`);
-    FS[dir].files[name] = { size: String(content).length, content: String(content) };
+    FS[dir].files[name] =
+      content instanceof Uint8Array
+        ? { bytes: Uint8Array.from(content), size: content.length }
+        : { size: String(content).length, content: String(content) };
+  }
+  async write(content) {
+    this.writeSync(content);
+  }
+  delete() {
+    const [dir, name] = split(this.uri);
+    if (!FS[dir] || !FS[dir].files[name]) throw new Error(`File does not exist: ${this.uri}`);
+    delete FS[dir].files[name];
   }
   async copy(dest) {
     const [dir, name] = split(dest.uri);
@@ -114,6 +130,9 @@ module.exports = {
   Paths: {
     get document() {
       return new Directory('file:///docs');
+    },
+    get cache() {
+      return new Directory('file:///cache');
     }
   },
   __FS: FS,

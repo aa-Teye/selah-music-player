@@ -16,6 +16,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ScannerService } from '../services/scannerService';
 import ScanStatusBanner from '../components/ScanStatusBanner';
 import ShowMoreButton from '../components/ShowMoreButton';
+import SongThumb from '../components/SongThumb';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 function LocalLibraryScreen({
@@ -310,13 +311,7 @@ function LocalLibraryScreen({
                     onPress={() => onPlayTrack(item)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.songIconBox}>
-                      <Ionicons 
-                        name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
-                        size={20} 
-                        color={isCurrent ? c.ink : c.textSubtle} 
-                      />
-                    </View>
+                    <SongThumb track={item} isCurrent={isCurrent} isPlaying={isPlaying} />
 
                     <View style={styles.songInfo}>
                       <Text 
@@ -422,13 +417,7 @@ function LocalLibraryScreen({
                           onPress={() => onPlayTrack(item)}
                           activeOpacity={0.7}
                         >
-                          <View style={styles.songIconBox}>
-                            <Ionicons 
-                              name={isCurrent && isPlaying ? "volume-high" : "musical-note"} 
-                              size={20} 
-                              color={isCurrent ? c.ink : c.textSubtle} 
-                            />
-                          </View>
+                          <SongThumb track={item} isCurrent={isCurrent} isPlaying={isPlaying} />
                           <View style={styles.songInfo}>
                             <Text style={[styles.songTitle, isCurrent && styles.songTitleActive]} numberOfLines={1}>
                               {item.title}

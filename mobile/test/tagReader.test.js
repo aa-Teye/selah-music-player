@@ -40,3 +40,62 @@ test('reads a real file through the file system, and survives broken files', () 
   expect(readTags('file:///docs/broken.mp3')).toEqual({});
   expect(readTags('file:///docs/missing.mp3')).toBeNull();
 });
+
+// ── Cover pictures ──────────────────────────────────────────────────────────
+const withPicture = (bytes, ext) => readTagsFromReader(fx.memoryReader(bytes), ext, { picture: true });
+const picOf = (tags) => (tags.picture ? Array.from(tags.picture.data) : null);
+
+test('MP3: picks the FRONT cover even when another picture comes first', () => {
+  const front = fx.jpeg(1);
+  const tags = withPicture(fx.mp3WithCovers(front, fx.jpeg(2)), 'mp3');
+  expect(tags).toMatchObject({ title: 'Jehovah Overdo', artist: 'Minister GUC' });
+  expect(tags.picture.type).toBe('jpg');
+  expect(picOf(tags)).toEqual(front);
+});
+
+test('covers are only read when asked for', () => {
+  const tags = readTagsFromReader(fx.memoryReader(fx.mp3WithCovers(fx.jpeg(1), fx.jpeg(2))), 'mp3');
+  expect(tags.title).toBe('Jehovah Overdo');
+  expect(tags.picture).toBeUndefined();
+});
+
+test('MP3: newer (v2.4, unsynchronised frame), older (v2.2) and fully unsynchronised tags', () => {
+  const pic = fx.png();
+  const v24 = withPicture(fx.mp3v24WithCover(pic), 'mp3');
+  expect(v24.title).toBe('Nara');
+  expect(v24.picture.type).toBe('png');
+  expect(picOf(v24)).toEqual(pic);
+
+  const jpg = fx.jpeg(3);
+  const unsynced = withPicture(fx.mp3UnsyncedTag(jpg), 'mp3');
+  expect(unsynced.title).toBe('Odo Yewu');
+  expect(picOf(unsynced)).toEqual(jpg);
+
+  const v22 = withPicture(fx.mp3v22WithCover(jpg), 'mp3');
+  expect(v22.title).toBe('Onise Iyanu');
+  expect(picOf(v22)).toEqual(jpg);
+});
+
+test('a huge cover is skipped, and the title stored after it is still found', () => {
+  const tags = withPicture(fx.mp3WithHugeCover(), 'mp3');
+  expect(tags.title).toBe('Big Cover Song');
+  expect(tags.picture).toBeUndefined();
+});
+
+test('M4A, FLAC and WAV covers (and WAV names from its INFO list)', () => {
+  const pic = fx.jpeg(4);
+  const m4a = withPicture(fx.m4aWithCover(pic), 'm4a');
+  expect(m4a.title).toBe('Yesu Mo');
+  expect(picOf(m4a)).toEqual(pic);
+
+  expect(picOf(withPicture(fx.flacWithCover(pic), 'flac'))).toEqual(pic);
+
+  const wav = withPicture(fx.wavWithDetails(pic), 'wav');
+  expect(wav).toMatchObject({ title: 'Bo Noo Ni', artist: 'Joe Mettle', album: 'Love Never Fails', duration: 3 });
+  expect(picOf(wav)).toEqual(pic);
+});
+
+test('data that is not a picture is never treated as a cover', () => {
+  const junk = Array.from({ length: 200 }, (_, i) => (i * 13) & 127);
+  expect(withPicture(fx.mp3WithCovers(junk, junk), 'mp3').picture).toBeUndefined();
+});

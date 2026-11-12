@@ -60,6 +60,11 @@ export default function EditTagsModal({
       category: genre,
       coverUrl: coverUrl || track.coverUrl
     };
+    // You picked your own picture: scans will never replace it with the song's cover
+    if (coverUrl && coverUrl !== track.coverUrl) {
+      updatedTrack.customCover = true;
+      delete updatedTrack.coverFile;
+    }
 
     if (onSaveTrack) {
       onSaveTrack(updatedTrack);

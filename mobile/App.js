@@ -56,6 +56,7 @@ function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
     }
     let next = t;
     if (fresh.uri !== t.uri) next = { ...next, uri: fresh.uri };
+    if (fresh.tagsVersion && fresh.tagsVersion !== t.tagsVersion) next = { ...next, tagsVersion: fresh.tagsVersion };
     // details read from inside the file replace guesses from the file name (never your own edits)
     if (fresh.tagged && !t.userEdited) {
       const detailsChanged =
@@ -72,9 +73,15 @@ function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
           album: fresh.album,
           duration: fresh.duration > 0 ? fresh.duration : t.duration,
           embeddedLyrics: fresh.embeddedLyrics,
-          coverUrl: fresh.coverUrl,
           tagged: true
         };
+      }
+    }
+    // the song's own cover picture (unless you chose a different one)
+    if (fresh.tagged && !t.customCover && (fresh.coverFile !== t.coverFile || fresh.coverUrl !== next.coverUrl)) {
+      if (fresh.coverFile || !t.userEdited) {
+        next = { ...next, coverFile: fresh.coverFile, coverUrl: fresh.coverUrl };
+        if (!fresh.coverFile) delete next.coverFile;
       }
     }
     if (next !== t) changed = true;
@@ -333,7 +340,11 @@ function SelahApp() {
           if (cleanPlaylists.length !== savedPlaylists.length) StorageService.savePlaylists(cleanPlaylists);
         }
         if (savedRecent) {
-          const cleanRecent = savedRecent.filter((t) => t && !isDemoId(t.id));
+          // use the library's copy of each song (it has the latest name and cover)
+          const libraryById = new Map((savedLocal || []).map((t) => [t.id, t]));
+          const cleanRecent = savedRecent
+            .filter((t) => t && !isDemoId(t.id))
+            .map((t) => libraryById.get(t.id) || t);
           setRecentTracks(cleanRecent);
           if (cleanRecent.length !== savedRecent.length) StorageService.saveRecentlyPlayed(cleanRecent);
         }
@@ -380,7 +391,7 @@ function SelahApp() {
         if (Platform.OS === 'android' && !deepScannedBefore && !(savedLocal && savedLocal.length > 0)) {
           runDeepScan();
         } else {
-          runDeviceScan({ knownIds: new Set((savedLocal || []).map((t) => t.id)) });
+          runDeviceScan({ knownIds: ScannerService.upToDateIds(savedLocal) });
         }
       } catch (e) {
         console.log('Error initializing app storage:', e);
@@ -889,7 +900,7 @@ function SelahApp() {
     setScanStatus({ state: 'scanning', count: 0, latest: '' });
     try {
       const res = await ScannerService.scanDeviceAudio({
-        knownIds: (opts && opts.knownIds) || new Set((localTracksRef.current || []).map((t) => t.id)),
+        knownIds: (opts && opts.knownIds) || ScannerService.upToDateIds(localTracksRef.current),
         onProgress: (count, pageTracks) => {
           if (pageTracks && pageTracks.length > 0) handleBatchAddLocalTracks(pageTracks);
           setScanStatus({

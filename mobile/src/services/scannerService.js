@@ -15,6 +15,11 @@ import * as MediaLibrary from 'expo-media-library/legacy';
 import { Directory, File, Paths } from 'expo-file-system';
 import { Id3Service } from './id3Service';
 import { readTags } from './tagReader';
+import { saveCover, coverUri } from './coverStore';
+
+// Bump this when Selah learns to read something new from inside songs:
+// songs read by an older version are read again once (e.g. version 2 = covers).
+export const TAGS_VERSION = 2;
 
 // Every common audio file type
 export const AUDIO_EXTENSIONS = [
@@ -55,25 +60,45 @@ const safeDecode = (s) => {
 const pause = () => new Promise((resolve) => setTimeout(resolve, 0));
 const normPath = (uri) => safeDecode(String(uri || '')).replace(/^file:\/\//, '').replace(/\/+$/, '');
 
-/** Copies the real details from inside the file onto the track (keeps the phone's length if it has one) */
+/**
+ * Copies the real details from inside the file onto the track (keeps the phone's
+ * length if it has one), and saves the song's own cover picture.
+ */
 export function applyTags(track, tags) {
-  if (!tags) return track;
-  const next = { ...track, tagged: true };
+  if (!tags) return { ...track, tagsVersion: TAGS_VERSION }; // unreadable: don't keep retrying
+  const next = { ...track, tagged: true, tagsVersion: TAGS_VERSION };
   if (tags.title) next.title = tags.title;
   if (tags.artist) next.artist = tags.artist;
   if (tags.album) next.album = tags.album;
   if (tags.duration && !(track.duration > 0)) next.duration = tags.duration;
   if (tags.lyrics) next.embeddedLyrics = tags.lyrics;
-  next.coverUrl = Id3Service.generateCuratedArtwork(next.title, next.artist);
+  const cover = tags.picture ? saveCover(tags.picture) : null;
+  if (cover) {
+    next.coverFile = cover;
+    next.coverUrl = coverUri(cover);
+  } else {
+    delete next.coverFile;
+    next.coverUrl = Id3Service.generateCuratedArtwork(next.title, next.artist);
+  }
   return next;
 }
 
-/** Reads details for songs Selah hasn't seen before (keeps the screen responsive) */
+/** Reads everything stored inside one song file (details + cover) */
+export function readDetails(track) {
+  return applyTags(track, readTags(track.uri, { picture: true }));
+}
+
+/** Songs already read by this version of Selah (no need to open their files again) */
+export function upToDateIds(list) {
+  return new Set((list || []).filter((t) => t && t.tagsVersion >= TAGS_VERSION).map((t) => t.id));
+}
+
+/** Reads details for songs Selah hasn't fully read before (keeps the screen responsive) */
 async function readDetailsForNew(tracks, knownIds) {
   const out = [];
   for (let i = 0; i < tracks.length; i++) {
     const t = tracks[i];
-    out.push(knownIds && knownIds.has(t.id) ? t : applyTags(t, readTags(t.uri)));
+    out.push(knownIds && knownIds.has(t.id) ? t : readDetails(t));
     if (i % 25 === 24) await pause();
   }
   return out;
@@ -399,7 +424,7 @@ export async function deepScanDeviceAudio({ onProgress, shouldCancel } = {}) {
       detailed.push(...all.slice(i));
       break;
     }
-    detailed.push(applyTags(all[i], readTags(all[i].uri)));
+    detailed.push(readDetails(all[i]));
     if (i % 20 === 19) {
       report({ step: 3, done: i + 1, total: all.length, found: all.length });
       await pause();
@@ -448,7 +473,7 @@ export async function importPickedFiles(pickedAssets = []) {
       const source = new File(picked.uri);
       const { file: destination, reuse } = uniqueDestination(folder, name, picked.size || source.size);
       if (!reuse) await source.copy(destination);
-      imported.push(applyTags(fileToTrack(destination, MUSIC_FOLDER_NAME), readTags(destination.uri)));
+      imported.push(readDetails(fileToTrack(destination, MUSIC_FOLDER_NAME)));
     } catch (err) {
       console.log('Import copy notice:', err);
       // Could not copy: keep the picked file as it is
@@ -480,6 +505,7 @@ export const ScannerService = {
   getMusicFolder,
   isAudioFileName,
   unsupportedFormat,
+  upToDateIds,
   AUDIO_EXTENSIONS
 };
 

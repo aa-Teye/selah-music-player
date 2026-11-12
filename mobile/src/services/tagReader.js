@@ -1,12 +1,13 @@
 // ═════════════════════════════════════════════════════════════════════════
 //  SELAH — SONG DETAILS READER
-//  Reads the real title, artist, album, length and lyrics that are stored
-//  inside audio files, so songs don't depend on their file names.
+//  Reads the real title, artist, album, length, lyrics and cover picture
+//  that are stored inside audio files, so songs don't depend on file names.
 //  Supports MP3 (ID3v2 / ID3v1), M4A/MP4, FLAC, WAV, OGG Vorbis and Opus.
 // ═════════════════════════════════════════════════════════════════════════
 import { File } from 'expo-file-system';
 
-const MAX_TAG_BYTES = 1024 * 1024; // never read more than 1 MB of tag data
+const MAX_TAG_BYTES = 1024 * 1024; // never read more than 1 MB of text details
+export const MAX_PICTURE_BYTES = 4 * 1024 * 1024; // covers bigger than this are skipped
 
 // ── byte helpers ───────────────────────────────────────────────────────────
 const u32 = (b, o) => b[o] * 16777216 + (b[o + 1] << 16) + (b[o + 2] << 8) + b[o + 3];
@@ -75,6 +76,76 @@ function decodeText(encoding, b) {
 
 const tidy = (s) => String(s || '').replace(/\u0000/g, '').replace(/\s+/g, ' ').trim();
 
+// A "reader" over bytes already in memory, and over one part of another reader
+const memReader = (b) => ({ size: b.length, read: (o, l) => b.subarray(o, Math.min(b.length, o + l)) });
+const subReader = (reader, offset, length) => ({
+  size: length,
+  read: (o, l) => reader.read(offset + o, Math.max(0, Math.min(l, length - o)))
+});
+
+// Undo ID3 "unsynchronisation" (every 0xFF 0x00 was written for a plain 0xFF)
+function unsync(b) {
+  const out = new Uint8Array(b.length);
+  let n = 0;
+  for (let i = 0; i < b.length; i++) {
+    out[n++] = b[i];
+    if (b[i] === 0xff && b[i + 1] === 0x00) i++;
+  }
+  return out.subarray(0, n);
+}
+
+// ── Cover pictures ─────────────────────────────────────────────────────────
+/** The kind of picture these bytes hold, judged by their first bytes ('' if not a picture). */
+export function imageType(b) {
+  if (!b || b.length < 12) return '';
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpg';
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png';
+  if (ascii(b, 0, 4) === 'GIF8') return 'gif';
+  if (ascii(b, 0, 4) === 'RIFF' && ascii(b, 8, 4) === 'WEBP') return 'webp';
+  if (b[0] === 0x42 && b[1] === 0x4d) return 'bmp';
+  return '';
+}
+
+// Keep the best picture: the front cover (kind 3) if there is one, otherwise the first
+function offerPicture(out, data, kind) {
+  const type = imageType(data);
+  if (!type) return;
+  const front = kind === 3;
+  if (!out.picture || (front && !out.picture.front)) out.picture = { data, type, front };
+}
+
+// Skips a text that ends with a zero (two zero bytes for UTF-16)
+function skipText(data, p, encoding) {
+  if (encoding === 1 || encoding === 2) {
+    while (p + 1 < data.length && !(data[p] === 0 && data[p + 1] === 0)) p += 2;
+    return p + 2;
+  }
+  while (p < data.length && data[p] !== 0) p++;
+  return p + 1;
+}
+
+// APIC (ID3v2.3/2.4) or PIC (ID3v2.2): encoding, format, kind, description, picture
+function parsePictureFrame(out, data, v22) {
+  const encoding = data[0];
+  let p = 1;
+  if (v22) p += 3;
+  else p = skipText(data, p, 0);
+  const formatEnd = p;
+  const kind = data[p];
+  p = skipText(data, p + 1, encoding);
+  let picture = data.subarray(p);
+  if (!imageType(picture)) {
+    // Some apps write the description wrongly: look for the picture's first bytes nearby
+    for (let i = formatEnd; i < Math.min(data.length - 12, formatEnd + 300); i++) {
+      if (imageType(data.subarray(i, i + 12))) {
+        picture = data.subarray(i);
+        break;
+      }
+    }
+  }
+  offerPicture(out, picture, kind);
+}
+
 // ── MP3: ID3v2 tags ────────────────────────────────────────────────────────
 const ID3_FRAMES = {
   TIT2: 'title',
@@ -133,39 +204,83 @@ function parseUslt(data) {
   return enc === 3 ? decodeUtf8(data.subarray(p)) : decodeLatin1(data.subarray(p));
 }
 
-export function parseId3v2(b) {
+/**
+ * Reads an ID3v2 tag frame by frame, so a huge picture never has to be loaded
+ * just to get to the title behind it.
+ */
+function parseId3v2Reader(reader, wantPicture) {
   const out = {};
-  if (b.length < 10 || ascii(b, 0, 3) !== 'ID3') return out;
-  const ver = b[3];
-  const flags = b[5];
-  const end = Math.min(b.length, 10 + synchsafe(b, 6));
+  const h = reader.read(0, 10);
+  if (h.length < 10 || ascii(h, 0, 3) !== 'ID3') return out;
+  const ver = h[3];
+  if (ver < 2 || ver > 4) return out;
+  const flags = h[5];
+  let end = Math.min(reader.size, 10 + synchsafe(h, 6));
+  let src = reader;
+  if (flags & 0x80 && ver < 4) {
+    // Older tags can be "unsynchronised" as a whole: undo that in memory first
+    const raw = reader.read(0, Math.min(end, MAX_PICTURE_BYTES));
+    const body = unsync(raw.subarray(10));
+    const joined = new Uint8Array(10 + body.length);
+    joined.set(raw.subarray(0, 10), 0);
+    joined.set(body, 10);
+    src = memReader(joined);
+    end = joined.length;
+  }
   let pos = 10;
-  if (flags & 0x40) pos += ver === 4 ? synchsafe(b, 10) : u32(b, 10) + 4; // extended header
+  if (flags & 0x40) {
+    const x = src.read(10, 4); // extended header
+    pos += ver === 4 ? synchsafe(x, 0) : u32(x, 0) + 4;
+  }
   const idLen = ver === 2 ? 3 : 4;
   const headerLen = ver === 2 ? 6 : 10;
 
-  while (pos + headerLen <= end) {
-    const id = ascii(b, pos, idLen);
+  for (let guard = 0; pos + headerLen <= end && guard < 512; guard++) {
+    const fh = src.read(pos, headerLen);
+    const id = ascii(fh, 0, idLen);
     if (!/^[A-Z0-9]+$/.test(id)) break; // padding
-    const size = ver === 2 ? u24(b, pos + 3) : ver === 4 ? synchsafe(b, pos + 4) : u32(b, pos + 4);
+    const size = ver === 2 ? u24(fh, 3) : ver === 4 ? synchsafe(fh, 4) : u32(fh, 4);
     const start = pos + headerLen;
     const stop = start + size;
     if (!(size > 0) || stop > end) break;
-    const data = b.subarray(start, stop);
+    pos = stop;
+
     const key = ID3_FRAMES[id];
-    if (key === 'lyrics') {
-      if (!out.lyrics) out.lyrics = parseUslt(data);
+    const isPicture = id === 'APIC' || id === 'PIC';
+    if (isPicture ? !wantPicture || size > MAX_PICTURE_BYTES : !key || size > MAX_TAG_BYTES) continue;
+    if (key && key !== 'length' && out[key]) continue; // already have it
+
+    let data = src.read(start, size);
+    if (ver === 3) {
+      const fmt = fh[9];
+      if (fmt & 0xc0) continue; // compressed or encrypted
+      if (fmt & 0x20) data = data.subarray(1); // group byte
+    } else if (ver === 4) {
+      const fmt = fh[9];
+      if (fmt & 0x0c) continue; // compressed or encrypted
+      if (fmt & 0x40) data = data.subarray(1); // group byte
+      if (fmt & 0x01) data = data.subarray(4); // stored length
+      if (fmt & 0x02 || flags & 0x80) data = unsync(data);
+    }
+
+    if (isPicture) {
+      parsePictureFrame(out, data, ver === 2);
+    } else if (key === 'lyrics') {
+      out.lyrics = parseUslt(data);
     } else if (key === 'length') {
       const ms = parseInt(tidy(decodeText(data[0], data.subarray(1))), 10);
       if (ms > 0) out.duration = ms / 1000;
-    } else if (key && !out[key]) {
+    } else {
       out[key] = tidy(decodeText(data[0], data.subarray(1)));
     }
-    pos = stop;
   }
   if (!out.artist && out.albumArtist) out.artist = out.albumArtist;
   delete out.albumArtist;
   return out;
+}
+
+export function parseId3v2(b, wantPicture = false) {
+  return parseId3v2Reader(memReader(b), wantPicture);
 }
 
 export function parseId3v1(b) {
@@ -226,7 +341,7 @@ export function mp3Duration(reader, start) {
 // ── M4A / MP4 ──────────────────────────────────────────────────────────────
 const MP4_ITEMS = { '©nam': 'title', '©ART': 'artist', aART: 'albumArtist', '©alb': 'album', '©lyr': 'lyrics' };
 
-export function parseMp4(reader) {
+export function parseMp4(reader, wantPicture = false) {
   const out = {};
   const walk = (start, end, depth) => {
     let pos = start;
@@ -264,6 +379,12 @@ export function parseMp4(reader) {
             out[key] = key === 'lyrics' ? text : tidy(text);
           }
         }
+      } else if (type === 'covr' && wantPicture && depth >= 3) {
+        const len = bodyEnd - bodyStart;
+        if (len > 16 && len <= MAX_PICTURE_BYTES + 16) {
+          const b = reader.read(bodyStart, len);
+          if (ascii(b, 4, 4) === 'data') offerPicture(out, b.subarray(16, Math.min(b.length, u32(b, 0))), 3);
+        }
       }
       pos += size;
     }
@@ -275,7 +396,7 @@ export function parseMp4(reader) {
 }
 
 // ── FLAC ───────────────────────────────────────────────────────────────────
-export function parseFlac(reader) {
+export function parseFlac(reader, wantPicture = false) {
   const out = {};
   let pos = 4;
   for (let n = 0; n < 64; n++) {
@@ -309,6 +430,16 @@ export function parseFlac(reader) {
         else if (k === 'ALBUM' && !out.album) out.album = tidy(v);
         else if ((k === 'LYRICS' || k === 'UNSYNCEDLYRICS') && !out.lyrics) out.lyrics = v;
       }
+    } else if (type === 6 && wantPicture && len <= MAX_PICTURE_BYTES) {
+      // PICTURE: kind, format, description, width, height, depth, colours, then the picture
+      const b = reader.read(body, len);
+      const kind = u32(b, 0);
+      let p = 8 + u32(b, 4);
+      p += 4 + u32(b, p);
+      p += 16;
+      const size = u32(b, p);
+      p += 4;
+      if (size > 0 && p + size <= b.length) offerPicture(out, b.subarray(p, p + size), kind);
     }
     if (last) break;
     pos = body + len;
@@ -317,7 +448,7 @@ export function parseFlac(reader) {
 }
 
 // ── WAV ────────────────────────────────────────────────────────────────────
-export function parseWav(reader) {
+export function parseWav(reader, wantPicture = false) {
   const out = {};
   let pos = 12;
   let byteRate = 0;
@@ -326,10 +457,30 @@ export function parseWav(reader) {
     if (c.length < 8) break;
     const id = ascii(c, 0, 4);
     const len = u32le(c, 4);
-    if (id === 'fmt ') byteRate = u32le(reader.read(pos + 8, 16), 8);
-    else if (id === 'data') {
-      if (byteRate > 0) out.duration = len / byteRate;
-      break;
+    if (id === 'fmt ') {
+      byteRate = u32le(reader.read(pos + 8, 16), 8);
+    } else if (id === 'data') {
+      if (byteRate > 0 && !out.duration) out.duration = len / byteRate;
+    } else if (id === 'LIST' && len <= MAX_TAG_BYTES) {
+      // INFO list: INAM = title, IART = artist, IPRD = album
+      const b = reader.read(pos + 8, len);
+      if (ascii(b, 0, 4) === 'INFO') {
+        for (let p = 4; p + 8 <= b.length; ) {
+          const sub = ascii(b, p, 4);
+          const l = u32le(b, p + 4);
+          const text = tidy(decodeUtf8(b.subarray(p + 8, p + 8 + l)));
+          if (sub === 'INAM' && !out.title) out.title = text;
+          else if (sub === 'IART' && !out.artist) out.artist = text;
+          else if (sub === 'IPRD' && !out.album) out.album = text;
+          p += 8 + l + (l % 2);
+        }
+      }
+    } else if (id === 'id3 ' || id === 'ID3 ') {
+      // Many apps store a normal MP3-style tag (with the cover) inside WAV files
+      const tag = parseId3v2Reader(subReader(reader, pos + 8, Math.min(len, reader.size - pos - 8)), wantPicture);
+      Object.keys(tag).forEach((k) => {
+        if (out[k] === undefined) out[k] = tag[k];
+      });
     }
     pos += 8 + len + (len % 2);
   }
@@ -368,21 +519,23 @@ const MP3_EXTS = ['mp3', 'mp2', 'mpga'];
 
 /**
  * Reads details from any "reader" ({ size, read(offset, length) -> Uint8Array }).
- * Returns { title?, artist?, album?, duration? (seconds), lyrics? }.
+ * Returns { title?, artist?, album?, duration? (seconds), lyrics?, picture? }.
+ * The cover picture ({ data, type }) is only read when options.picture is true.
  */
-export function readTagsFromReader(reader, ext) {
+export function readTagsFromReader(reader, ext, options = {}) {
+  const wantPicture = Boolean(options.picture);
   let out = {};
   const head = reader.read(0, 12);
   if (ascii(head, 0, 3) === 'ID3') {
     const tagSize = synchsafe(head, 6) + 10;
-    out = parseId3v2(reader.read(0, Math.min(tagSize, MAX_TAG_BYTES)));
+    out = parseId3v2Reader(reader, wantPicture);
     if (!out.duration && MP3_EXTS.includes(ext)) out.duration = mp3Duration(reader, tagSize);
   } else if (ascii(head, 4, 4) === 'ftyp') {
-    out = parseMp4(reader);
+    out = parseMp4(reader, wantPicture);
   } else if (ascii(head, 0, 4) === 'fLaC') {
-    out = parseFlac(reader);
+    out = parseFlac(reader, wantPicture);
   } else if (ascii(head, 0, 4) === 'RIFF' && ascii(head, 8, 4) === 'WAVE') {
-    out = parseWav(reader);
+    out = parseWav(reader, wantPicture);
   } else if (ascii(head, 0, 4) === 'OggS') {
     out = parseOgg(reader);
   } else if (MP3_EXTS.includes(ext)) {
@@ -404,11 +557,12 @@ export function readTagsFromReader(reader, ext) {
   if (out.duration > 0 && isFinite(out.duration)) result.duration = Math.round(out.duration);
   const lyrics = String(out.lyrics || '').replace(/\r\n?/g, '\n').trim();
   if (lyrics) result.lyrics = lyrics.slice(0, 20000);
+  if (wantPicture && out.picture) result.picture = { data: out.picture.data, type: out.picture.type };
   return result;
 }
 
 /** Reads the details stored inside an audio file. Returns null if the file can't be read. */
-export function readTags(uri) {
+export function readTags(uri, options = {}) {
   let handle = null;
   try {
     const file = new File(uri);
@@ -425,7 +579,7 @@ export function readTags(uri) {
         return handle.readBytesSync(len);
       }
     };
-    return readTagsFromReader(reader, extOf(uri));
+    return readTagsFromReader(reader, extOf(uri), options);
   } catch {
     return null;
   } finally {

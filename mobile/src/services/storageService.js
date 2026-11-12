@@ -2,6 +2,7 @@ import AsyncStoragePackage from '@react-native-async-storage/async-storage';
 const AsyncStorage = AsyncStoragePackage?.default || AsyncStoragePackage;
 import { Directory, File, Paths } from 'expo-file-system';
 import { Id3Service } from './id3Service';
+import { coverUri, savedCoverNames } from './coverStore';
 
 // The music library can hold thousands of songs, so it is kept in a file
 // (the phone's key-value storage only allows a few MB).
@@ -17,14 +18,27 @@ function compactTrack(t) {
   if (!t) return t;
   const out = { ...t };
   if (typeof out.lyrics === 'string' && PLACEHOLDER_LYRICS.test(out.lyrics)) delete out.lyrics;
-  if (out.coverUrl && out.coverUrl === Id3Service.generateCuratedArtwork(out.title, out.artist)) delete out.coverUrl;
+  if (out.coverFile) delete out.coverUrl; // the song's own cover: its address is worked out when loading
+  else if (out.coverUrl && out.coverUrl === Id3Service.generateCuratedArtwork(out.title, out.artist)) delete out.coverUrl;
   return out;
 }
 
-function hydrateTrack(t) {
-  if (!t || t.coverUrl) return t;
+function hydrateTrack(t, covers) {
+  if (!t) return t;
+  if (t.coverFile) {
+    if (covers && covers.has(t.coverFile)) return { ...t, coverUrl: coverUri(t.coverFile) };
+    // The phone cleared this cover: show the usual picture and read the song again on the next scan
+    const { coverFile, tagsVersion, ...rest } = t;
+    return { ...rest, coverUrl: Id3Service.generateCuratedArtwork(t.title, t.artist) };
+  }
+  if (t.coverUrl) return t;
   return { ...t, coverUrl: Id3Service.generateCuratedArtwork(t.title, t.artist) };
 }
+
+const hydrateAll = (list) => {
+  const covers = list.some((t) => t && t.coverFile) ? savedCoverNames() : null;
+  return list.map((t) => hydrateTrack(t, covers));
+};
 
 const KEYS = {
   FAVORITES: '@selah_favorites',
@@ -66,7 +80,7 @@ export const StorageService = {
       const file = libraryFile();
       if (file.exists) {
         const list = JSON.parse(await file.text());
-        if (Array.isArray(list)) return list.map(hydrateTrack);
+        if (Array.isArray(list)) return hydrateAll(list);
       }
     } catch (e) {
       console.log('Error reading library file:', e);
@@ -75,7 +89,7 @@ export const StorageService = {
     try {
       const data = await AsyncStorage.getItem(KEYS.LOCAL_TRACKS);
       const list = data ? JSON.parse(data) : [];
-      return Array.isArray(list) ? list.map(hydrateTrack) : [];
+      return Array.isArray(list) ? hydrateAll(list) : [];
     } catch (e) {
       console.log('Error reading local tracks:', e);
       return [];
