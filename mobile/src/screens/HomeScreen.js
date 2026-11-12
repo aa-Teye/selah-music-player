@@ -9,8 +9,11 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ScanStatusBanner from '../components/ScanStatusBanner';
 
-export default function HomeScreen({
+const HOME_SONG_LIMIT = 30;
+
+function HomeScreen({
   devotion,
   tracks,
   currentTrack,
@@ -27,13 +30,26 @@ export default function HomeScreen({
   favoriteArtists = [],
   onNextDevotional,
   onOpenDigitalLibraries,
-  onOpenLibrary
+  onOpenLibrary,
+  playlists = [],
+  onPlayPlaylist,
+  onOpenPlaylists,
+  scanStatus
 }) {
   const filteredTracks = activeMood === 'all' 
     ? tracks 
     : tracks.filter(t => t.category === activeMood);
 
-  const featuredTrack = tracks[0];
+  // Songs most recently added to the phone
+  const recentlyAdded = React.useMemo(
+    () =>
+      tracks
+        .filter((t) => t.sourceType === 'local')
+        .slice()
+        .sort((a, b) => Number(b.addedAt || 0) - Number(a.addedAt || 0))
+        .slice(0, 12),
+    [tracks]
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -62,34 +78,7 @@ export default function HomeScreen({
         )}
       </View>
 
-      {/* Recommended For You Based on Favorite Artists */}
-      {favoriteArtists && favoriteArtists.length > 0 && (
-        <View style={styles.recommendedSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended For You</Text>
-            <Text style={styles.sectionSubtitle}>Based on your chosen worship leaders</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-            {favoriteArtists.map((artistName, idx) => (
-              <TouchableOpacity
-                key={`fav-art-${idx}`}
-                style={styles.artistRecCard}
-                onPress={() => onNavigateToYouTube && onNavigateToYouTube(artistName)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.artistRecAvatar}>
-                  <Text style={styles.artistRecInitial}>{artistName ? artistName.charAt(0) : 'W'}</Text>
-                </View>
-                <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
-                <View style={styles.artistRecPlayRow}>
-                  <Ionicons name="play-circle" size={13} color="#12141A" />
-                  <Text style={styles.artistRecPlayText}>Listen</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <ScanStatusBanner status={scanStatus} />
 
       {/* Recently Played Horizontal Rail */}
       {recentTracks && recentTracks.length > 0 && (
@@ -110,6 +99,75 @@ export default function HomeScreen({
                   source={{ uri: item.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' }} 
                   style={styles.recentCover} 
                 />
+                <Text style={styles.recentTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.recentArtist} numberOfLines={1}>{item.artist}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Your Playlists */}
+      <View style={{ marginBottom: 20 }}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Your Playlists</Text>
+          {onOpenPlaylists && (
+            <TouchableOpacity onPress={onOpenPlaylists}>
+              <Text style={styles.sectionLink}>See all</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+          {playlists.map((pl) => {
+            const count = (pl.trackIds || []).length;
+            return (
+              <TouchableOpacity
+                key={`pl-${pl.id}`}
+                style={styles.playlistCard}
+                onPress={() => {
+                  const plTracks = tracks.filter((t) => (pl.trackIds || []).includes(t.id));
+                  if (plTracks.length > 0 && onPlayPlaylist) onPlayPlaylist(plTracks);
+                  else if (onOpenPlaylists) onOpenPlaylists();
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.playlistIcon}>
+                  <Ionicons name="musical-notes" size={22} color="#FFFFFF" />
+                </View>
+                <Text style={styles.playlistName} numberOfLines={1}>{pl.name}</Text>
+                <Text style={styles.playlistCount}>{count} song{count === 1 ? '' : 's'}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {onOpenPlaylists && (
+            <TouchableOpacity style={[styles.playlistCard, styles.playlistNewCard]} onPress={onOpenPlaylists} activeOpacity={0.8}>
+              <View style={[styles.playlistIcon, styles.playlistNewIcon]}>
+                <Ionicons name="add" size={24} color="#12141A" />
+              </View>
+              <Text style={styles.playlistName} numberOfLines={2}>
+                {playlists.length > 0 ? 'New playlist' : 'Create your first playlist'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </View>
+
+      {/* Recently Added from the phone */}
+      {recentlyAdded.length > 0 && (
+        <View style={{ marginBottom: 20 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recently Added</Text>
+            <Text style={styles.sectionSubtitle}>On your phone</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+            {recentlyAdded.map((item) => (
+              <TouchableOpacity
+                key={`added-${item.id}`}
+                style={styles.recentItemCard}
+                onPress={() => onPlayTrack(item)}
+                activeOpacity={0.8}
+              >
+                <Image source={{ uri: item.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' }} style={styles.recentCover} />
                 <Text style={styles.recentTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.recentArtist} numberOfLines={1}>{item.artist}</Text>
               </TouchableOpacity>
@@ -201,7 +259,7 @@ export default function HomeScreen({
         </View>
       ) : (
         <View style={styles.tracksGrid}>
-          {filteredTracks.map((track) => {
+          {filteredTracks.slice(0, HOME_SONG_LIMIT).map((track) => {
             const isCurrent = currentTrack?.id === track.id;
             return (
               <TouchableOpacity
@@ -244,11 +302,79 @@ export default function HomeScreen({
           })}
         </View>
       )}
+      {filteredTracks.length > HOME_SONG_LIMIT && onOpenLibrary && (
+        <TouchableOpacity style={styles.seeAllBtn} onPress={onOpenLibrary} activeOpacity={0.8}>
+          <Text style={styles.seeAllText}>See all {filteredTracks.length} songs in Library</Text>
+        </TouchableOpacity>
+      )}
+      <View style={{ marginTop: 8 }}>
+        {/* Recommended For You Based on Favorite Artists */}
+        {favoriteArtists && favoriteArtists.length > 0 && (
+          <View style={styles.recommendedSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recommended For You</Text>
+              <Text style={styles.sectionSubtitle}>Based on your chosen worship leaders</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+              {favoriteArtists.map((artistName, idx) => (
+                <TouchableOpacity
+                  key={`fav-art-${idx}`}
+                  style={styles.artistRecCard}
+                  onPress={() => onNavigateToYouTube && onNavigateToYouTube(artistName)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.artistRecAvatar}>
+                    <Text style={styles.artistRecInitial}>{artistName ? artistName.charAt(0) : 'W'}</Text>
+                  </View>
+                  <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
+                  <View style={styles.artistRecPlayRow}>
+                    <Ionicons name="play-circle" size={13} color="#12141A" />
+                    <Text style={styles.artistRecPlayText}>Listen</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  sectionLink: { color: '#12141A', fontSize: 13, fontWeight: '800' },
+  playlistCard: {
+    width: 130,
+    marginRight: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 12
+  },
+  playlistNewCard: { backgroundColor: '#F1F3F6', borderStyle: 'dashed' },
+  playlistIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#12141A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+  playlistNewIcon: { backgroundColor: '#E2E6EC' },
+  playlistName: { color: '#0F1115', fontSize: 14, fontWeight: '800' },
+  playlistCount: { color: '#717886', fontSize: 12, marginTop: 2 },
+  seeAllBtn: {
+    alignItems: 'center',
+    backgroundColor: '#EEF0F4',
+    borderRadius: 14,
+    paddingVertical: 13,
+    marginTop: 4,
+    marginBottom: 24
+  },
+  seeAllText: { color: '#12141A', fontWeight: '800', fontSize: 14 },
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA'
@@ -581,3 +707,5 @@ const styles = StyleSheet.create({
     fontWeight: '800'
   }
 });
+
+export default React.memo(HomeScreen);

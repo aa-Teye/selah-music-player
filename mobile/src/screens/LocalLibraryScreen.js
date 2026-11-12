@@ -14,8 +14,10 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { ScannerService } from '../services/scannerService';
+import ScanStatusBanner from '../components/ScanStatusBanner';
+import ShowMoreButton from '../components/ShowMoreButton';
 
-export default function LocalLibraryScreen({
+function LocalLibraryScreen({
   localTracks = [],
   searchQuery = '',
   onAddLocalTrack,
@@ -26,67 +28,62 @@ export default function LocalLibraryScreen({
   onDeleteTrack,
   onOpenAddToPlaylist,
   onOpenSetRingtone,
-  onOpenEditTags
+  onOpenEditTags,
+  scanStatus,
+  onScan
 }) {
   const [activeSubTab, setActiveSubTab] = useState('tracks'); // 'tracks' | 'folders' | 'artists'
   const [selectedFolder, setSelectedFolder] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
+  const isScanning = scanStatus?.state === 'scanning';
+  const [tracksLimit, setTracksLimit] = useState(60);
+  const [folderLimit, setFolderLimit] = useState(60);
+  const [artistsLimit, setArtistsLimit] = useState(80);
   const [filterQuery, setFilterQuery] = useState('');
 
-  // Auto-scan phone storage across all Android versions
+  // Scan the phone (Android) or Selah's folder (iPhone). Progress shows live in the banner.
   const handleAutoScanDevice = async (silent = false) => {
-    try {
-      setIsScanning(true);
-      const res = await ScannerService.scanDeviceAudio();
+    if (!onScan) return;
+    const res = await onScan();
+    if (!res || silent) return;
 
-      if (res.success && res.tracks && res.tracks.length > 0) {
-        if (onBatchAddLocalTracks) {
-          onBatchAddLocalTracks(res.tracks);
-        }
-        if (!silent) {
-          Alert.alert(
-            "Scan Complete! 🎵", 
-            `Found and added ${res.tracks.length} music track${res.tracks.length === 1 ? '' : 's'} from your phone.`
-          );
-        }
-      } else if (!silent) {
-        if (res.error === 'Permission not granted') {
-          Alert.alert(
-            "Audio Permission Needed", 
-            "Selah needs permission to read music files on your phone. Please allow audio access in your device Settings to scan all MP3s.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { 
-                text: "Open Settings", 
-                onPress: () => {
-                  Linking.openSettings?.()?.catch?.(() => {});
-                } 
-              }
-            ]
-          );
-        } else {
-          Alert.alert(
-            Platform.OS === 'android' ? "No Music Found" : "No Songs in Selah's Folder Yet", 
-            Platform.OS === 'android'
-              ? "No audio files were found on this phone. You can pick music files directly from your Downloads or Files app."
-              : "iPhone doesn't let apps scan the whole phone. Import songs from the Files app, or copy music into Files › On My iPhone › Selah, then scan again.",
-            [
-              { text: "Later", style: "cancel" },
-              { text: "Select Files Directly", onPress: handlePickAudio }
-            ]
-          );
-        }
-      }
-    } catch (err) {
-      console.log('Error scanning media:', err);
-      if (!silent) {
+    if (res.success) {
+      const count = res.tracks ? res.tracks.length : 0;
+      if (count > 0) {
         Alert.alert(
-          "Scan Notice", 
-          `Could not scan media: ${err?.message || 'Storage error'}.\n\nYou can use the "Import" button to pick music files directly.`
+          "Scan Complete! 🎵",
+          `Found ${count} song${count === 1 ? '' : 's'} ${Platform.OS === 'android' ? 'on your phone' : "in Selah's folder"}.`
+        );
+      } else {
+        Alert.alert(
+          Platform.OS === 'android' ? "No Music Found" : "No Songs in Selah's Folder Yet",
+          Platform.OS === 'android'
+            ? "No audio files were found on this phone. You can pick music files directly from your Downloads or Files app."
+            : "iPhone doesn't let apps scan the whole phone. Import songs from the Files app, or copy music into Files › On My iPhone › Selah, then scan again.",
+          [
+            { text: "Later", style: "cancel" },
+            { text: "Select Files Directly", onPress: handlePickAudio }
+          ]
         );
       }
-    } finally {
-      setIsScanning(false);
+    } else if (res.error === 'Permission not granted') {
+      Alert.alert(
+        "Audio Permission Needed",
+        'Selah needs permission to read music files on your phone. Please allow "Music and audio" in Settings.',
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Open Settings",
+            onPress: () => {
+              Linking.openSettings?.()?.catch?.(() => {});
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert(
+        "Scan Notice",
+        `Could not scan media: ${res.error || 'Storage error'}.\n\nYou can use the "Import" button to pick music files directly.`
+      );
     }
   };
 
@@ -198,7 +195,7 @@ export default function LocalLibraryScreen({
             ) : (
               <>
                 <Ionicons name="refresh" size={16} color="#12141A" />
-                <Text style={styles.scanBtnText}>Auto-Scan</Text>
+                <Text style={styles.scanBtnText}>Rescan</Text>
               </>
             )}
           </TouchableOpacity>
@@ -209,6 +206,8 @@ export default function LocalLibraryScreen({
           </TouchableOpacity>
         </View>
       </View>
+
+      <ScanStatusBanner status={scanStatus} showDone />
 
       {/* Auto-Scan Banner if Library is empty */}
       {localTracks.length === 0 && (
@@ -298,7 +297,7 @@ export default function LocalLibraryScreen({
           {/* ==================== SUB-TAB 1: ALL TRACKS ==================== */}
           {activeSubTab === 'tracks' && (
             <View style={styles.songsList}>
-              {filteredTracks.map((item) => {
+              {filteredTracks.slice(0, tracksLimit).map((item) => {
                 const isCurrent = currentTrack?.id === item.id;
                 return (
                   <TouchableOpacity
@@ -369,6 +368,7 @@ export default function LocalLibraryScreen({
                   </TouchableOpacity>
                 );
               })}
+              <ShowMoreButton remaining={filteredTracks.length - tracksLimit} onPress={() => setTracksLimit((n) => n + 60)} />
             </View>
           )}
 
@@ -409,7 +409,7 @@ export default function LocalLibraryScreen({
                   </View>
 
                   <View style={styles.songsList}>
-                    {(foldersMap[selectedFolder] || []).map((item) => {
+                    {(foldersMap[selectedFolder] || []).slice(0, folderLimit).map((item) => {
                       const isCurrent = currentTrack?.id === item.id;
                       return (
                         <TouchableOpacity
@@ -453,6 +453,10 @@ export default function LocalLibraryScreen({
                         </TouchableOpacity>
                       );
                     })}
+                    <ShowMoreButton
+                      remaining={(foldersMap[selectedFolder] || []).length - folderLimit}
+                      onPress={() => setFolderLimit((n) => n + 60)}
+                    />
                   </View>
                 </View>
               ) : (
@@ -464,7 +468,10 @@ export default function LocalLibraryScreen({
                       <TouchableOpacity
                         key={folderName}
                         style={styles.folderCard}
-                        onPress={() => setSelectedFolder(folderName)}
+                        onPress={() => {
+                          setSelectedFolder(folderName);
+                          setFolderLimit(60);
+                        }}
                         activeOpacity={0.7}
                       >
                         <View style={styles.folderIconBox}>
@@ -486,7 +493,7 @@ export default function LocalLibraryScreen({
           {/* ==================== SUB-TAB 3: ARTISTS ==================== */}
           {activeSubTab === 'artists' && (
             <View style={styles.artistsList}>
-              {Object.keys(artistsMap).map((artistName) => (
+              {Object.keys(artistsMap).slice(0, artistsLimit).map((artistName) => (
                 <View key={artistName} style={styles.artistCard}>
                   <View style={styles.artistAvatar}>
                     <Text style={styles.artistInitial}>{artistName.charAt(0).toUpperCase()}</Text>
@@ -505,6 +512,7 @@ export default function LocalLibraryScreen({
                   </TouchableOpacity>
                 </View>
               ))}
+              <ShowMoreButton remaining={Object.keys(artistsMap).length - artistsLimit} onPress={() => setArtistsLimit((n) => n + 80)} />
             </View>
           )}
         </>
@@ -906,3 +914,5 @@ const styles = StyleSheet.create({
     borderColor: '#E2E6EC'
   }
 });
+
+export default React.memo(LocalLibraryScreen);

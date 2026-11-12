@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ShowMoreButton from '../components/ShowMoreButton';
 import { 
   View, 
   Text, 
@@ -11,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function PlaylistsScreen({
+function PlaylistsScreen({
   tracks = [],
   favorites = [],
   onPlayTrack,
@@ -28,6 +29,7 @@ export default function PlaylistsScreen({
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [isAddSongsVisible, setIsAddSongsVisible] = useState(false);
   const [songSearchQuery, setSongSearchQuery] = useState('');
+  const [pickerLimit, setPickerLimit] = useState(80);
 
   // Favorite tracks list
   const favoriteTracks = tracks.filter((t) => favorites.includes(t.id));
@@ -252,7 +254,7 @@ export default function PlaylistsScreen({
               {/* Songs List */}
               <ScrollView style={styles.modalSongsList}>
                 {filteredAvailableTracks.length > 0 ? (
-                  filteredAvailableTracks.map((item) => {
+                  filteredAvailableTracks.slice(0, pickerLimit).map((item) => {
                     const isIn = (selectedPlaylist.trackIds || []).includes(item.id);
                     return (
                       <TouchableOpacity
@@ -287,6 +289,7 @@ export default function PlaylistsScreen({
                     <Text style={{ color: '#9CA3AF', fontSize: 13 }}>No songs matching search.</Text>
                   </View>
                 )}
+                <ShowMoreButton remaining={filteredAvailableTracks.length - pickerLimit} onPress={() => setPickerLimit((n) => n + 80)} />
               </ScrollView>
 
               <TouchableOpacity 
@@ -1060,3 +1063,5 @@ const styles = StyleSheet.create({
     fontSize: 14
   }
 });
+
+export default React.memo(PlaylistsScreen);

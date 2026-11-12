@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
@@ -30,6 +30,30 @@ import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 
+// Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
+const isScannedTrack = (t) => String(t.id).startsWith('local-scan-') || String(t.id).startsWith('local-doc-');
+function mergeScan(prev, foundTracks) {
+  const freshById = new Map(foundTracks.map((t) => [t.id, t]));
+  const known = new Set(prev.map((t) => t.id));
+  const newFound = foundTracks.filter((t) => !known.has(t.id));
+  let changed = newFound.length > 0;
+  const kept = [];
+  prev.forEach((t) => {
+    if (isScannedTrack(t) && !freshById.has(t.id)) {
+      changed = true;
+      return;
+    }
+    const fresh = freshById.get(t.id);
+    if (fresh && fresh.uri !== t.uri) {
+      changed = true;
+      kept.push({ ...t, uri: fresh.uri });
+    } else {
+      kept.push(t);
+    }
+  });
+  return changed ? [...newFound, ...kept] : prev;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [tracks, setTracks] = useState([]);
@@ -56,9 +80,12 @@ export default function App() {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
+  const [repeatMode, setRepeatMode] = useState('off'); // 'off' | 'all' | 'one'
+  const isRepeat = repeatMode !== 'off';
   const [favorites, setFavorites] = useState([]);
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
+  const [scanStatus, setScanStatus] = useState({ state: 'idle', count: 0, latest: '' });
+  const scanningRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
   const [streakData, setStreakData] = useState({ streakDays: 1 });
@@ -74,7 +101,7 @@ export default function App() {
   const playbackTimer = useRef(null);
   const sleepTimerRef = useRef(null);
   const handleNextTrackRef = useRef(null);
-  const isRepeatRef = useRef(isRepeat);
+  const repeatModeRef = useRef(repeatMode);
   const isShuffleRef = useRef(isShuffle);
   const crossfadeRef = useRef(0);
   const sleepEndRef = useRef(null);
@@ -175,8 +202,8 @@ export default function App() {
   }, [isPlaying, currentTrack?.id]);
 
   useEffect(() => {
-    isRepeatRef.current = isRepeat;
-  }, [isRepeat]);
+    repeatModeRef.current = repeatMode;
+  }, [repeatMode]);
 
   useEffect(() => {
     isShuffleRef.current = isShuffle;
@@ -266,45 +293,7 @@ export default function App() {
         } catch {}
 
         // Background scan: every song on the phone (Android) / in Selah's folder (iPhone)
-        ScannerService.scanDeviceAudio().then((scanResult) => {
-          if (!scanResult || !scanResult.success) return;
-          const foundTracks = scanResult.tracks || [];
-          const freshById = new Map(foundTracks.map((t) => [t.id, t]));
-          const isScanned = (t) => String(t.id).startsWith('local-scan-') || String(t.id).startsWith('local-doc-');
-
-          // Add new songs, drop songs that are gone from the phone, refresh moved file paths
-          const mergeWith = (prev) => {
-            const known = new Set(prev.map((t) => t.id));
-            const newFound = foundTracks.filter((t) => !known.has(t.id));
-            let changed = newFound.length > 0;
-            const kept = [];
-            prev.forEach((t) => {
-              if (isScanned(t) && !freshById.has(t.id)) {
-                changed = true;
-                return;
-              }
-              const fresh = freshById.get(t.id);
-              if (fresh && fresh.uri !== t.uri) {
-                changed = true;
-                kept.push({ ...t, uri: fresh.uri });
-              } else {
-                kept.push(t);
-              }
-            });
-            return changed ? [...newFound, ...kept] : prev;
-          };
-
-          setLocalTracks((prev) => {
-            const merged = mergeWith(prev);
-            if (merged !== prev) StorageService.saveLocalTracks(merged);
-            return merged;
-          });
-          setTracks((prev) => mergeWith(prev));
-          if (foundTracks.length > 0) {
-            setCurrentTrack((prev) => prev || foundTracks[0]);
-            setDuration((prev) => prev || foundTracks[0].duration || 0);
-          }
-        }).catch((scanErr) => console.log('Auto-scan background notice:', scanErr));
+        runDeviceScan();
       } catch (e) {
         console.log('Error initializing app storage:', e);
       }
@@ -477,7 +466,7 @@ export default function App() {
             applyVolume(player, status.currentTime, status.duration || track.duration || 0);
           }
           if (status.didJustFinish) {
-            if (isRepeatRef.current) {
+            if (repeatModeRef.current === 'one') {
               try {
                 player.seekTo(0);
                 player.play();
@@ -485,7 +474,7 @@ export default function App() {
                 handleNextTrackRef.current?.();
               }
             } else {
-              handleNextTrackRef.current?.();
+              handleNextTrackRef.current?.({ auto: true });
             }
           }
         });
@@ -497,9 +486,10 @@ export default function App() {
   }, [playbackSpeed, applyVolume]);
 
   // Next Track
-  const handleNextTrack = useCallback(() => {
+  const handleNextTrack = useCallback((opts) => {
     if (queue.length === 0) return;
     const keep = { keepQueue: true };
+    const auto = Boolean(opts && opts.auto === true); // true when a song finished by itself
 
     if (isShuffleRef.current || isShuffle) {
       const pool = queue.length > 1 ? queue.filter((t) => t.id !== currentTrack?.id) : queue;
@@ -510,6 +500,16 @@ export default function App() {
     const currentIdx = queue.findIndex((t) => t.id === currentTrack?.id);
     if (currentIdx !== -1 && currentIdx < queue.length - 1) {
       handlePlayTrack(queue[currentIdx + 1], keep);
+    } else if (auto && repeatModeRef.current !== 'all') {
+      // End of the list with repeat off: stop instead of starting over
+      setIsPlaying(false);
+      setCurrentPosition(0);
+      if (soundRef.current) {
+        try {
+          soundRef.current.pause();
+          soundRef.current.seekTo(0);
+        } catch {}
+      }
     } else {
       handlePlayTrack(queue[0], keep);
     }
@@ -521,7 +521,7 @@ export default function App() {
 
   // Previous Track
   const handlePrevTrack = useCallback(() => {
-    if (currentPosition > 4) {
+    if (positionRef.current > 4) {
       setCurrentPosition(0);
       if (soundRef.current) {
         try {
@@ -538,10 +538,10 @@ export default function App() {
     } else {
       handlePlayTrack(queue[queue.length - 1], keep);
     }
-  }, [currentPosition, queue, currentTrack, handlePlayTrack]);
+  }, [queue, currentTrack, handlePlayTrack]);
 
   // Toggle Play / Pause
-  const handleTogglePlay = (explicitState) => {
+  const handleTogglePlay = useCallback((explicitState) => {
     if (!currentTrack) return;
     const nextState = typeof explicitState === 'boolean' ? explicitState : !isPlaying;
 
@@ -554,7 +554,7 @@ export default function App() {
       !currentTrack.youtubeId &&
       (currentTrack.asset || currentTrack.uri)
     ) {
-      handlePlayTrack(currentTrack, { keepQueue: true, resumeAt: currentPosition });
+      handlePlayTrack(currentTrack, { keepQueue: true, resumeAt: positionRef.current });
       return;
     }
 
@@ -572,10 +572,10 @@ export default function App() {
         } catch {}
       }
     }
-  };
+  }, [currentTrack, isPlaying, handlePlayTrack]);
 
   // Interactive Audio Seeking (Scrubber)
-  const handleSeek = (targetSeconds) => {
+  const handleSeek = useCallback((targetSeconds) => {
     setCurrentPosition(targetSeconds);
     if (soundRef.current) {
       try {
@@ -584,7 +584,7 @@ export default function App() {
         console.log('Error seeking position:', e);
       }
     }
-  };
+  }, []);
 
   // Playback Speed Controller
   const handleSetSpeed = (newSpeed) => {
@@ -646,15 +646,17 @@ export default function App() {
 
   // Fallback Time ticker (only active when native audio player is not attached)
   useEffect(() => {
-    if (isPlaying && !soundRef.current) {
+    // YouTube videos report their own time, so the ticker is only for files without a player
+    const isVideo = currentTrack?.sourceType === 'youtube' || Boolean(currentTrack?.youtubeId);
+    if (isPlaying && !soundRef.current && !isVideo) {
       playbackTimer.current = setInterval(() => {
         setCurrentPosition((prev) => {
           if (prev >= duration && duration > 0) {
-            if (isRepeat) {
+            if (repeatMode === 'one') {
               handleSeek(0);
               return 0;
             }
-            handleNextTrack();
+            handleNextTrack({ auto: true });
             return 0;
           }
           return prev + 1;
@@ -671,10 +673,10 @@ export default function App() {
         clearInterval(playbackTimer.current);
       }
     };
-  }, [isPlaying, duration, isRepeat, handleNextTrack]);
+  }, [isPlaying, duration, repeatMode, handleNextTrack, currentTrack?.sourceType, currentTrack?.youtubeId]);
 
   // Toggle Favorite with permanent persistence
-  const handleToggleFavorite = (trackId) => {
+  const handleToggleFavorite = useCallback((trackId) => {
     setFavorites((prev) => {
       const updated = prev.includes(trackId)
         ? prev.filter((id) => id !== trackId)
@@ -682,20 +684,20 @@ export default function App() {
       StorageService.saveFavorites(updated);
       return updated;
     });
-  };
+  }, []);
 
   // Add individual local track
-  const handleAddLocalTrack = (newTrack) => {
+  const handleAddLocalTrack = useCallback((newTrack) => {
     setLocalTracks((prev) => {
       const updated = [newTrack, ...prev];
       StorageService.saveLocalTracks(updated);
       return updated;
     });
     setTracks((prev) => [newTrack, ...prev]);
-  };
+  }, []);
 
   // Batch add local tracks (from auto-scan or multi-import)
-  const handleBatchAddLocalTracks = (newTracks) => {
+  const handleBatchAddLocalTracks = useCallback((newTracks) => {
     if (!newTracks || newTracks.length === 0) return;
     setLocalTracks((prev) => {
       const existingIds = new Set(prev.map(t => t.id || t.uri));
@@ -709,24 +711,79 @@ export default function App() {
       const fresh = newTracks.filter(t => !existingIds.has(t.id || t.uri));
       return [...fresh, ...prev];
     });
-    if (newTracks.length > 0 && !currentTrack) {
-      setCurrentTrack(newTracks[0]);
-      setDuration(newTracks[0].duration || 0);
+    if (newTracks.length > 0) {
+      setCurrentTrack((prev) => prev || newTracks[0]);
+      setDuration((prev) => prev || newTracks[0].duration || 0);
     }
-  };
+  }, []);
+
+  // Apply a finished scan (adds new songs, removes deleted ones)
+  const applyScanResult = useCallback((scanResult) => {
+    if (!scanResult || !scanResult.success) return;
+    const found = scanResult.tracks || [];
+    setLocalTracks((prev) => {
+      const merged = mergeScan(prev, found);
+      if (merged !== prev) StorageService.saveLocalTracks(merged);
+      return merged;
+    });
+    setTracks((prev) => mergeScan(prev, found));
+    if (found.length > 0) {
+      setCurrentTrack((prev) => prev || found[0]);
+      setDuration((prev) => prev || found[0].duration || 0);
+    }
+  }, []);
+
+  // Scan for music, adding songs batch by batch so they appear while scanning
+  const runDeviceScan = useCallback(async () => {
+    if (scanningRef.current) return null;
+    scanningRef.current = true;
+    setScanStatus({ state: 'scanning', count: 0, latest: '' });
+    try {
+      const res = await ScannerService.scanDeviceAudio({
+        onProgress: (count, pageTracks) => {
+          if (pageTracks && pageTracks.length > 0) handleBatchAddLocalTracks(pageTracks);
+          setScanStatus({
+            state: 'scanning',
+            count,
+            latest: pageTracks && pageTracks.length > 0 ? pageTracks[pageTracks.length - 1].title : ''
+          });
+        }
+      });
+      applyScanResult(res);
+      if (res && res.success) {
+        setScanStatus({ state: 'done', count: (res.tracks || []).length, latest: '' });
+      } else if (res && res.error === 'Permission not granted') {
+        setScanStatus({ state: 'denied', count: 0, latest: '' });
+      } else {
+        setScanStatus({ state: 'error', count: 0, latest: '', message: (res && res.error) || 'Scan failed' });
+      }
+      return res;
+    } catch (err) {
+      setScanStatus({ state: 'error', count: 0, latest: '', message: err?.message || 'Scan failed' });
+      return null;
+    } finally {
+      scanningRef.current = false;
+    }
+  }, [applyScanResult, handleBatchAddLocalTracks]);
+
+  // YouTube reports the real video time
+  const handleVideoProgress = useCallback((seconds, total) => {
+    setCurrentPosition(Math.floor(seconds));
+    if (total > 0) setDuration(Math.floor(total));
+  }, []);
 
   // Delete local track
-  const handleDeleteLocalTrack = (trackId) => {
+  const handleDeleteLocalTrack = useCallback((trackId) => {
     setLocalTracks((prev) => {
       const updated = prev.filter((t) => t.id !== trackId);
       StorageService.saveLocalTracks(updated);
       return updated;
     });
     setTracks((prev) => prev.filter((t) => t.id !== trackId));
-  };
+  }, []);
 
   // Add YouTube Track with duplicate check
-  const handleAddYouTubeTrack = (newTrack) => {
+  const handleAddYouTubeTrack = useCallback((newTrack) => {
     if (!newTrack) return;
     setTracks((prev) => {
       if (prev.some((t) => t.id === newTrack.id || (newTrack.youtubeId && t.youtubeId === newTrack.youtubeId))) {
@@ -734,10 +791,10 @@ export default function App() {
       }
       return [newTrack, ...prev];
     });
-  };
+  }, []);
 
   // Create new custom playlist
-  const handleCreatePlaylist = (name, initialTrackId) => {
+  const handleCreatePlaylist = useCallback((name, initialTrackId) => {
     const newPl = {
       id: `pl-${Date.now()}`,
       name,
@@ -750,19 +807,19 @@ export default function App() {
       return updated;
     });
     Alert.alert("Playlist Created 🎵", `"${name}" has been created!`);
-  };
+  }, []);
 
   // Delete custom playlist
-  const handleDeletePlaylist = (playlistId) => {
+  const handleDeletePlaylist = useCallback((playlistId) => {
     setPlaylists((prev) => {
       const updated = prev.filter((p) => p.id !== playlistId);
       StorageService.savePlaylists(updated);
       return updated;
     });
-  };
+  }, []);
 
   // Toggle track inside a playlist
-  const handleToggleTrackInPlaylist = (playlistId, trackId) => {
+  const handleToggleTrackInPlaylist = useCallback((playlistId, trackId) => {
     setPlaylists((prev) => {
       const updated = prev.map((pl) => {
         if (pl.id !== playlistId) return pl;
@@ -775,10 +832,10 @@ export default function App() {
       StorageService.savePlaylists(updated);
       return updated;
     });
-  };
+  }, []);
 
   // Play entire playlist
-  const handlePlayPlaylist = (playlistTracks) => {
+  const handlePlayPlaylist = useCallback((playlistTracks) => {
     if (!playlistTracks || playlistTracks.length === 0) return;
     setTracks((prev) => {
       const existingIds = new Set(prev.map(t => t.id));
@@ -787,17 +844,17 @@ export default function App() {
     });
     setQueueOverride(playlistTracks);
     handlePlayTrack(playlistTracks[0]);
-  };
+  }, [handlePlayTrack]);
 
   // Open Add to Playlist Modal
-  const handleOpenAddToPlaylist = (track) => {
+  const handleOpenAddToPlaylist = useCallback((track) => {
     setPlaylistModalTrack(track);
-  };
+  }, []);
 
   // Open Set Ringtone / Caller Tune Modal
-  const handleOpenSetRingtone = (track) => {
+  const handleOpenSetRingtone = useCallback((track) => {
     setRingtoneModalTrack(track || currentTrack);
-  };
+  }, [currentTrack]);
 
   // Scripture & Prayer Bookmarks
   const handleAddBookmark = (entry) => {
@@ -854,15 +911,35 @@ export default function App() {
   };
 
   // Filtered tracks
-  const visibleTracks = tracks.filter((t) => {
-    if (!searchQuery) return true;
+  const visibleTracks = useMemo(() => {
+    if (!searchQuery) return tracks;
     const q = searchQuery.toLowerCase();
-    return (
-      t.title.toLowerCase().includes(q) ||
-      t.artist.toLowerCase().includes(q) ||
-      (t.category && t.category.toLowerCase().includes(q))
+    return tracks.filter(
+      (t) =>
+        String(t.title || '').toLowerCase().includes(q) ||
+        String(t.artist || '').toLowerCase().includes(q) ||
+        String(t.category || '').toLowerCase().includes(q)
     );
-  });
+  }, [tracks, searchQuery]);
+
+  // Stable actions, so screens don't redraw every second while music plays
+  const homeDevotion = useMemo(
+    () => ({ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 1 }),
+    [devotionalIndex, streakData.streakDays]
+  );
+  const openStats = useCallback(() => setIsStatsVisible(true), []);
+  const navigateToYouTube = useCallback((query) => {
+    if (query) setSearchQuery(query);
+    setActiveTab('youtube');
+  }, []);
+  const nextDevotional = useCallback(() => setDevotionalIndex((prev) => (prev + 1) % DEVOTIONAL_COLLECTION.length), []);
+  const openDigitalLibraries = useCallback(() => setIsDigitalLibrariesVisible(true), []);
+  const openLibrary = useCallback(() => setActiveTab('library'), []);
+  const openPlaylists = useCallback(() => setActiveTab('playlists'), []);
+  const openEditTags = useCallback((track) => setTagEditTrack(track), []);
+  const toggleShuffle = useCallback(() => setIsShuffle((prev) => !prev), []);
+  // Repeat: off → all songs → this song → off
+  const toggleRepeat = useCallback(() => setRepeatMode((m) => (m === 'off' ? 'all' : m === 'all' ? 'one' : 'off')), []);
 
   // The Player tab is the full player (Now Playing / Lyrics / Up Next / Library)
   const openNowPlaying = () => {
@@ -894,7 +971,7 @@ export default function App() {
       <View style={styles.mainContent}>
         {activeTab === 'home' && (
           <HomeScreen
-            devotion={{ ...DEVOTIONAL_COLLECTION[devotionalIndex], streakDays: streakData.streakDays || 1 }}
+            devotion={homeDevotion}
             tracks={visibleTracks}
             currentTrack={currentTrack}
             isPlaying={isPlaying}
@@ -904,16 +981,17 @@ export default function App() {
             moodTags={MOOD_TAGS}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             recentTracks={recentTracks}
-            onOpenStats={() => setIsStatsVisible(true)}
+            onOpenStats={openStats}
             searchQuery={searchQuery}
-            onNavigateToYouTube={(query) => {
-              if (query) setSearchQuery(query);
-              setActiveTab('youtube');
-            }}
+            onNavigateToYouTube={navigateToYouTube}
             favoriteArtists={favoriteArtists}
-            onNextDevotional={() => setDevotionalIndex((prev) => (prev + 1) % DEVOTIONAL_COLLECTION.length)}
-            onOpenDigitalLibraries={() => setIsDigitalLibrariesVisible(true)}
-            onOpenLibrary={() => setActiveTab('library')}
+            onNextDevotional={nextDevotional}
+            onOpenDigitalLibraries={openDigitalLibraries}
+            onOpenLibrary={openLibrary}
+            playlists={playlists}
+            onPlayPlaylist={handlePlayPlaylist}
+            onOpenPlaylists={openPlaylists}
+            scanStatus={scanStatus}
           />
         )}
 
@@ -935,9 +1013,10 @@ export default function App() {
             onNext={handleNextTrack}
             onPrev={handlePrevTrack}
             isShuffle={isShuffle}
-            onToggleShuffle={() => setIsShuffle((prev) => !prev)}
+            onToggleShuffle={toggleShuffle}
             isRepeat={isRepeat}
-            onToggleRepeat={() => setIsRepeat((prev) => !prev)}
+            repeatMode={repeatMode}
+            onToggleRepeat={toggleRepeat}
             isFavorite={favorites.includes(currentTrack?.id)}
             onToggleFavorite={handleToggleFavorite}
             currentPosition={currentPosition}
@@ -973,7 +1052,9 @@ export default function App() {
             onDeleteTrack={handleDeleteLocalTrack}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             onOpenSetRingtone={handleOpenSetRingtone}
-            onOpenEditTags={(track) => setTagEditTrack(track)}
+            onOpenEditTags={openEditTags}
+            scanStatus={scanStatus}
+            onScan={runDeviceScan}
           />
         )}
 
@@ -995,11 +1076,14 @@ export default function App() {
             onAddYouTubeTrack={handleAddYouTubeTrack}
             onOpenAddToPlaylist={handleOpenAddToPlaylist}
             isShuffle={isShuffle}
-            onToggleShuffle={() => setIsShuffle((prev) => !prev)}
+            onToggleShuffle={toggleShuffle}
             isRepeat={isRepeat}
-            onToggleRepeat={() => setIsRepeat((prev) => !prev)}
+            repeatMode={repeatMode}
+            onToggleRepeat={toggleRepeat}
             onPrevTrack={handlePrevTrack}
             onNextTrack={handleNextTrack}
+            isActive={activeTab === 'youtube'}
+            onVideoProgress={handleVideoProgress}
           />
         </View>
 
@@ -1139,7 +1223,7 @@ export default function App() {
         visible={isHeaderMenuVisible}
         onClose={() => setIsHeaderMenuVisible(false)}
         onOpenEq={() => setIsEqVisible(true)}
-        onOpenStats={() => setIsStatsVisible(true)}
+        onOpenStats={openStats}
         onOpenSleepTimer={() => setIsEqVisible(true)}
         streakDays={streakData?.streakDays || 1}
       />

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import ShowMoreButton from '../components/ShowMoreButton';
 import {
   View,
   Text,
@@ -23,7 +24,7 @@ const PLAYER_CATEGORIES = [
   { id: 'genres', label: 'Genres', icon: 'options' }
 ];
 
-function LibraryBrowser({
+function LibraryBrowserImpl({
   tracks = [],
   localTracks = [],
   recentTracks = [],
@@ -36,6 +37,7 @@ function LibraryBrowser({
   onOpenAddToPlaylist
 }) {
   const [activeCategory, setActiveCategory] = useState('suggested');
+  const [songsLimit, setSongsLimit] = useState(80);
 
   // Combined tracks pool
   const allTracks = useMemo(() => {
@@ -331,7 +333,8 @@ function LibraryBrowser({
               <Text style={styles.sectionTitle}>All Songs</Text>
               <Text style={styles.sectionCount}>{allTracks.length} tracks available</Text>
             </View>
-            {allTracks.map((t, idx) => renderTrackItem(t, idx))}
+            {allTracks.slice(0, songsLimit).map((t, idx) => renderTrackItem(t, idx))}
+            <ShowMoreButton remaining={allTracks.length - songsLimit} onPress={() => setSongsLimit((n) => n + 80)} />
           </View>
         )}
 
@@ -784,6 +787,8 @@ const styles = StyleSheet.create({
   }
 });
 
+const LibraryBrowser = React.memo(LibraryBrowserImpl);
+
 const PLAYER_VIEWS = [
   { id: 'now', label: 'Now Playing', icon: 'disc' },
   { id: 'lyrics', label: 'Lyrics', icon: 'text' },
@@ -796,6 +801,7 @@ const PLAYER_VIEWS = [
  */
 export default function PlayerScreen(props) {
   const { view = 'now', onChangeView } = props;
+  const openNowPlaying = useCallback(() => onChangeView && onChangeView('now'), [onChangeView]);
   return (
     <View style={viewStyles.container}>
       <View style={viewStyles.segmentWrap}>
@@ -820,7 +826,18 @@ export default function PlayerScreen(props) {
       </View>
 
       {view === 'library' ? (
-        <LibraryBrowser {...props} onOpenFullPlayer={() => onChangeView && onChangeView('now')} />
+        <LibraryBrowser
+          tracks={props.tracks}
+          localTracks={props.localTracks}
+          recentTracks={props.recentTracks}
+          favorites={props.favorites}
+          playlists={props.playlists}
+          currentTrack={props.currentTrack}
+          isPlaying={props.isPlaying}
+          onPlayTrack={props.onPlayTrack}
+          onOpenFullPlayer={openNowPlaying}
+          onOpenAddToPlaylist={props.onOpenAddToPlaylist}
+        />
       ) : props.currentTrack ? (
         <PlayerPanel {...props} view={view} onChangeView={onChangeView} />
       ) : (

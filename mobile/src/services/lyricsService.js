@@ -81,9 +81,11 @@ function rankCandidates(results, title, artist) {
     const lyricsScore = (r.syncedLyrics ? 3 : 0) + (r.plainLyrics ? 1 : 0);
     return { r, titleScore, score: lyricsScore + titleScore * 2 + artistScore * 2 };
   });
-  const titleMatches = scored.filter((s) => s.titleScore > 0);
-  const pool = titleMatches.length > 0 ? titleMatches : scored;
-  return pool.sort((a, b) => b.score - a.score).map((s) => s.r);
+  // Only keep results whose song title matches - wrong lyrics are worse than none
+  return scored
+    .filter((s) => s.titleScore > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((s) => s.r);
 }
 
 /**
@@ -116,6 +118,39 @@ export async function searchLyrics({ title, artist }) {
       synced: r.syncedLyrics || null,
       plain: r.plainLyrics || null
     }));
+}
+
+const VIDEO_NOISE =
+  /\b(official( music)?( video| audio)?|music video|lyrics?( video)?|lyric video|audio|visuali[sz]er|live( session| performance)?|hd|4k|full (song|album|set)|worship set)\b/gi;
+
+/**
+ * YouTube titles look like "Artist - Song (Official Video)" or "Song | Artist".
+ * Tries the likely song/artist splits and returns the first matching lyrics.
+ */
+export async function searchLyricsForVideo(videoTitle, channel) {
+  const cleaned = cleanTitle(videoTitle).replace(VIDEO_NOISE, ' ').replace(/\s+/g, ' ').trim();
+  const parts = cleaned
+    .split(/\s+[-–—|:]\s+|\s*\/\/\s*/)
+    .map((x) => x.replace(/^[\s\-–—|]+|[\s\-–—|]+$/g, '').trim())
+    .filter(Boolean);
+
+  const attempts = [];
+  if (parts.length >= 2) {
+    attempts.push({ title: parts[1], artist: parts[0] });
+    attempts.push({ title: parts[0], artist: parts[1] });
+  }
+  attempts.push({ title: parts[0] || cleaned, artist: channel });
+  attempts.push({ title: cleaned, artist: '' });
+
+  const tried = new Set();
+  for (const attempt of attempts) {
+    const key = `${attempt.title}|${attempt.artist}`;
+    if (!attempt.title || tried.has(key)) continue;
+    tried.add(key);
+    const found = await searchLyrics(attempt);
+    if (found.length > 0) return found;
+  }
+  return [];
 }
 
 /** Prefer synced versions, then the one whose length is closest to the real song length */
@@ -169,5 +204,5 @@ export function parsePlain(text) {
   return out;
 }
 
-export const LyricsService = { searchLyrics, parseLrc, parsePlain, orderCandidates, isPlaceholderLyrics };
+export const LyricsService = { searchLyrics, searchLyricsForVideo, parseLrc, parsePlain, orderCandidates, isPlaceholderLyrics };
 export default LyricsService;

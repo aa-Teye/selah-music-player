@@ -184,8 +184,9 @@ async function scanAndroidMediaStore(onProgress) {
       first: PAGE_SIZE,
       after
     });
+    const before = tracks.length;
     (res?.assets || []).forEach(add);
-    if (onProgress) onProgress(tracks.length);
+    if (onProgress) onProgress(tracks.length, tracks.slice(before));
     if (!res?.hasNextPage || !res.endCursor || res.endCursor === after) break;
     after = res.endCursor;
   }
@@ -199,9 +200,11 @@ async function scanAndroidMediaStore(onProgress) {
         first: PAGE_SIZE,
         after: afterOther
       });
+      const before = tracks.length;
       (res?.assets || []).forEach((asset) => {
         if (isAudioFileName(asset.filename || asset.uri)) add(asset);
       });
+      if (onProgress && tracks.length > before) onProgress(tracks.length, tracks.slice(before));
       if (!res?.hasNextPage || !res.endCursor || res.endCursor === afterOther) break;
       afterOther = res.endCursor;
     }
@@ -218,6 +221,7 @@ async function scanAndroidMediaStore(onProgress) {
  */
 export async function scanDeviceAudio({ onProgress } = {}) {
   const fromAppFolder = scanAppFolder();
+  if (onProgress && fromAppFolder.length > 0) onProgress(fromAppFolder.length, fromAppFolder);
 
   if (Platform.OS !== 'android') {
     return { success: true, tracks: fromAppFolder, platformScan: 'app-folder' };
@@ -229,7 +233,9 @@ export async function scanDeviceAudio({ onProgress } = {}) {
   }
 
   try {
-    const fromPhone = await scanAndroidMediaStore(onProgress);
+    const fromPhone = await scanAndroidMediaStore(
+      onProgress ? (count, page) => onProgress(fromAppFolder.length + count, page) : undefined
+    );
     return { success: true, tracks: [...fromPhone, ...fromAppFolder], platformScan: 'android' };
   } catch (err) {
     console.log('Scan device audio notice:', err);

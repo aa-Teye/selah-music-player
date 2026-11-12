@@ -74,7 +74,7 @@ export default function PlayerPanel({
   onPrev,
   isShuffle,
   onToggleShuffle,
-  isRepeat,
+  repeatMode = 'off',
   onToggleRepeat,
   isFavorite,
   onToggleFavorite,
@@ -291,9 +291,18 @@ export default function PlayerPanel({
           <TouchableOpacity onPress={onNext} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
             <Ionicons name="play-skip-forward" size={28} color="#12141A" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={onToggleRepeat} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
-            <Ionicons name="repeat" size={22} color={isRepeat ? '#12141A' : '#B0B6C2'} />
-            {isRepeat && <View style={styles.activeDot} />}
+          <TouchableOpacity
+            onPress={onToggleRepeat}
+            hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+            testID="repeat-button"
+            accessibilityLabel={repeatMode === 'one' ? 'Repeat this song' : repeatMode === 'all' ? 'Repeat all songs' : 'Repeat off'}
+          >
+            <MaterialCommunityIcons
+              name={repeatMode === 'one' ? 'repeat-once' : repeatMode === 'all' ? 'repeat' : 'repeat-off'}
+              size={24}
+              color={repeatMode !== 'off' ? '#12141A' : '#B0B6C2'}
+            />
+            {repeatMode !== 'off' && <View style={styles.activeDot} />}
           </TouchableOpacity>
         </View>
 

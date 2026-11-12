@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { StorageService } from '../services/storageService';
 import {
   searchLyrics,
+  searchLyricsForVideo,
   parseLrc,
   parsePlain,
   orderCandidates,
@@ -29,7 +30,8 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
   const trackId = track?.id || null;
   const trackTitle = track?.title || '';
   const trackArtist = track?.artist || '';
-  const canSearch = Boolean(track) && track.sourceType !== 'youtube' && !track.youtubeId && !String(trackId).startsWith('track-');
+  const isVideo = Boolean(track) && (track.sourceType === 'youtube' || Boolean(track.youtubeId));
+  const canSearch = Boolean(track) && !String(trackId).startsWith('track-');
   const builtInText = track && !isPlaceholderLyrics(track.lyrics) ? track.lyrics : null;
 
   const [data, setData] = useState({
@@ -90,7 +92,9 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
       }
 
       try {
-        const found = await searchLyrics({ title: trackTitle, artist: trackArtist });
+        const found = isVideo
+          ? await searchLyricsForVideo(trackTitle, trackArtist)
+          : await searchLyrics({ title: trackTitle, artist: trackArtist });
         if (requestId !== requestRef.current) return;
         const usable = found.filter((c) => c.synced || c.plain || c.instrumental);
         StorageService.saveLyricsCache(trackId, {
@@ -119,7 +123,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         });
       }
     },
-    [trackId, trackTitle, trackArtist, canSearch, builtInText]
+    [trackId, trackTitle, trackArtist, canSearch, builtInText, isVideo]
   );
 
   useEffect(() => {

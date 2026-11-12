@@ -85,7 +85,7 @@ const DEFAULT_FEATURED = [
   }
 ];
 
-export default function YouTubeWatchScreen({
+function YouTubeWatchScreen({
   currentTrack,
   isPlaying,
   searchQuery = '',
@@ -97,8 +97,11 @@ export default function YouTubeWatchScreen({
   onToggleShuffle,
   isRepeat = false,
   onToggleRepeat,
+  repeatMode: repeatModeProp,
   onPrevTrack,
-  onNextTrack
+  onNextTrack,
+  isActive = false,
+  onVideoProgress
 }) {
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [activeChip, setActiveChip] = useState('curated');
@@ -109,7 +112,7 @@ export default function YouTubeWatchScreen({
   const [isCustomExpanded, setIsCustomExpanded] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
-  const [repeatMode, setRepeatMode] = useState(isRepeat ? 'all' : 'off'); // 'off' | 'all' | 'one'
+  const repeatMode = repeatModeProp || (isRepeat ? 'all' : 'off'); // one repeat setting for the whole app
   const [selectedYtVideo, setSelectedYtVideo] = useState(
     currentTrack?.sourceType === 'youtube' && currentTrack?.youtubeId 
       ? currentTrack 
@@ -125,39 +128,37 @@ export default function YouTubeWatchScreen({
     }
   }, [currentTrack]);
 
-  // Synchronize when parent isPlaying prop changes (only for active YouTube track)
+  // The video only plays while a YouTube video is Selah's current song.
+  // As soon as you start one of your own songs, the video pauses.
+  const ytIsCurrent = currentTrack?.sourceType === 'youtube' || Boolean(currentTrack?.youtubeId);
   useEffect(() => {
-    if (currentTrack?.sourceType === 'youtube') {
-      setIsYtPlaying(isPlaying);
-    }
-  }, [isPlaying, currentTrack?.sourceType]);
+    setIsYtPlaying(ytIsCurrent ? isPlaying : false);
+  }, [isPlaying, ytIsCurrent, currentTrack?.id]);
+
+  // Tell the app where the video really is (keeps the progress bar and lyrics in time)
+  useEffect(() => {
+    if (!ytIsCurrent || !isYtPlaying || !isPlayerReady || !onVideoProgress) return undefined;
+    const timer = setInterval(async () => {
+      try {
+        const player = playerRef.current;
+        if (!player || typeof player.getCurrentTime !== 'function') return;
+        const [time, total] = await Promise.all([
+          player.getCurrentTime(),
+          typeof player.getDuration === 'function' ? player.getDuration() : Promise.resolve(0)
+        ]);
+        if (typeof time === 'number') onVideoProgress(time, typeof total === 'number' ? total : 0);
+      } catch {}
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [ytIsCurrent, isYtPlaying, isPlayerReady, onVideoProgress]);
 
   const scrollRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const playerRef = useRef(null);
 
-  // Sync external repeat prop with local repeat mode
-  useEffect(() => {
-    if (isRepeat && repeatMode === 'off') {
-      setRepeatMode('all');
-    } else if (!isRepeat && repeatMode !== 'off') {
-      setRepeatMode('off');
-    }
-  }, [isRepeat]);
 
   const cycleRepeatMode = () => {
-    setRepeatMode((prev) => {
-      let next = 'off';
-      if (prev === 'off') next = 'all';
-      else if (prev === 'all') next = 'one';
-      else next = 'off';
-
-      if (onToggleRepeat) {
-        if (next !== 'off' && !isRepeat) onToggleRepeat();
-        else if (next === 'off' && isRepeat) onToggleRepeat();
-      }
-      return next;
-    });
+    if (onToggleRepeat) onToggleRepeat();
   };
 
   const toggleShuffleMode = () => {
@@ -324,33 +325,36 @@ export default function YouTubeWatchScreen({
     }
   };
 
-  // Direct toggle play/pause for master button
+  // Master play/pause: always goes through the app, so it really pauses
   const handleTogglePlayBtn = () => {
     const activeVideo = selectedYtVideo || DEFAULT_FEATURED[0];
-    const willPlay = !isYtPlaying;
-
-    setIsYtPlaying(willPlay);
-
-    if (willPlay) {
-      if (!currentTrack || currentTrack.id !== activeVideo.id || currentTrack.sourceType !== 'youtube') {
-        if (onAddYouTubeTrack) {
-          onAddYouTubeTrack(activeVideo);
-        }
-        if (onPlayTrack) {
-          onPlayTrack(activeVideo);
-        }
-      } else if (onTogglePlayPause) {
-        onTogglePlayPause(true);
-      }
-    } else {
-      if (onTogglePlayPause) {
-        onTogglePlayPause(false);
-      }
+    const isThisVideoCurrent = ytIsCurrent && currentTrack?.youtubeId === activeVideo.youtubeId;
+    if (!isThisVideoCurrent) {
+      if (onAddYouTubeTrack) onAddYouTubeTrack(activeVideo);
+      if (onPlayTrack) onPlayTrack(activeVideo);
+      return;
     }
+    const willPlay = !isPlaying;
+    setIsYtPlaying(willPlay);
+    if (onTogglePlayPause) onTogglePlayPause(willPlay);
   };
 
   // Callback when YouTube player state changes inside the iframe
   const handlePlayerStateChange = (state) => {
+    if (!ytIsCurrent) {
+      // A video that is not Selah's current song must never pause, play or replace your song
+      if (state === 'playing') {
+        if (isActive) {
+          // You pressed play inside the YouTube player: switch to the video
+          const video = selectedYtVideo || DEFAULT_FEATURED[0];
+          if (onAddYouTubeTrack) onAddYouTubeTrack(video);
+          if (onPlayTrack) onPlayTrack(video);
+        } else {
+          setIsYtPlaying(false);
+        }
+      }
+      return;
+    }
     if (state === 'playing') {
       setIsYtPlaying(true);
       if (onTogglePlayPause && !isPlaying) {
@@ -561,13 +565,14 @@ export default function YouTubeWatchScreen({
           <TouchableOpacity 
             style={styles.ctrlPlayBtn}
             onPress={handleTogglePlayBtn}
+            testID="yt-play-pause"
             activeOpacity={0.8}
           >
             <Ionicons 
-              name={isYtPlaying ? "pause" : "play"} 
+              name={ytIsCurrent && isPlaying ? "pause" : "play"} 
               size={22} 
               color="#FFFFFF" 
-              style={!isYtPlaying ? { marginLeft: 2 } : null}
+              style={!(ytIsCurrent && isPlaying) ? { marginLeft: 2 } : null}
             />
           </TouchableOpacity>
 
@@ -1342,3 +1347,5 @@ const styles = StyleSheet.create({
     opacity: 0.5
   }
 });
+
+export default React.memo(YouTubeWatchScreen);

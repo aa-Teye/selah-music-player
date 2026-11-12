@@ -16,7 +16,10 @@ jest.mock('react-native-webview', () => {
 jest.mock('react-native-youtube-iframe', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const YoutubePlayer = React.forwardRef(() => React.createElement(View, { testID: 'youtube-player' }));
+  const YoutubePlayer = React.forwardRef((props) => {
+    global.__youtubeProps = props; // lets tests see what the app tells the video to do
+    return React.createElement(View, { testID: 'youtube-player' });
+  });
   return { __esModule: true, default: YoutubePlayer, getYoutubeMeta: jest.fn(async () => ({})) };
 });
 
