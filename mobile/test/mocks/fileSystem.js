@@ -1,0 +1,105 @@
+/* Fake file system (Selah's Documents folder) kept in memory. */
+const FS = {};
+
+function reset(initial) {
+  Object.keys(FS).forEach((k) => delete FS[k]);
+  Object.assign(FS, initial || { 'file:///docs/': { dirs: [], files: {} } });
+}
+reset();
+
+const enc = (name) => String(name).split('/').map(encodeURIComponent).join('/');
+
+function toUri(parts) {
+  let out = '';
+  parts.forEach((p, i) => {
+    const piece = typeof p === 'string' ? (i === 0 ? p : enc(p)) : p.uri;
+    out = i === 0 ? piece : out.replace(/\/$/, '') + '/' + piece.replace(/^\//, '');
+  });
+  return out;
+}
+
+function split(uri) {
+  const u = uri.replace(/\/$/, '');
+  const i = u.lastIndexOf('/');
+  return [u.slice(0, i + 1), decodeURIComponent(u.slice(i + 1))];
+}
+
+class Directory {
+  constructor(...parts) {
+    this.uri = toUri(parts).replace(/\/?$/, '/');
+  }
+  get name() {
+    return split(this.uri)[1];
+  }
+  get exists() {
+    return Boolean(FS[this.uri]);
+  }
+  create() {
+    if (!FS[this.uri]) FS[this.uri] = { dirs: [], files: {} };
+    const [parent, name] = split(this.uri);
+    if (FS[parent] && !FS[parent].dirs.includes(name)) FS[parent].dirs.push(name);
+  }
+  list() {
+    const node = FS[this.uri];
+    if (!node) throw new Error(`Directory does not exist: ${this.uri}`);
+    return [
+      ...node.dirs.map((d) => new Directory(this.uri + enc(d))),
+      ...Object.keys(node.files).map((f) => new File(this.uri + enc(f)))
+    ];
+  }
+}
+
+class File {
+  constructor(...parts) {
+    this.uri = toUri(parts);
+  }
+  get name() {
+    return split(this.uri)[1];
+  }
+  get extension() {
+    const m = this.name.match(/\.[^.]+$/);
+    return m ? m[0] : '';
+  }
+  entry() {
+    const [dir, name] = split(this.uri);
+    return FS[dir] ? FS[dir].files[name] : undefined;
+  }
+  get exists() {
+    return Boolean(this.entry());
+  }
+  get size() {
+    const e = this.entry();
+    return e ? e.size : null;
+  }
+  create() {
+    const [dir, name] = split(this.uri);
+    if (!FS[dir]) throw new Error(`Folder missing for ${this.uri}`);
+    FS[dir].files[name] = { size: 0, content: '' };
+  }
+  async text() {
+    const e = this.entry();
+    if (!e) throw new Error(`File does not exist: ${this.uri}`);
+    return e.content;
+  }
+  async write(content) {
+    const [dir, name] = split(this.uri);
+    if (!FS[dir]) throw new Error(`Folder missing for ${this.uri}`);
+    FS[dir].files[name] = { size: String(content).length, content: String(content) };
+  }
+  async copy(dest) {
+    const [dir, name] = split(dest.uri);
+    FS[dir].files[name] = { ...(this.entry() || { size: 0, content: '' }) };
+  }
+}
+
+module.exports = {
+  Directory,
+  File,
+  Paths: {
+    get document() {
+      return new Directory('file:///docs');
+    }
+  },
+  __FS: FS,
+  __reset: reset
+};

@@ -27,6 +27,7 @@ export default function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
             key={tab.id}
             style={styles.tabButton}
             onPress={() => handlePress(tab.id)}
+            testID={`tab-${tab.id}`}
             activeOpacity={0.7}
           >
             {tab.iconType === 'ion' ? (

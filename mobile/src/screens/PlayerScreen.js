@@ -807,6 +807,7 @@ export default function PlayerScreen(props) {
                 key={v.id}
                 style={[viewStyles.segment, active && viewStyles.segmentActive]}
                 onPress={() => onChangeView && onChangeView(v.id)}
+                testID={`player-view-${v.id}`}
                 activeOpacity={0.8}
               >
                 <Text style={[viewStyles.segmentText, active && viewStyles.segmentTextActive]} numberOfLines={1}>
