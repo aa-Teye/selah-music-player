@@ -69,7 +69,23 @@ class File {
   }
   get size() {
     const e = this.entry();
-    return e ? e.size : null;
+    if (!e) return null;
+    return e.bytes ? e.bytes.length : e.size;
+  }
+  open() {
+    const e = this.entry();
+    if (!e) throw new Error(`File does not exist: ${this.uri}`);
+    const bytes = e.bytes || new Uint8Array(0);
+    return {
+      size: bytes.length,
+      offset: 0,
+      readBytesSync(len) {
+        const out = bytes.subarray(this.offset, this.offset + len);
+        this.offset += out.length;
+        return out;
+      },
+      close() {}
+    };
   }
   create() {
     const [dir, name] = split(this.uri);

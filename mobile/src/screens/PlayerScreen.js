@@ -15,6 +15,14 @@ import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
+// Real song length ("4:05"), or nothing when it isn't known yet
+const lengthText = (t) => {
+  if (t.durationFormatted) return t.durationFormatted;
+  const s = Math.round(Number(t.duration) || 0);
+  if (s <= 0) return '';
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
 const PLAYER_CATEGORIES = [
   { id: 'suggested', label: 'Suggested', icon: 'star' },
   { id: 'songs', label: 'Songs', icon: 'musical-notes' },
@@ -160,7 +168,8 @@ function LibraryBrowserImpl({
             {track.title}
           </Text>
           <Text style={styles.trackArtist} numberOfLines={1}>
-            {track.artist || 'Unknown Artist'} • {track.durationFormatted || '3:30'}
+            {track.artist || 'Unknown Artist'}
+            {lengthText(track) ? ` • ${lengthText(track)}` : ''}
           </Text>
         </View>
 

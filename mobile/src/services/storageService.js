@@ -200,6 +200,23 @@ export const StorageService = {
     }
   },
 
+  // Simple on/off flags (e.g. "the first detailed scan has been done")
+  async getFlag(name) {
+    try {
+      return (await AsyncStorage.getItem(`@selah_flag_${name}`)) === 'true';
+    } catch (e) {
+      return false;
+    }
+  },
+
+  async setFlag(name, value = true) {
+    try {
+      await AsyncStorage.setItem(`@selah_flag_${name}`, value ? 'true' : 'false');
+    } catch (e) {
+      console.log('Error saving flag:', e);
+    }
+  },
+
   // Lyrics lookup cache (so we only ask the lyrics service once per song)
   async getLyricsCache(trackId) {
     if (!trackId) return null;

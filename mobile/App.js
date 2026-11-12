@@ -24,6 +24,7 @@ import PrayerBookmarksModal from './src/components/PrayerBookmarksModal';
 import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
 import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
+import DeepScanModal from './src/components/DeepScanModal';
 
 import { DEVOTIONAL_COLLECTION, DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/mockData';
 import { StorageService } from './src/services/storageService';
@@ -32,25 +33,49 @@ import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeContext';
 
 // Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
-const isScannedTrack = (t) => String(t.id).startsWith('local-scan-') || String(t.id).startsWith('local-doc-');
-function mergeScan(prev, foundTracks) {
+// kinds = which scanned songs this scan fully covers (only those can be removed as "gone")
+function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
   const freshById = new Map(foundTracks.map((t) => [t.id, t]));
   const known = new Set(prev.map((t) => t.id));
   const newFound = foundTracks.filter((t) => !known.has(t.id));
   let changed = newFound.length > 0;
   const kept = [];
   prev.forEach((t) => {
-    if (isScannedTrack(t) && !freshById.has(t.id)) {
-      changed = true;
+    const id = String(t.id);
+    const fresh = freshById.get(t.id);
+    if (!fresh) {
+      if (kinds.some((k) => id.startsWith(k))) {
+        changed = true; // no longer on the phone
+        return;
+      }
+      kept.push(t);
       return;
     }
-    const fresh = freshById.get(t.id);
-    if (fresh && fresh.uri !== t.uri) {
-      changed = true;
-      kept.push({ ...t, uri: fresh.uri });
-    } else {
-      kept.push(t);
+    let next = t;
+    if (fresh.uri !== t.uri) next = { ...next, uri: fresh.uri };
+    // details read from inside the file replace guesses from the file name (never your own edits)
+    if (fresh.tagged && !t.userEdited) {
+      const detailsChanged =
+        fresh.title !== t.title ||
+        fresh.artist !== t.artist ||
+        fresh.album !== t.album ||
+        (fresh.duration > 0 && fresh.duration !== t.duration) ||
+        fresh.embeddedLyrics !== t.embeddedLyrics;
+      if (detailsChanged) {
+        next = {
+          ...next,
+          title: fresh.title,
+          artist: fresh.artist,
+          album: fresh.album,
+          duration: fresh.duration > 0 ? fresh.duration : t.duration,
+          embeddedLyrics: fresh.embeddedLyrics,
+          coverUrl: fresh.coverUrl,
+          tagged: true
+        };
+      }
     }
+    if (next !== t) changed = true;
+    kept.push(next);
   });
   return changed ? [...newFound, ...kept] : prev;
 }
@@ -88,6 +113,7 @@ function SelahApp() {
   const [favorites, setFavorites] = useState([]);
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [scanStatus, setScanStatus] = useState({ state: 'idle', count: 0, latest: '' });
+  const [deepScan, setDeepScan] = useState({ visible: false, state: 'idle' });
   const scanningRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
@@ -114,6 +140,11 @@ function SelahApp() {
   const ambientPlayerRef = useRef(null);
   const ambientVolumeRef = useRef(0.5);
   const loadWatchdogRef = useRef(null);
+  const localTracksRef = useRef([]);
+  const deepScanningRef = useRef(false);
+  const deepCancelRef = useRef(false);
+  const deepProgressRef = useRef(null);
+  const rememberDurationRef = useRef(null);
 
   // Queue: null = play through the whole library; array = custom queue (e.g. a playlist)
   const [queueOverride, setQueueOverride] = useState(null);
@@ -126,6 +157,10 @@ function SelahApp() {
   useEffect(() => {
     positionRef.current = currentPosition;
   }, [currentPosition]);
+
+  useEffect(() => {
+    localTracksRef.current = localTracks;
+  }, [localTracks]);
 
   // Ambient soundscape: real looping background audio layered under the music
   useEffect(() => {
@@ -278,7 +313,7 @@ function SelahApp() {
           setLocalTracks(savedLocal);
           setTracks((prev) => [...savedLocal, ...prev]);
           setCurrentTrack(savedLocal[0]);
-          setDuration(savedLocal[0].duration || 180);
+          setDuration(savedLocal[0].duration || 0);
         }
 
         // Resume the last played track (paused, ready to continue)
@@ -289,14 +324,20 @@ function SelahApp() {
             const lastTrack = pool.find((t) => t.id === last.trackId);
             if (lastTrack && lastTrack.sourceType !== 'youtube') {
               setCurrentTrack(lastTrack);
-              setDuration(lastTrack.duration || 180);
+              setDuration(lastTrack.duration || 0);
               setCurrentPosition(Math.floor(last.position || 0));
             }
           }
         } catch {}
 
         // Background scan: every song on the phone (Android) / in Selah's folder (iPhone)
-        runDeviceScan();
+        // First time on Android: a detailed scan with the scan screen. After that: a quick refresh.
+        const deepScannedBefore = await StorageService.getFlag('deepScanned');
+        if (Platform.OS === 'android' && !deepScannedBefore && !(savedLocal && savedLocal.length > 0)) {
+          runDeepScan();
+        } else {
+          runDeviceScan({ knownIds: new Set((savedLocal || []).map((t) => t.id)) });
+        }
       } catch (e) {
         console.log('Error initializing app storage:', e);
       }
@@ -369,7 +410,7 @@ function SelahApp() {
     setCurrentTrack(track);
     setIsPlaying(true);
     setCurrentPosition(resumeAt);
-    setDuration(track.duration || 180);
+    setDuration(track.duration || 0);
 
     // Record to recently played and count the play (real listening time is tracked separately)
     StorageService.addRecentlyPlayed(track).then((updated) => {
@@ -456,6 +497,7 @@ function SelahApp() {
           }, 8000);
         }
 
+        let durationRemembered = false;
         const sub = player.addListener('playbackStatusUpdate', (status) => {
           if (status.isLoaded && loadWatchdogRef.current) {
             clearTimeout(loadWatchdogRef.current);
@@ -463,6 +505,13 @@ function SelahApp() {
           }
           if (status.duration && status.duration > 0) {
             setDuration(Math.floor(status.duration));
+            // remember the real length so lists show it next time
+            if (!durationRemembered) {
+              durationRemembered = true;
+              if (Math.abs(status.duration - (track.duration || 0)) > 1.5) {
+                rememberDurationRef.current?.(track.id, Math.round(status.duration));
+              }
+            }
           }
           if (typeof status.currentTime === 'number') {
             setCurrentPosition(Math.floor(status.currentTime));
@@ -720,29 +769,65 @@ function SelahApp() {
     }
   }, []);
 
-  // Apply a finished scan (adds new songs, removes deleted ones)
+  // Apply a finished scan (adds new songs, removes deleted ones, refreshes song details)
   const applyScanResult = useCallback((scanResult) => {
-    if (!scanResult || !scanResult.success) return;
+    if (!scanResult || !scanResult.success) return { added: 0, removed: 0 };
     const found = scanResult.tracks || [];
+    const kinds = scanResult.kinds || ['local-scan-', 'local-doc-'];
+    const before = localTracksRef.current || [];
+    const beforeIds = new Set(before.map((t) => t.id));
+    const foundIds = new Set(found.map((t) => t.id));
+    const summary = {
+      added: found.filter((t) => !beforeIds.has(t.id)).length,
+      removed: before.filter((t) => kinds.some((k) => String(t.id).startsWith(k)) && !foundIds.has(t.id)).length
+    };
     setLocalTracks((prev) => {
-      const merged = mergeScan(prev, found);
+      const merged = mergeScan(prev, found, kinds);
       if (merged !== prev) StorageService.saveLocalTracks(merged);
       return merged;
     });
-    setTracks((prev) => mergeScan(prev, found));
+    setTracks((prev) => mergeScan(prev, found, kinds));
     if (found.length > 0) {
       setCurrentTrack((prev) => prev || found[0]);
       setDuration((prev) => prev || found[0].duration || 0);
     }
+    return summary;
   }, []);
 
+  // Once a song has played, keep its real length
+  const rememberDuration = useCallback((trackId, seconds) => {
+    const fix = (list) => {
+      let changed = false;
+      const next = list.map((t) => {
+        if (t.id === trackId && t.duration !== seconds) {
+          changed = true;
+          return { ...t, duration: seconds };
+        }
+        return t;
+      });
+      return changed ? next : list;
+    };
+    setLocalTracks((prev) => {
+      const next = fix(prev);
+      if (next !== prev) StorageService.saveLocalTracks(next);
+      return next;
+    });
+    setTracks((prev) => fix(prev));
+    setQueueOverride((prev) => (prev ? fix(prev) : prev));
+  }, []);
+
+  useEffect(() => {
+    rememberDurationRef.current = rememberDuration;
+  }, [rememberDuration]);
+
   // Scan for music, adding songs batch by batch so they appear while scanning
-  const runDeviceScan = useCallback(async () => {
+  const runDeviceScan = useCallback(async (opts) => {
     if (scanningRef.current) return null;
     scanningRef.current = true;
     setScanStatus({ state: 'scanning', count: 0, latest: '' });
     try {
       const res = await ScannerService.scanDeviceAudio({
+        knownIds: (opts && opts.knownIds) || new Set((localTracksRef.current || []).map((t) => t.id)),
         onProgress: (count, pageTracks) => {
           if (pageTracks && pageTracks.length > 0) handleBatchAddLocalTracks(pageTracks);
           setScanStatus({
@@ -768,6 +853,71 @@ function SelahApp() {
       scanningRef.current = false;
     }
   }, [applyScanResult, handleBatchAddLocalTracks]);
+
+  // Detailed scan with the scan screen: every folder, every file, real song details
+  const runDeepScan = useCallback(async () => {
+    if (deepScanningRef.current) {
+      setDeepScan((prev) => ({ ...prev, visible: true }));
+      return null;
+    }
+    deepScanningRef.current = true;
+    deepCancelRef.current = false;
+    deepProgressRef.current = null;
+    setDeepScan({ visible: true, state: 'running', step: 1, found: 0, folders: 0, files: 0, done: 0, total: 0, folder: '', seconds: 0 });
+    setScanStatus({ state: 'scanning', count: 0, latest: '' });
+    // update the scan screen a few times per second
+    const timer = setInterval(() => {
+      const p = deepProgressRef.current;
+      if (!p) return;
+      setDeepScan((prev) => (prev.state === 'running' ? { ...prev, ...p } : prev));
+      setScanStatus({ state: 'scanning', count: p.found || 0, latest: '' });
+    }, 250);
+    try {
+      const res = await ScannerService.deepScanDeviceAudio({
+        onProgress: (p) => {
+          deepProgressRef.current = { ...(deepProgressRef.current || {}), ...p };
+        },
+        shouldCancel: () => deepCancelRef.current
+      });
+      clearInterval(timer);
+      if (!res || !res.success) {
+        const denied = Boolean(res && res.error === 'Permission not granted');
+        setDeepScan((prev) => ({ ...prev, state: denied ? 'denied' : 'error', message: res && res.error }));
+        setScanStatus(
+          denied
+            ? { state: 'denied', count: 0, latest: '' }
+            : { state: 'error', count: 0, latest: '', message: (res && res.error) || 'Scan failed' }
+        );
+        return res;
+      }
+      const summary = applyScanResult(res);
+      setDeepScan((prev) => ({
+        ...prev,
+        ...(deepProgressRef.current || {}),
+        state: 'done',
+        total: res.tracks.length,
+        added: summary.added,
+        removed: summary.removed,
+        cancelled: res.cancelled,
+        seconds: res.seconds
+      }));
+      setScanStatus({ state: 'done', count: res.tracks.length, latest: '' });
+      if (!res.cancelled) StorageService.setFlag('deepScanned', true);
+      return res;
+    } catch (err) {
+      clearInterval(timer);
+      setDeepScan((prev) => ({ ...prev, state: 'error', message: err?.message || 'Scan failed' }));
+      setScanStatus({ state: 'error', count: 0, latest: '', message: err?.message || 'Scan failed' });
+      return null;
+    } finally {
+      deepScanningRef.current = false;
+    }
+  }, [applyScanResult]);
+
+  const stopDeepScan = useCallback(() => {
+    deepCancelRef.current = true;
+  }, []);
+  const closeDeepScan = useCallback(() => setDeepScan((prev) => ({ ...prev, visible: false })), []);
 
   // YouTube reports the real video time
   const handleVideoProgress = useCallback((seconds, total) => {
@@ -901,7 +1051,8 @@ function SelahApp() {
   };
 
   // In-app tag editor save
-  const handleSaveEditedTrack = (updatedTrack) => {
+  const handleSaveEditedTrack = (editedTrack) => {
+    const updatedTrack = { ...editedTrack, userEdited: true }; // your edits are never overwritten by scans
     setLocalTracks((prev) => {
       const updated = prev.map((t) => (t.id === updatedTrack.id ? updatedTrack : t));
       StorageService.saveLocalTracks(updated);
@@ -1058,6 +1209,7 @@ function SelahApp() {
             onOpenEditTags={openEditTags}
             scanStatus={scanStatus}
             onScan={runDeviceScan}
+            onDeepScan={runDeepScan}
           />
         )}
 
@@ -1220,6 +1372,9 @@ function SelahApp() {
         onClose={() => setTagEditTrack(null)}
         onSaveTrack={handleSaveEditedTrack}
       />
+
+      {/* Detailed music scan */}
+      <DeepScanModal scan={deepScan} onStop={stopDeepScan} onClose={closeDeepScan} />
 
       {/* Header Menu Drawer Modal */}
       <HeaderMenuModal

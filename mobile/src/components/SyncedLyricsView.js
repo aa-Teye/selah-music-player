@@ -39,6 +39,7 @@ function sourceLabel(lyrics) {
   const synced = lyrics.mode === 'synced';
   if (lyrics.source === 'custom') return synced ? 'YOUR LYRICS · SYNCED' : 'YOUR LYRICS';
   if (lyrics.source === 'lrclib') return synced ? 'SYNCED · LRCLIB' : 'LYRICS · LRCLIB';
+  if (lyrics.source === 'file') return synced ? 'SYNCED · FROM THE FILE' : 'LYRICS · FROM THE FILE';
   return synced ? 'SYNCED LYRICS' : 'LYRICS';
 }
 

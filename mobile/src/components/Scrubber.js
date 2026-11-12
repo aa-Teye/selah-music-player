@@ -98,7 +98,7 @@ export default function Scrubber({ position = 0, duration = 0, onSeek }) {
       </View>
       <View style={styles.timesRow}>
         <Text style={styles.time}>{formatTime(shownTime)}</Text>
-        <Text style={styles.time}>{formatTime(duration)}</Text>
+        <Text style={styles.time}>{duration > 0 ? formatTime(duration) : '--:--'}</Text>
       </View>
     </View>
   );

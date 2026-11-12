@@ -14,6 +14,7 @@ import { Platform } from 'react-native';
 import * as MediaLibrary from 'expo-media-library/legacy';
 import { Directory, File, Paths } from 'expo-file-system';
 import { Id3Service } from './id3Service';
+import { readTags } from './tagReader';
 
 // Every common audio file type
 export const AUDIO_EXTENSIONS = [
@@ -50,6 +51,33 @@ const safeDecode = (s) => {
     return s;
   }
 };
+
+const pause = () => new Promise((resolve) => setTimeout(resolve, 0));
+const normPath = (uri) => safeDecode(String(uri || '')).replace(/^file:\/\//, '').replace(/\/+$/, '');
+
+/** Copies the real details from inside the file onto the track (keeps the phone's length if it has one) */
+export function applyTags(track, tags) {
+  if (!tags) return track;
+  const next = { ...track, tagged: true };
+  if (tags.title) next.title = tags.title;
+  if (tags.artist) next.artist = tags.artist;
+  if (tags.album) next.album = tags.album;
+  if (tags.duration && !(track.duration > 0)) next.duration = tags.duration;
+  if (tags.lyrics) next.embeddedLyrics = tags.lyrics;
+  next.coverUrl = Id3Service.generateCuratedArtwork(next.title, next.artist);
+  return next;
+}
+
+/** Reads details for songs Selah hasn't seen before (keeps the screen responsive) */
+async function readDetailsForNew(tracks, knownIds) {
+  const out = [];
+  for (let i = 0; i < tracks.length; i++) {
+    const t = tracks[i];
+    out.push(knownIds && knownIds.has(t.id) ? t : applyTags(t, readTags(t.uri)));
+    if (i % 25 === 24) await pause();
+  }
+  return out;
+}
 
 export function getExtension(nameOrUri = '') {
   const clean = String(nameOrUri).split('?')[0].split('#')[0];
@@ -219,12 +247,13 @@ async function scanAndroidMediaStore(onProgress) {
  * Finds every song Selah can reach.
  * Returns { success, tracks, platformScan, error? }.
  */
-export async function scanDeviceAudio({ onProgress } = {}) {
+export async function scanDeviceAudio({ onProgress, knownIds } = {}) {
   const fromAppFolder = scanAppFolder();
   if (onProgress && fromAppFolder.length > 0) onProgress(fromAppFolder.length, fromAppFolder);
 
   if (Platform.OS !== 'android') {
-    return { success: true, tracks: fromAppFolder, platformScan: 'app-folder' };
+    const tracks = await readDetailsForNew(fromAppFolder, knownIds);
+    return { success: true, tracks, platformScan: 'app-folder', kinds: ['local-doc-'] };
   }
 
   const allowed = await requestAudioPermissions();
@@ -236,11 +265,158 @@ export async function scanDeviceAudio({ onProgress } = {}) {
     const fromPhone = await scanAndroidMediaStore(
       onProgress ? (count, page) => onProgress(fromAppFolder.length + count, page) : undefined
     );
-    return { success: true, tracks: [...fromPhone, ...fromAppFolder], platformScan: 'android' };
+    const tracks = await readDetailsForNew([...fromPhone, ...fromAppFolder], knownIds);
+    return { success: true, tracks, platformScan: 'android', kinds: ['local-scan-', 'local-doc-'] };
   } catch (err) {
     console.log('Scan device audio notice:', err);
     return { success: false, tracks: fromAppFolder, platformScan: 'android', error: err?.message || 'Scan failed' };
   }
+}
+
+// ── Detailed scan: every folder, every file ────────────────────────────────
+
+const PHONE_ROOT = 'file:///storage/emulated/0/';
+const PRIVATE_FOLDERS = /\/Android\/(data|obb)$/i; // other apps' private storage (not readable)
+
+function storageRoots() {
+  const roots = [PHONE_ROOT];
+  try {
+    new Directory('file:///storage/').list().forEach((entry) => {
+      if (entry instanceof Directory && !['emulated', 'self'].includes(entry.name)) roots.push(entry.uri); // SD cards
+    });
+  } catch {}
+  return roots;
+}
+
+const shortPath = (uri) =>
+  safeDecode(String(uri || ''))
+    .replace(/^file:\/\/\/storage\/emulated\/0\/?/, '')
+    .replace(/^file:\/\/\/storage\//, 'SD card/')
+    .replace(/\/$/, '') || 'Phone storage';
+
+async function walkAllFolders(roots, report, shouldCancel) {
+  const found = [];
+  const queue = roots.map((uri) => ({ uri, depth: 0 }));
+  let folders = 0;
+  let files = 0;
+  while (queue.length > 0) {
+    if (shouldCancel && shouldCancel()) break;
+    const { uri, depth } = queue.shift();
+    if (PRIVATE_FOLDERS.test(normPath(uri))) continue;
+    let entries;
+    try {
+      entries = new Directory(uri).list();
+    } catch {
+      continue;
+    }
+    folders += 1;
+    entries.forEach((entry) => {
+      if (entry instanceof Directory) {
+        if (depth < 30) queue.push({ uri: entry.uri, depth: depth + 1 });
+      } else if (entry instanceof File) {
+        files += 1;
+        if (isAudioFileName(entry.name) && !isExcluded(entry.uri)) {
+          found.push({ uri: entry.uri, name: entry.name, folder: shortPath(uri).split('/').pop() });
+        }
+      }
+    });
+    if (folders % 10 === 0) {
+      report({ folder: shortPath(uri), folders, files, found: found.length });
+      await pause();
+    }
+  }
+  report({ folder: '', folders, files, found: found.length });
+  return found;
+}
+
+function storageFileToTrack(f) {
+  const meta = Id3Service.parseFilenameMetadata(f.name);
+  const now = Date.now();
+  return {
+    id: `local-path-${normPath(f.uri)}`,
+    title: meta.title,
+    artist: meta.artist,
+    album: meta.album,
+    folder: f.folder || 'Music',
+    duration: 0,
+    category: 'local',
+    sourceType: 'local',
+    uri: f.uri,
+    coverUrl: Id3Service.generateCuratedArtwork(meta.title, meta.artist),
+    addedAt: now,
+    scannedAt: now
+  };
+}
+
+/**
+ * Detailed scan (can take a few minutes):
+ *   1. the phone's own music list (Android)
+ *   2. every folder on the phone and SD card, including hidden folders, for every audio format
+ *   3. the real song details inside each file (title, artist, album, length, lyrics)
+ * onProgress receives { step, folder, folders, files, found, done, total, seconds }.
+ */
+export async function deepScanDeviceAudio({ onProgress, shouldCancel } = {}) {
+  const started = Date.now();
+  const seconds = () => Math.round((Date.now() - started) / 1000);
+  const report = (p) => onProgress && onProgress({ ...p, seconds: seconds() });
+  const cancelled = () => Boolean(shouldCancel && shouldCancel());
+
+  report({ step: 1, found: 0 });
+  let indexed = [];
+  if (Platform.OS === 'android') {
+    const allowed = await requestAudioPermissions();
+    if (!allowed) return { success: false, error: 'Permission not granted', tracks: [] };
+    try {
+      indexed = await scanAndroidMediaStore((count) => report({ step: 1, found: count }));
+    } catch (err) {
+      console.log('Music list notice:', err);
+    }
+  }
+  const appFolder = scanAppFolder();
+
+  let extra = [];
+  if (Platform.OS === 'android' && !cancelled()) {
+    const known = new Set([...indexed, ...appFolder].map((t) => normPath(t.uri)));
+    const base = indexed.length + appFolder.length;
+    const walked = await walkAllFolders(
+      storageRoots(),
+      (p) => report({ step: 2, ...p, found: base + p.found }),
+      shouldCancel
+    );
+    const seen = new Set();
+    walked.forEach((f) => {
+      const key = normPath(f.uri);
+      if (known.has(key) || seen.has(key)) return;
+      seen.add(key);
+      extra.push(storageFileToTrack(f));
+    });
+  }
+
+  const all = [...indexed, ...appFolder, ...extra];
+  const detailed = [];
+  for (let i = 0; i < all.length; i++) {
+    if (cancelled()) {
+      detailed.push(...all.slice(i));
+      break;
+    }
+    detailed.push(applyTags(all[i], readTags(all[i].uri)));
+    if (i % 20 === 19) {
+      report({ step: 3, done: i + 1, total: all.length, found: all.length });
+      await pause();
+    }
+  }
+  report({ step: 3, done: all.length, total: all.length, found: all.length });
+
+  const wasCancelled = cancelled();
+  return {
+    success: true,
+    tracks: detailed,
+    cancelled: wasCancelled,
+    extraFound: extra.length,
+    // a stopped scan only adds songs; a full scan also removes songs that are gone
+    kinds: wasCancelled ? [] : ['local-scan-', 'local-doc-', 'local-path-'],
+    seconds: seconds()
+  };
 }
 
 // ── Import from Files ──────────────────────────────────────────────────────
@@ -272,7 +448,7 @@ export async function importPickedFiles(pickedAssets = []) {
       const source = new File(picked.uri);
       const { file: destination, reuse } = uniqueDestination(folder, name, picked.size || source.size);
       if (!reuse) await source.copy(destination);
-      imported.push(fileToTrack(destination, MUSIC_FOLDER_NAME));
+      imported.push(applyTags(fileToTrack(destination, MUSIC_FOLDER_NAME), readTags(destination.uri)));
     } catch (err) {
       console.log('Import copy notice:', err);
       // Could not copy: keep the picked file as it is
@@ -299,6 +475,7 @@ export async function importPickedFiles(pickedAssets = []) {
 export const ScannerService = {
   requestAudioPermissions,
   scanDeviceAudio,
+  deepScanDeviceAudio,
   importPickedFiles,
   getMusicFolder,
   isAudioFileName,

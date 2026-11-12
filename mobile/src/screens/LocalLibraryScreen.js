@@ -31,7 +31,8 @@ function LocalLibraryScreen({
   onOpenSetRingtone,
   onOpenEditTags,
   scanStatus,
-  onScan
+  onScan,
+  onDeepScan
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -143,7 +144,7 @@ function LocalLibraryScreen({
   };
 
   // Filter local tracks with global searchQuery
-  const activeQuery = (searchQuery || '').trim().toLowerCase();
+  const activeQuery = (filterQuery || searchQuery || '').trim().toLowerCase();
   const filteredTracks = localTracks.filter(t => {
     if (!activeQuery) return true;
     return (
@@ -172,7 +173,7 @@ function LocalLibraryScreen({
 
   // Format seconds to mm:ss
   const formatTime = (secs) => {
-    if (!secs || isNaN(secs)) return '0:00';
+    if (!secs || isNaN(secs)) return '—';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -190,7 +191,7 @@ function LocalLibraryScreen({
         <View style={styles.actionBtns}>
           <TouchableOpacity 
             style={[styles.scanBtn, isScanning && styles.btnDisabled]} 
-            onPress={() => handleAutoScanDevice(false)}
+            onPress={() => (onDeepScan ? onDeepScan() : handleAutoScanDevice(false))}
             disabled={isScanning}
           >
             {isScanning ? (
@@ -227,7 +228,7 @@ function LocalLibraryScreen({
 
           <TouchableOpacity 
             style={styles.heroScanBtn} 
-            onPress={() => handleAutoScanDevice(false)}
+            onPress={() => (onDeepScan ? onDeepScan() : handleAutoScanDevice(false))}
             disabled={isScanning}
           >
             {isScanning ? (

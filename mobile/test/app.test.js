@@ -8,6 +8,8 @@ import { render, screen, fireEvent, act, cleanup } from '@testing-library/react-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import App from '../App';
 
+const fx = require('./fixtures');
+
 const media = require('./mocks/mediaLibrary');
 const fs = require('./mocks/fileSystem');
 const audio = require('./mocks/audio');
@@ -196,10 +198,9 @@ androidOnly('if music permission is refused, the scan explains how to allow it',
   await settle();
 
   await tap(screen.getByTestId('tab-library'));
-  Alert.alert.mockClear();
   await tap(screen.getByText('Scan My Phone for Music'));
   await settle(10);
-  expect(Alert.alert).toHaveBeenCalledWith('Audio Permission Needed', expect.any(String), expect.any(Array));
+  expect(screen.getAllByText('Music access is off').length).toBeGreaterThan(0);
 });
 
 iphoneOnly("finds songs in Selah's folder without asking for Photos access", async () => {
@@ -371,4 +372,67 @@ test('dark mode: one tap on the header button, every screen still opens, and it 
   await tap(screen.getByTestId('tab-home'));
   await tap(screen.getByTestId('theme-toggle'));
   expect(background()).toBe('#F8F9FA');
+});
+
+androidOnly('detailed scan: every folder (hidden, WhatsApp media, SD card), real song names, private app data skipped', async () => {
+  fs.__reset({
+    'file:///docs/': { dirs: [], files: {} },
+    'file:///storage/': { dirs: ['emulated', 'self', '1234-5678'], files: {} },
+    'file:///storage/emulated/0/': { dirs: ['Music', 'Download', 'Android'], files: {} },
+    'file:///storage/emulated/0/Music/': {
+      dirs: [],
+      files: { 'Sinach - Way Maker 0.mp3': { size: 10 }, 'Sinach - Way Maker 1.m4a': { size: 10 }, 'Sinach - Way Maker 2.flac': { size: 10 } }
+    },
+    'file:///storage/emulated/0/Download/': { dirs: ['.hidden songs'], files: { 'notes.pdf': { size: 5 } } },
+    'file:///storage/emulated/0/Download/.hidden%20songs/': {
+      dirs: [],
+      files: { 'track01.mp3': { bytes: fx.mp3WithTags() }, 'voice.opus': { bytes: fx.opus180s() } }
+    },
+    'file:///storage/emulated/0/Android/': { dirs: ['data', 'media'], files: {} },
+    'file:///storage/emulated/0/Android/data/': { dirs: [], files: { 'secret.mp3': { size: 10 } } },
+    'file:///storage/emulated/0/Android/media/': { dirs: [], files: { 'Shared Audio.aac': { size: 10 } } },
+    'file:///storage/1234-5678/': { dirs: ['Gospel'], files: {} },
+    'file:///storage/1234-5678/Gospel/': { dirs: [], files: { 'Excess Love.flac': { bytes: fx.flacWithTags() } } }
+  });
+  media.__state.audio = phoneSongs(3); // the 3 songs in Music/ are also in the phone's own list
+
+  await render(<App />); // first launch on Android runs the detailed scan with the scan screen
+  await settle(40);
+  expect(screen.getByText('Scan complete')).toBeTruthy();
+  expect(screen.getByText(/7 songs in your library/)).toBeTruthy();
+  await tap(screen.getByTestId('deep-scan-done'));
+  expect(screen.queryByText('Scan complete')).toBeNull();
+  expect(screen.getByText('7 available')).toBeTruthy();
+
+  await tap(screen.getByTestId('tab-library'));
+  expect(screen.getByText('Way Maker')).toBeTruthy(); // real title read from inside track01.mp3
+  expect(screen.getByText('Sinach • 0:26')).toBeTruthy(); // real artist and length from the file
+  expect(screen.getByText('Excess Love')).toBeTruthy(); // on the SD card
+  expect(screen.getByText('Mercy Chinwo • 3:20')).toBeTruthy();
+  expect(screen.queryByText('secret')).toBeNull(); // other apps' private data is not touched
+});
+
+androidOnly('My Songs search box finds songs', async () => {
+  media.__state.audio = phoneSongs(12);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await fireEvent.changeText(screen.getByPlaceholderText('Search my songs...'), 'Maker 1');
+  await settle(4);
+  expect(screen.getByText('Way Maker 1')).toBeTruthy();
+  expect(screen.getByText('Way Maker 10')).toBeTruthy();
+  expect(screen.getByText('Way Maker 11')).toBeTruthy();
+  expect(screen.queryByText('Way Maker 2')).toBeNull();
+});
+
+androidOnly('song lengths are real (never a made-up 3:30)', async () => {
+  media.__state.audio = phoneSongs(3); // 4:00, 4:01, 4:02
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-player'));
+  await tap(screen.getByTestId('player-view-library'));
+  expect(screen.getAllByText(/Sinach • 4:0[0-2]/).length).toBeGreaterThanOrEqual(3);
+  expect(screen.queryByText(/3:30/)).toBeNull();
 });

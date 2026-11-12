@@ -32,7 +32,9 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
   const trackArtist = track?.artist || '';
   const isVideo = Boolean(track) && (track.sourceType === 'youtube' || Boolean(track.youtubeId));
   const canSearch = Boolean(track) && !String(trackId).startsWith('track-');
-  const builtInText = track && !isPlaceholderLyrics(track.lyrics) ? track.lyrics : null;
+  // lyrics stored inside the song file (or shipped with the track)
+  const builtInText =
+    (track && track.embeddedLyrics) || (track && !isPlaceholderLyrics(track.lyrics) ? track.lyrics : null);
 
   const [data, setData] = useState({
     trackId: null,
@@ -81,7 +83,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         if (stillValid) {
           setData({
             trackId,
-            status: cached.candidates.length > 0 ? 'ready' : 'none',
+            status: cached.candidates.length > 0 || builtInText ? 'ready' : 'none',
             custom: null,
             candidates: cached.candidates,
             versionIndex: cached.versionIndex || 0,
@@ -105,7 +107,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         });
         setData({
           trackId,
-          status: usable.length > 0 ? 'ready' : 'none',
+          status: usable.length > 0 || builtInText ? 'ready' : 'none',
           custom: null,
           candidates: usable,
           versionIndex: 0,
@@ -151,6 +153,8 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
       const ordered = orderCandidates(data.candidates, duration);
       const chosen = ordered[data.versionIndex % ordered.length];
       const lines = parseLrc(chosen.synced);
+      // timed lyrics from online win; otherwise lyrics stored in the file are preferred
+      if (lines.length > 0 || !builtInText) {
       const plainLines = lines.length > 0 ? [] : parsePlain(chosen.plain);
       return {
         mode: lines.length > 0 ? 'synced' : plainLines.length > 0 ? 'plain' : 'none',
@@ -162,6 +166,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         versionCount: ordered.length,
         instrumental: Boolean(chosen.instrumental) && lines.length === 0 && plainLines.length === 0
       };
+      }
     }
 
     if (builtInText) {
@@ -171,7 +176,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
         mode: lines.length > 0 ? 'synced' : 'plain',
         lines,
         plainLines: lines.length > 0 ? [] : parsePlain(builtInText),
-        source: 'built-in',
+        source: 'file',
         rawText: builtInText
       };
     }
