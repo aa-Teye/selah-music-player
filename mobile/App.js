@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView, AppState } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +34,9 @@ import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeConte
 
 // Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
 // kinds = which scanned songs this scan fully covers (only those can be removed as "gone")
+// Songs at least this long (sermons, worship sets) remember their own spot
+const LONG_TRACK_SECONDS = 600;
+
 function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
   const freshById = new Map(foundTracks.map((t) => [t.id, t]));
   const known = new Set(prev.map((t) => t.id));
@@ -114,6 +117,7 @@ function SelahApp() {
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [scanStatus, setScanStatus] = useState({ state: 'idle', count: 0, latest: '' });
   const [deepScan, setDeepScan] = useState({ visible: false, state: 'idle' });
+  const [resumeVideo, setResumeVideo] = useState(null); // { id, at } for YouTube
   const scanningRef = useRef(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMood, setActiveMood] = useState('all');
@@ -145,6 +149,9 @@ function SelahApp() {
   const deepCancelRef = useRef(false);
   const deepProgressRef = useRef(null);
   const rememberDurationRef = useRef(null);
+  const currentTrackRef = useRef(null);
+  const durationRef = useRef(0);
+  const songPositionsRef = useRef({});
 
   // Queue: null = play through the whole library; array = custom queue (e.g. a playlist)
   const [queueOverride, setQueueOverride] = useState(null);
@@ -161,6 +168,14 @@ function SelahApp() {
   useEffect(() => {
     localTracksRef.current = localTracks;
   }, [localTracks]);
+
+  useEffect(() => {
+    currentTrackRef.current = currentTrack;
+  }, [currentTrack]);
+
+  useEffect(() => {
+    durationRef.current = duration;
+  }, [duration]);
 
   // Ambient soundscape: real looping background audio layered under the music
   useEffect(() => {
@@ -226,18 +241,43 @@ function SelahApp() {
     };
   }, [isPlaying]);
 
-  // Remember where the user stopped so the app can resume on next launch
+  // Remember where you are: the last song (for reopening the app) and long songs (sermons, worship sets)
+  const rememberSpot = useCallback((track, position, total) => {
+    if (!track || !track.id) return;
+    StorageService.saveLastPlayed(track, position);
+    const length = total || track.duration || 0;
+    if (length >= LONG_TRACK_SECONDS) {
+      const next = { ...songPositionsRef.current };
+      if (position > 30 && position < length - 30) next[track.id] = { position: Math.floor(position), at: Date.now() };
+      else delete next[track.id];
+      songPositionsRef.current = next;
+      StorageService.saveSongPositions(next);
+    }
+  }, []);
+
+  // While playing: save every 5 seconds. When paused: save right away.
   useEffect(() => {
     if (!currentTrack?.id) return undefined;
     if (!isPlaying) {
-      StorageService.saveLastPlayed(currentTrack.id, positionRef.current);
+      rememberSpot(currentTrack, positionRef.current, durationRef.current);
       return undefined;
     }
     const timer = setInterval(() => {
-      StorageService.saveLastPlayed(currentTrack.id, positionRef.current);
-    }, 10000);
+      rememberSpot(currentTrackRef.current, positionRef.current, durationRef.current);
+    }, 5000);
     return () => clearInterval(timer);
-  }, [isPlaying, currentTrack?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, currentTrack?.id, rememberSpot]);
+
+  // Leaving or closing the app: save the exact spot immediately
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'background' || next === 'inactive') {
+        rememberSpot(currentTrackRef.current, positionRef.current, durationRef.current);
+      }
+    });
+    return () => sub?.remove?.();
+  }, [rememberSpot]);
 
   useEffect(() => {
     repeatModeRef.current = repeatMode;
@@ -318,14 +358,18 @@ function SelahApp() {
 
         // Resume the last played track (paused, ready to continue)
         try {
+          songPositionsRef.current = (await StorageService.getSongPositions()) || {};
           const last = await StorageService.getLastPlayed();
           if (last?.trackId) {
             const pool = savedLocal || [];
-            const lastTrack = pool.find((t) => t.id === last.trackId);
-            if (lastTrack && lastTrack.sourceType !== 'youtube') {
+            const isVideo = (t) => t && (t.sourceType === 'youtube' || Boolean(t.youtubeId));
+            const lastTrack = pool.find((t) => t.id === last.trackId) || (isVideo(last.track) ? last.track : null);
+            if (lastTrack) {
+              const spot = Math.floor(last.position || 0);
               setCurrentTrack(lastTrack);
               setDuration(lastTrack.duration || 0);
-              setCurrentPosition(Math.floor(last.position || 0));
+              setCurrentPosition(spot);
+              if (isVideo(lastTrack) && spot > 5) setResumeVideo({ id: lastTrack.youtubeId, at: spot });
             }
           }
         } catch {}
@@ -391,7 +435,17 @@ function SelahApp() {
   const handlePlayTrack = useCallback(async (track, opts) => {
     if (!track) return;
     const options = opts && typeof opts === 'object' && !opts.nativeEvent ? opts : {};
-    const resumeAt = typeof options.resumeAt === 'number' && options.resumeAt > 1 ? options.resumeAt : 0;
+    let resumeAt = typeof options.resumeAt === 'number' && options.resumeAt > 1 ? options.resumeAt : 0;
+
+    // Keep the spot of the song you are leaving
+    const previous = currentTrackRef.current;
+    if (previous && previous.id !== track.id) rememberSpot(previous, positionRef.current, durationRef.current);
+
+    // Long songs (sermons, worship sets) continue where you left them
+    if (!resumeAt) {
+      const saved = songPositionsRef.current[track.id];
+      if (saved && saved.position > 30) resumeAt = saved.position;
+    }
 
     const badFormat = unsupportedFormat(track);
     if (badFormat) {
@@ -443,6 +497,7 @@ function SelahApp() {
 
     // If it's a YouTube track, activate YouTube streaming engine
     if (track.sourceType === 'youtube') {
+      setResumeVideo(resumeAt > 0 ? { id: track.youtubeId, at: resumeAt } : null);
       setActiveTab('youtube');
       return;
     }
@@ -518,6 +573,13 @@ function SelahApp() {
             applyVolume(player, status.currentTime, status.duration || track.duration || 0);
           }
           if (status.didJustFinish) {
+            // finished: a long song starts from the beginning next time
+            if (songPositionsRef.current[track.id]) {
+              const next = { ...songPositionsRef.current };
+              delete next[track.id];
+              songPositionsRef.current = next;
+              StorageService.saveSongPositions(next);
+            }
             if (repeatModeRef.current === 'one') {
               try {
                 player.seekTo(0);
@@ -535,7 +597,7 @@ function SelahApp() {
         console.log('Error playing audio sound:', err);
       }
     }
-  }, [playbackSpeed, applyVolume]);
+  }, [playbackSpeed, applyVolume, rememberSpot]);
 
   // Next Track
   const handleNextTrack = useCallback((opts) => {
@@ -918,6 +980,7 @@ function SelahApp() {
     deepCancelRef.current = true;
   }, []);
   const closeDeepScan = useCallback(() => setDeepScan((prev) => ({ ...prev, visible: false })), []);
+  const clearResumeVideo = useCallback(() => setResumeVideo(null), []);
 
   // YouTube reports the real video time
   const handleVideoProgress = useCallback((seconds, total) => {
@@ -1239,6 +1302,8 @@ function SelahApp() {
             onNextTrack={handleNextTrack}
             isActive={activeTab === 'youtube'}
             onVideoProgress={handleVideoProgress}
+            resumeAt={resumeVideo}
+            onResumeDone={clearResumeVideo}
           />
         </View>
 

@@ -3,7 +3,7 @@
  * They run twice: once as iPhone and once as Android (see "jest" in package.json).
  */
 import React from 'react';
-import { Platform, Alert, StyleSheet } from 'react-native';
+import { Platform, Alert, StyleSheet, AppState } from 'react-native';
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import App from '../App';
@@ -81,6 +81,8 @@ beforeEach(async () => {
   audio.createAudioPlayer.mockClear();
   audio.__players.length = 0;
   Alert.alert.mockClear();
+  global.__youtubeRef = null;
+  global.__youtubeTime = 0;
   global.fetch = jest.fn(async (url) => ({
     ok: true,
     status: 200,
@@ -435,4 +437,115 @@ androidOnly('song lengths are real (never a made-up 3:30)', async () => {
   await tap(screen.getByTestId('player-view-library'));
   expect(screen.getAllByText(/Sinach • 4:0[0-2]/).length).toBeGreaterThanOrEqual(3);
   expect(screen.queryByText(/3:30/)).toBeNull();
+});
+
+androidOnly('reopening the app continues the same song from the same spot', async () => {
+  media.__state.audio = phoneSongs(3);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Way Maker 1')[0]);
+  const first = audio.__players[audio.__players.length - 1];
+  await act(async () => {
+    first.emit('playbackStatusUpdate', { isLoaded: true, currentTime: 95, duration: 241, didJustFinish: false });
+  });
+  await act(async () => {
+    jest.advanceTimersByTime(6000); // saved automatically every 5 seconds
+  });
+  await settle(4);
+  await cleanup(); // the app is closed
+
+  audio.createAudioPlayer.mockClear();
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('tab-player'));
+  expect(screen.getAllByText('Way Maker 1').length).toBeGreaterThan(0);
+  expect(screen.getByText('1:35')).toBeTruthy(); // exactly where you stopped
+  await tap(screen.getByTestId('play-pause'));
+  expect(audio.createAudioPlayer).toHaveBeenCalledWith(expect.stringContaining('Way%20Maker%201'));
+  expect(audio.__players[audio.__players.length - 1].seekTo).toHaveBeenCalledWith(95);
+});
+
+androidOnly('leaving the app saves the exact spot straight away', async () => {
+  const handlers = [];
+  const spy = jest.spyOn(AppState, 'addEventListener').mockImplementation((type, fn) => {
+    handlers.push(fn);
+    return { remove: jest.fn() };
+  });
+  media.__state.audio = phoneSongs(2);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Way Maker 1')[0]);
+  const p = audio.__players[audio.__players.length - 1];
+  await act(async () => {
+    p.emit('playbackStatusUpdate', { isLoaded: true, currentTime: 42, duration: 241, didJustFinish: false });
+  });
+  await act(async () => {
+    handlers.forEach((fn) => fn('background'));
+  });
+  await settle(2);
+  const saved = JSON.parse(await AsyncStorage.getItem('@selah_last_played'));
+  expect(saved).toMatchObject({ trackId: 'local-scan-2', position: 42 });
+  spy.mockRestore();
+});
+
+androidOnly('a long sermon continues where you left it after listening to something else', async () => {
+  media.__state.audio = [
+    {
+      id: '900',
+      filename: 'Pastor Kumuyi - Sunday Sermon.mp3',
+      uri: 'file:///storage/emulated/0/Sermons/Pastor%20Kumuyi%20-%20Sunday%20Sermon.mp3',
+      mediaType: 'audio',
+      duration: 3600,
+      modificationTime: 1700000000500
+    },
+    ...phoneSongs(2)
+  ];
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Sunday Sermon')[0]);
+  const sermon = audio.__players[audio.__players.length - 1];
+  await act(async () => {
+    sermon.emit('playbackStatusUpdate', { isLoaded: true, currentTime: 1250, duration: 3600, didJustFinish: false });
+  });
+  await tap(screen.getAllByText('Way Maker 0')[0]); // listen to something else
+  await tap(screen.getAllByText('Sunday Sermon')[0]); // back to the sermon
+  expect(audio.__players[audio.__players.length - 1].seekTo).toHaveBeenCalledWith(1250);
+});
+
+test('a YouTube video continues where you stopped after reopening the app', async () => {
+  await render(<App />);
+  await settle(15);
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+  global.__youtubeTime = 130;
+  await act(async () => {
+    global.__youtubeProps.onReady();
+  });
+  await act(async () => {
+    jest.advanceTimersByTime(1500); // the YouTube screen reads the video's time
+  });
+  await settle(4);
+  await act(async () => {
+    jest.advanceTimersByTime(6000); // saved automatically
+  });
+  await settle(4);
+  await cleanup();
+
+  global.__youtubeRef = null;
+  await render(<App />);
+  await settle(15);
+  await tap(screen.getByTestId('tab-youtube'));
+  await act(async () => {
+    global.__youtubeProps.onReady();
+  });
+  await tap(screen.getByTestId('yt-play-pause'));
+  await settle(4);
+  expect(global.__youtubeRef.seekTo).toHaveBeenCalledWith(130, true);
 });

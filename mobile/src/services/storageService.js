@@ -302,12 +302,42 @@ export const StorageService = {
     }
   },
 
-  async saveLastPlayed(trackId, position) {
+  async saveLastPlayed(track, position) {
+    const trackId = typeof track === 'string' ? track : track && track.id;
     if (!trackId) return;
+    let stored = null;
+    if (track && typeof track === 'object') {
+      const { embeddedLyrics, lyrics, ...rest } = track; // keep it small
+      stored = rest;
+    }
     try {
-      await AsyncStorage.setItem(KEYS.LAST_PLAYED, JSON.stringify({ trackId, position: Math.floor(position || 0) }));
+      await AsyncStorage.setItem(
+        KEYS.LAST_PLAYED,
+        JSON.stringify({ trackId, position: Math.floor(position || 0), track: stored, savedAt: Date.now() })
+      );
     } catch (e) {
       console.log('Error saving last played:', e);
+    }
+  },
+
+  // Long songs (sermons, worship sets) remember their own spot
+  async getSongPositions() {
+    try {
+      const data = await AsyncStorage.getItem('@selah_song_positions');
+      return data ? JSON.parse(data) : {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  async saveSongPositions(positions) {
+    try {
+      const entries = Object.entries(positions || {})
+        .sort((x, y) => (y[1].at || 0) - (x[1].at || 0))
+        .slice(0, 200);
+      await AsyncStorage.setItem('@selah_song_positions', JSON.stringify(Object.fromEntries(entries)));
+    } catch (e) {
+      console.log('Error saving song positions:', e);
     }
   },
 

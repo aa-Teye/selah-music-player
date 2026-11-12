@@ -281,7 +281,7 @@ export default function PlayerPanel({
           <TouchableOpacity onPress={() => skipBy(-10)} hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}>
             <MaterialCommunityIcons name="rewind-10" size={30} color={c.ink} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.playBtn} onPress={onTogglePlay} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.playBtn} onPress={onTogglePlay} activeOpacity={0.85} testID="play-pause">
             <Ionicons
               name={isPlaying ? 'pause' : 'play'}
               size={32}

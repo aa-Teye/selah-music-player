@@ -102,7 +102,9 @@ function YouTubeWatchScreen({
   onPrevTrack,
   onNextTrack,
   isActive = false,
-  onVideoProgress
+  onVideoProgress,
+  resumeAt,
+  onResumeDone
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -398,6 +400,16 @@ function YouTubeWatchScreen({
 
   // Video list to display: search results if searched, otherwise default featured
   const displayVideos = hasSearched ? searchResults : DEFAULT_FEATURED;
+
+  // Continue a video where you stopped (after reopening the app, or a long worship set)
+  useEffect(() => {
+    if (!resumeAt || !ytIsCurrent || !isYtPlaying || !isPlayerReady) return;
+    if (resumeAt.id !== currentYtId) return;
+    try {
+      if (playerRef.current && typeof playerRef.current.seekTo === 'function') playerRef.current.seekTo(resumeAt.at, true);
+    } catch {}
+    if (onResumeDone) onResumeDone();
+  }, [resumeAt, ytIsCurrent, isYtPlaying, isPlayerReady, currentYtId, onResumeDone]);
 
   const activeVideoTitle = selectedYtVideo?.title || DEFAULT_FEATURED[0].title;
   const activeVideoArtist = selectedYtVideo?.artist || DEFAULT_FEATURED[0].artist;

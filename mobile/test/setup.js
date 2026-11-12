@@ -16,8 +16,18 @@ jest.mock('react-native-webview', () => {
 jest.mock('react-native-youtube-iframe', () => {
   const React = require('react');
   const { View } = require('react-native');
-  const YoutubePlayer = React.forwardRef((props) => {
+  const YoutubePlayer = React.forwardRef((props, ref) => {
     global.__youtubeProps = props; // lets tests see what the app tells the video to do
+    React.useImperativeHandle(ref, () => {
+      if (!global.__youtubeRef) {
+        global.__youtubeRef = {
+          seekTo: jest.fn(),
+          getCurrentTime: jest.fn(async () => global.__youtubeTime || 0),
+          getDuration: jest.fn(async () => 0)
+        };
+      }
+      return global.__youtubeRef;
+    });
     return React.createElement(View, { testID: 'youtube-player' });
   });
   return { __esModule: true, default: YoutubePlayer, getYoutubeMeta: jest.fn(async () => ({})) };
