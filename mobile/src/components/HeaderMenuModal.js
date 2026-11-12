@@ -65,8 +65,8 @@ export default function HeaderMenuModal({
                   <Ionicons name="options" size={20} color={c.ink} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuTitle}>Sound Equalizer &amp; Presets</Text>
-                  <Text style={styles.menuSub}>5-Band EQ, Worship, Bass Boost, Clarity</Text>
+                  <Text style={styles.menuTitle}>Sound &amp; Sleep Timer</Text>
+                  <Text style={styles.menuSub}>Sleep timer, speed, crossfade, calming sounds</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>

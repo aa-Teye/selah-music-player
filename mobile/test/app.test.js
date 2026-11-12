@@ -129,6 +129,33 @@ test('fresh install with no music: every tab and player view opens without crash
   }
 });
 
+test('Sound screen is honest: no fake equalizer; Android opens the phone equalizer', async () => {
+  const { Linking } = require('react-native');
+  const intent = jest.spyOn(Linking, 'sendIntent').mockImplementation(async () => {});
+  await render(<App />);
+  await settle(15);
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByText('Sound & Sleep Timer'));
+  expect(screen.queryByText(/5-Band|Bass Boost/)).toBeNull();
+  expect(screen.getByText(/exactly as it was recorded/)).toBeTruthy();
+
+  if (isAndroid) {
+    await tap(screen.getByTestId('open-phone-equalizer'));
+    expect(intent).toHaveBeenCalledWith('android.media.action.DISPLAY_AUDIO_EFFECT_CONTROL_PANEL');
+    expect(Alert.alert).not.toHaveBeenCalled();
+
+    intent.mockImplementation(async () => {
+      throw new Error('No Activity found');
+    });
+    await tap(screen.getByTestId('open-phone-equalizer'));
+    expect(Alert.alert).toHaveBeenCalledWith('No equalizer found', expect.any(String));
+  } else {
+    expect(screen.queryByTestId('open-phone-equalizer')).toBeNull();
+  }
+  intent.mockRestore();
+});
+
 androidOnly('finds every song on the phone, plays one, shows Now Playing, lyrics and queue', async () => {
   media.__state.audio = phoneSongs(30);
   await render(<App />);

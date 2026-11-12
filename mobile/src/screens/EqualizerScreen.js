@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  StyleSheet 
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Linking,
+  Alert
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+
+// Android phones have their own equalizer (sound effects panel) that Selah can open.
+export async function openPhoneEqualizer() {
+  try {
+    await Linking.sendIntent('android.media.action.DISPLAY_AUDIO_EFFECT_CONTROL_PANEL');
+    return true;
+  } catch {
+    Alert.alert(
+      'No equalizer found',
+      "Selah couldn't find a built-in equalizer on this phone. Look for \"Sound effects\" or \"Equalizer\" in your phone's Settings."
+    );
+    return false;
+  }
+}
 
 export default function EqualizerScreen({
   onClose,
@@ -22,23 +39,6 @@ export default function EqualizerScreen({
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
-  const [activePreset, setActivePreset] = useState('worship');
-
-  const presets = [
-    { id: 'worship', name: 'Worship' },
-    { id: 'bass', name: 'Bass Boost' },
-    { id: 'acoustic', name: 'Acoustic' },
-    { id: 'vocal', name: 'Vocal' },
-    { id: 'flat', name: 'Flat' }
-  ];
-
-  const bands = [
-    { freq: '60 Hz', label: 'Sub-Bass', gain: '+4 dB', level: 0.7 },
-    { freq: '230 Hz', label: 'Warmth', gain: '+2 dB', level: 0.55 },
-    { freq: '910 Hz', label: 'Presence', gain: '0 dB', level: 0.5 },
-    { freq: '3.6 kHz', label: 'Vocals', gain: '+3 dB', level: 0.65 },
-    { freq: '14 kHz', label: 'Air', gain: '+5 dB', level: 0.8 }
-  ];
 
   const sleepPresets = [
     { label: 'Off', minutes: null },
@@ -197,73 +197,48 @@ export default function EqualizerScreen({
         </View>
       </View>
 
-      {/* 5-Band Equalizer */}
+      {/* Equalizer: Selah plays music as recorded; the phone's own equalizer shapes the sound */}
       <View style={styles.settingCard}>
         <View style={styles.cardHeader}>
           <Ionicons name="options-outline" size={20} color={c.ink} />
-          <Text style={styles.cardTitle}>5-Band Graphic Equalizer</Text>
+          <Text style={styles.cardTitle}>Equalizer</Text>
         </View>
-        <Text style={styles.cardSub}>Tailored audio profiles for worship and headphones</Text>
-
-        {/* Presets Row */}
-        <View style={styles.presetsRow}>
-          {presets.map((p) => {
-            const isActive = activePreset === p.id;
-            return (
-              <TouchableOpacity
-                key={p.id}
-                style={[styles.presetBtn, isActive && styles.activePresetBtn]}
-                onPress={() => setActivePreset(p.id)}
-              >
-                <Text style={[styles.presetText, isActive && styles.activePresetText]}>
-                  {p.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* 5-Band Graphic Sliders Visual */}
-        <View style={styles.bandsGrid}>
-          {bands.map((b, idx) => (
-            <View key={idx} style={styles.bandCol}>
-              <Text style={styles.gainText}>{b.gain}</Text>
-              <View style={styles.sliderTrack}>
-                <View style={[styles.sliderFill, { height: `${b.level * 100}%` }]} />
-                <View style={[styles.sliderThumb, { bottom: `${b.level * 100}%` }]} />
-              </View>
-              <Text style={styles.freqText}>{b.freq}</Text>
-              <Text style={styles.labelText}>{b.label}</Text>
-            </View>
-          ))}
-        </View>
+        <Text style={styles.cardSub}>
+          {Platform.OS === 'android'
+            ? "Selah plays your music exactly as it was recorded. To boost the bass or the voices, use your phone's own equalizer."
+            : "Selah plays your music exactly as it was recorded. iPhone doesn't let music apps change the sound, but many headphones have their own app with an equalizer."}
+        </Text>
+        {Platform.OS === 'android' && (
+          <TouchableOpacity
+            style={styles.eqButton}
+            onPress={openPhoneEqualizer}
+            activeOpacity={0.85}
+            testID="open-phone-equalizer"
+          >
+            <Ionicons name="open-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.eqButtonText}>Open phone equalizer</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Google Play & Store Compliance */}
+      {/* Plain facts about privacy and YouTube */}
       <View style={styles.complianceCard}>
         <View style={styles.complianceHeader}>
           <Ionicons name="shield-checkmark" size={18} color="#10B981" />
-          <Text style={styles.complianceTitle}>Google Play &amp; YouTube Compliant</Text>
+          <Text style={styles.complianceTitle}>Good to know</Text>
         </View>
 
         <View style={styles.pointRow}>
           <Ionicons name="checkmark-circle" size={16} color="#10B981" />
           <Text style={styles.pointText}>
-            Official YouTube Player API: Plays via official embed with all creator rights protected.
+            YouTube videos play in YouTube's own player. Selah never downloads them.
           </Text>
         </View>
 
         <View style={styles.pointRow}>
           <Ionicons name="checkmark-circle" size={16} color="#10B981" />
           <Text style={styles.pointText}>
-            No Audio Ripping: Never downloads or separates copyrighted streams.
-          </Text>
-        </View>
-
-        <View style={styles.pointRow}>
-          <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-          <Text style={styles.pointText}>
-            Private Device Storage: Your phone MP3s stay on your device with complete privacy.
+            Your songs stay on your phone. Selah never uploads them.
           </Text>
         </View>
       </View>
@@ -376,79 +351,20 @@ const makeStyles = (c) => StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800'
   },
-  presetsRow: {
+  eqButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16
-  },
-  presetBtn: {
-    backgroundColor: c.surfaceAlt,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: c.border
-  },
-  activePresetBtn: {
-    backgroundColor: c.inverse,
-    borderColor: c.inverse
-  },
-  presetText: {
-    color: c.textMuted,
-    fontSize: 12,
-    fontWeight: '700'
-  },
-  activePresetText: {
-    color: '#FFFFFF',
-    fontWeight: '800'
-  },
-  bandsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 8
-  },
-  bandCol: {
     alignItems: 'center',
-    gap: 6
-  },
-  gainText: {
-    color: c.ink,
-    fontSize: 11,
-    fontWeight: '700'
-  },
-  sliderTrack: {
-    width: 6,
-    height: 100,
-    backgroundColor: c.surfaceAlt,
-    borderRadius: 3,
-    position: 'relative',
-    justifyContent: 'flex-end'
-  },
-  sliderFill: {
-    width: '100%',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: c.inverse,
-    borderRadius: 3
-  },
-  sliderThumb: {
-    position: 'absolute',
-    left: -5,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: c.surface,
-    borderWidth: 2,
-    borderColor: c.inverse
-  },
-  freqText: {
-    color: c.text,
-    fontSize: 11,
-    fontWeight: '700',
+    borderRadius: 14,
+    paddingVertical: 12,
     marginTop: 4
   },
-  labelText: {
-    color: c.textMuted,
-    fontSize: 9
+  eqButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 14
   },
   complianceCard: {
     backgroundColor: c.surface,
