@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Platform, Alert, StyleSheet, AppState } from 'react-native';
-import { render, screen, fireEvent, act, cleanup } from '@testing-library/react-native';
+import { render, screen, fireEvent, act, cleanup, within } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import App from '../App';
 
@@ -195,6 +195,53 @@ androidOnly('finds every song on the phone, plays one, shows Now Playing, lyrics
   await tap(screen.getByTestId('player-view-library'));
   await tap(screen.getByTestId('tab-home'));
   expect(screen.getByText('Recently Played')).toBeTruthy();
+});
+
+androidOnly('share a lyric line as a picture (or as text if the picture fails)', async () => {
+  const { captureRef } = require('react-native-view-shot');
+  const Sharing = require('expo-sharing');
+  const { Share } = require('react-native');
+  const shareText = jest.spyOn(Share, 'share').mockImplementation(async () => ({}));
+  captureRef.mockClear();
+  Sharing.shareAsync.mockClear();
+
+  media.__state.audio = phoneSongs(3);
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  await tap(screen.getAllByText('Way Maker 1')[0]);
+  await tap(screen.getByTestId('tab-player'));
+  await settle(10);
+  await tap(screen.getByTestId('player-view-lyrics'));
+
+  // long-press a line: the card shows it with the song's name
+  await fireEvent(screen.getByTestId('lyric-line-1'), 'longPress');
+  await settle(2);
+  const card = () => screen.getByTestId('lyric-card');
+  expect(within(card()).getByText('I worship You, I worship You')).toBeTruthy();
+  expect(within(card()).getByText('Way Maker 1')).toBeTruthy();
+
+  await tap(screen.getByTestId('lyric-card-more')); // add the next line
+  expect(within(card()).getByText('I worship You, I worship You\nYou are here, working in this place')).toBeTruthy();
+  await tap(screen.getByTestId('lyric-style-ocean'));
+
+  await tap(screen.getByTestId('lyric-card-share'));
+  expect(captureRef).toHaveBeenCalled();
+  expect(Sharing.shareAsync).toHaveBeenCalledWith('file:///cache/lyric-card.png', expect.objectContaining({ mimeType: 'image/png' }));
+
+  // if the picture can't be made, the words are shared instead
+  captureRef.mockImplementationOnce(async () => {
+    throw new Error('no picture');
+  });
+  await tap(screen.getByTestId('lyric-card-share'));
+  expect(shareText).toHaveBeenCalledWith({
+    message: '"I worship You, I worship You\nYou are here, working in this place"\n— Way Maker 1 · Sinach\n\nShared from Selah'
+  });
+
+  await tap(screen.getByTestId('lyric-card-close'));
+  expect(screen.queryByTestId('lyric-card')).toBeNull();
+  shareText.mockRestore();
 });
 
 androidOnly('a format the phone cannot play shows a clear message instead of failing', async () => {

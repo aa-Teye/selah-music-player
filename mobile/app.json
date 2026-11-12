@@ -80,7 +80,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#08090C"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

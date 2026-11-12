@@ -40,3 +40,10 @@ jest.mock('expo-file-system', () => require('./mocks/fileSystem'));
 jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn(async () => ({ canceled: true, assets: [] }))
 }));
+jest.mock('react-native-view-shot', () => ({
+  captureRef: jest.fn(async () => 'file:///cache/lyric-card.png')
+}));
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(async () => true),
+  shareAsync: jest.fn(async () => {})
+}));

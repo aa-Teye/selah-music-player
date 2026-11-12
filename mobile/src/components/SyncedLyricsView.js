@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import LyricCardModal from './LyricCardModal';
 
 // The player reports whole seconds, so look slightly ahead to feel in time
 const LOOKAHEAD = 0.5;
@@ -69,12 +70,23 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
   const [editVisible, setEditVisible] = useState(false);
   const [editText, setEditText] = useState('');
   const [viewHeight, setViewHeight] = useState(320);
+  const [card, setCard] = useState(null); // { lines, start } while sharing a lyric picture
   const scrollRef = useRef(null);
   const layoutsRef = useRef({});
   const pausedUntilRef = useRef(0);
 
   const position = currentPosition + (lyrics.offset || 0) + LOOKAHEAD;
   const activeIndex = lyrics.mode === 'synced' ? findActiveIndex(lyrics.lines, position) : -1;
+
+  // Words of every line (no empty lines), used for sharing
+  const shareLines =
+    lyrics.mode === 'synced'
+      ? (lyrics.lines || []).map((l) => l.text)
+      : (lyrics.plainLines || []).filter((l) => String(l).trim());
+  const openCard = (start) => {
+    if (shareLines.length === 0) return;
+    setCard({ lines: shareLines, start: Math.min(Math.max(0, start), shareLines.length - 1) });
+  };
 
   // Keep the current line in the middle (unless the reader is scrolling by hand)
   useEffect(() => {
@@ -137,7 +149,10 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
                   layoutsRef.current[i] = e.nativeEvent.layout;
                 }}
                 onPress={() => onSeek && onSeek(Math.max(0, Math.round(line.time - (lyrics.offset || 0))))}
+                onLongPress={() => openCard(i)}
+                delayLongPress={350}
                 style={styles.lineBox}
+                testID={`lyric-line-${i}`}
               >
                 <Text
                   style={[
@@ -164,15 +179,23 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.plainNote}>These lyrics are not time-synced for this song.</Text>
-          {lyrics.plainLines.map((line, i) =>
-            line === '' ? (
-              <View key={i} style={{ height: 14 }} />
-            ) : (
-              <Text key={i} style={[styles.plainLine, { fontSize: 17 * fontScale, lineHeight: 26 * fontScale }]}>
-                {line}
-              </Text>
-            )
-          )}
+          {(() => {
+            let wordsIndex = -1; // position among the non-empty lines (for sharing)
+            return lyrics.plainLines.map((line, i) => {
+              if (!String(line).trim()) return <View key={i} style={{ height: 14 }} />;
+              wordsIndex += 1;
+              const start = wordsIndex;
+              return (
+                <Text
+                  key={i}
+                  style={[styles.plainLine, { fontSize: 17 * fontScale, lineHeight: 26 * fontScale }]}
+                  onLongPress={() => openCard(start)}
+                >
+                  {line}
+                </Text>
+              );
+            });
+          })()}
         </ScrollView>
       );
     }
@@ -239,6 +262,11 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
           style={styles.pillRow}
           contentContainerStyle={styles.pillRowContent}
         >
+          <Pill
+            icon={<Ionicons name="share-social" size={13} color={c.ink} />}
+            label="Share"
+            onPress={() => openCard(activeIndex >= 0 ? activeIndex : 0)}
+          />
           <Pill icon={<Ionicons name="pencil" size={13} color={c.ink} />} label="Edit" onPress={openEditor} />
           {lyrics.canSearch && (
             <Pill icon={<Ionicons name="refresh" size={13} color={c.ink} />} label="Search again" onPress={lyrics.refresh} />
@@ -276,6 +304,14 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
       )}
 
       <View style={styles.body}>{renderBody()}</View>
+
+      <LyricCardModal
+        visible={Boolean(card)}
+        allLines={card ? card.lines : []}
+        startIndex={card ? card.start : 0}
+        track={track}
+        onClose={() => setCard(null)}
+      />
 
       <Modal visible={editVisible} transparent animationType="slide" onRequestClose={() => setEditVisible(false)}>
         <KeyboardAvoidingView
