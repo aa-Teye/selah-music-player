@@ -235,13 +235,13 @@ function HomeScreen({
           <Text style={styles.noResultsTitle}>No songs yet</Text>
           <Text style={styles.noResultsSub}>
             {Platform.OS === 'android'
-              ? 'Selah finds all the music on your phone. Open your Library to scan.'
+              ? 'Selah finds all the music on your phone. Open My Songs to scan.'
               : 'Import songs from the Files app, or copy music into Files › On My iPhone › Selah.'}
           </Text>
           {onOpenLibrary && (
             <TouchableOpacity style={styles.searchYtBannerBtn} onPress={onOpenLibrary}>
               <Ionicons name="folder-open-outline" size={18} color={c.ink} />
-              <Text style={styles.searchYtBannerBtnText}>Open my Library</Text>
+              <Text style={styles.searchYtBannerBtnText}>Open My Songs</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -307,7 +307,7 @@ function HomeScreen({
       )}
       {filteredTracks.length > HOME_SONG_LIMIT && onOpenLibrary && (
         <TouchableOpacity style={styles.seeAllBtn} onPress={onOpenLibrary} activeOpacity={0.8}>
-          <Text style={styles.seeAllText}>See all {filteredTracks.length} songs in Library</Text>
+          <Text style={styles.seeAllText}>See all {filteredTracks.length} in My Songs</Text>
         </TouchableOpacity>
       )}
       <View style={{ marginTop: 8 }}>

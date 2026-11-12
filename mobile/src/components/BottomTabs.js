@@ -8,9 +8,9 @@ function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
   const styles = useThemedStyles(makeStyles);
   const tabs = [
     { id: 'home', label: 'Home', iconType: 'ion', icon: 'home-sharp' },
-    { id: 'library', label: 'Library', iconType: 'ion', icon: 'musical-notes' },
-    { id: 'youtube', label: 'YouTube', iconType: 'ion', icon: 'play-circle' },
     { id: 'player', label: 'Player', iconType: 'ion', icon: 'disc-outline' },
+    { id: 'youtube', label: 'YouTube', iconType: 'ion', icon: 'play-circle' },
+    { id: 'library', label: 'My Songs', iconType: 'ion', icon: 'musical-notes' },
     { id: 'playlists', label: 'Playlists', iconType: 'ion', icon: 'albums-outline' }
   ];
 

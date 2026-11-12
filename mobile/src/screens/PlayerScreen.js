@@ -796,7 +796,7 @@ const PLAYER_VIEWS = [
   { id: 'now', label: 'Now Playing', icon: 'disc' },
   { id: 'lyrics', label: 'Lyrics', icon: 'text' },
   { id: 'queue', label: 'Up Next', icon: 'list' },
-  { id: 'library', label: 'Library', icon: 'library' }
+  { id: 'library', label: 'Browse', icon: 'library' }
 ];
 
 /**
@@ -849,9 +849,9 @@ export default function PlayerScreen(props) {
         <View style={viewStyles.emptyBox}>
           <Ionicons name="musical-notes-outline" size={44} color={c.textFaint} />
           <Text style={viewStyles.emptyTitle}>Nothing playing yet</Text>
-          <Text style={viewStyles.emptySub}>Pick a song from your Library to start listening.</Text>
+          <Text style={viewStyles.emptySub}>Pick a song from Browse or My Songs to start listening.</Text>
           <TouchableOpacity style={viewStyles.emptyBtn} onPress={() => onChangeView && onChangeView('library')}>
-            <Text style={viewStyles.emptyBtnText}>Open Library</Text>
+            <Text style={viewStyles.emptyBtnText}>Browse songs</Text>
           </TouchableOpacity>
         </View>
       )}

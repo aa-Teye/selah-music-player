@@ -183,7 +183,7 @@ function LocalLibraryScreen({
       {/* Header */}
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.title}>Local Music</Text>
+          <Text style={styles.title}>My Songs</Text>
           <Text style={styles.subtitle}>{localTracks.length} offline song{localTracks.length === 1 ? '' : 's'} on device</Text>
         </View>
 
@@ -255,7 +255,7 @@ function LocalLibraryScreen({
             <Ionicons name="search" size={16} color={c.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search your phone library..."
+              placeholder="Search my songs..."
               placeholderTextColor={c.textSubtle}
               value={filterQuery}
               onChangeText={setFilterQuery}

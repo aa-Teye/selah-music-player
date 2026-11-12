@@ -227,11 +227,11 @@ const OCEANS = {
   syncedLyrics: '[00:10.00] You call me out upon the waters\n[00:16.00] The great unknown where feet may fail'
 };
 
-test('bottom tabs are in the new order: Home, Library, YouTube, Player, Playlists', async () => {
+test('bottom tabs are in the order: Home, Player, YouTube, Library, Playlists', async () => {
   await render(<App />);
   await settle();
   const ids = screen.getAllByTestId(/^tab-/).map((el) => el.props.testID);
-  expect(ids).toEqual(['tab-home', 'tab-library', 'tab-youtube', 'tab-player', 'tab-playlists']);
+  expect(ids).toEqual(['tab-home', 'tab-player', 'tab-youtube', 'tab-library', 'tab-playlists']);
 });
 
 test('the YouTube pause button really pauses and resumes the video', async () => {
@@ -277,7 +277,7 @@ androidOnly('YouTube pauses and never takes over when you play one of your own s
   await settle(6);
   expect(songPlayer.pause).not.toHaveBeenCalled();
   expect(audio.createAudioPlayer).toHaveBeenCalledTimes(1);
-  expect(screen.getByText('Local Music')).toBeTruthy(); // still on Library, not thrown to YouTube
+  expect(screen.getByText(/offline songs? on device/)).toBeTruthy(); // still on My Songs, not thrown to YouTube
 });
 
 androidOnly('Home shows your own music: recently added, playlists and your songs', async () => {
@@ -294,7 +294,7 @@ androidOnly('big libraries load in batches so the app stays fast', async () => {
   media.__state.audio = phoneSongs(200);
   await render(<App />);
   await settle(30);
-  expect(screen.getByText('See all 200 songs in Library')).toBeTruthy();
+  expect(screen.getByText('See all 200 in My Songs')).toBeTruthy();
 
   await tap(screen.getByTestId('tab-library'));
   const before = screen.getAllByText(/^Way Maker \d+$/).length;
