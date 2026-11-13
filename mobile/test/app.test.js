@@ -73,6 +73,9 @@ beforeEach(async () => {
   await AsyncStorage.setItem('@selah_has_onboarded', 'true');
   fs.__reset();
   require('./mocks/notifications').__reset();
+  require('./mocks/secureStore').__store.clear();
+  require('./mocks/purchases').__reset();
+  require('../src/services/apiClient').resetTokenCacheForTests();
   media.__state.audio = [];
   media.__state.other = [];
   media.__state.permission = 'granted';
@@ -166,8 +169,10 @@ androidOnly('song for today comes from your own music and plays with one tap', a
   expect(audio.createAudioPlayer).toHaveBeenCalledWith(expect.stringContaining('Way%20Maker'));
 });
 
-test('Backup & Restore: hidden until Selah cloud is set up, then backs up and restores playlists', async () => {
+test('Account & Backup: hidden until Selah cloud is set up; sign up, Premium unlocks backup, restore, delete account', async () => {
   const cloud = require('../src/services/cloudService');
+  const { resetTokenCacheForTests } = require('../src/services/apiClient');
+  const { createFakeServer, BASE } = require('./fakeServer');
   fs.__reset({
     'file:///docs/': { dirs: ['Selah Music'], files: {} },
     'file:///docs/Selah%20Music/': { dirs: [], files: { 'track01.mp3': { bytes: fx.mp3WithTags() } } } // Way Maker, Sinach, 0:26
@@ -176,47 +181,90 @@ test('Backup & Restore: hidden until Selah cloud is set up, then backs up and re
   await settle(25);
   if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
   await tap(screen.getByTestId('open-menu'));
-  expect(screen.queryByTestId('open-backup')).toBeNull(); // not set up yet: nothing to see
+  expect(screen.queryByTestId('open-account')).toBeNull(); // not set up yet: nothing to see
   await cleanup();
 
-  cloud.setApiUrlForTests('https://selah-api.test');
-  const OLD_PHONE = {
-    songs: { 'old-id': { t: 'Way Maker', a: 'Sinach', d: 26 } },
-    playlists: [{ id: 'pl-old', name: 'From my old phone', trackIds: ['old-id'] }],
-    favorites: ['old-id'],
-    playCounts: { 'old-id': { n: 9, last: 1 } },
-    lyrics: {}
-  };
-  global.fetch = jest.fn(async (url, options = {}) => {
-    const u = String(url);
-    if (u.includes('selah-api.test/api/backup') && options.method === 'PUT') {
-      return { ok: true, status: 200, json: async () => ({ savedAt: '2026-11-12T10:00:00.000Z', size: 99 }) };
-    }
-    if (u.includes('selah-api.test/api/backup')) {
-      return { ok: true, status: 200, json: async () => ({ savedAt: '2026-11-11T10:00:00.000Z', data: OLD_PHONE }) };
-    }
-    return { ok: true, status: 200, json: async () => (u.includes('lrclib') ? [LYRICS] : []), text: async () => '' };
+  cloud.setApiUrlForTests(BASE);
+  resetTokenCacheForTests();
+  const server = createFakeServer({ otherFetch: global.fetch });
+  global.fetch = server.fetch;
+  // Kofi made an account on his old phone, has Premium and a backup there
+  server.users.set('kofi@example.com', {
+    id: 'user-old',
+    name: 'Kofi',
+    email: 'kofi@example.com',
+    password: 'praise1234',
+    premium: { active: true, until: null, source: 'gift' }
   });
+  server.backups.set('user-old', {
+    savedAt: '2026-11-11T10:00:00.000Z',
+    data: {
+      songs: { 'old-id': { t: 'Way Maker', a: 'Sinach', d: 26 } },
+      playlists: [{ id: 'pl-old', name: 'From my old phone', trackIds: ['old-id'] }],
+      favorites: ['old-id'],
+      playCounts: { 'old-id': { n: 9, last: 1 } },
+      lyrics: {}
+    }
+  });
+  const type = async (testID, text) => {
+    await fireEvent.changeText(screen.getByTestId(testID), text);
+  };
   try {
     await render(<App />);
     await settle(25);
     await tap(screen.getByTestId('open-menu'));
-    await tap(screen.getByTestId('open-backup'));
-    expect(screen.getByTestId('backup-code').props.children).toMatch(/^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){4}$/);
+    await tap(screen.getByTestId('open-account'));
 
-    await tap(screen.getByTestId('backup-now'));
+    // sign up: a free account
+    await tap(screen.getByTestId('go-signup'));
+    await type('account-name', 'Ama');
+    await type('account-email', 'ama@example.com');
+    await type('account-password', 'short');
+    await tap(screen.getByTestId('account-submit'));
+    expect(screen.getByTestId('account-error').props.children).toBe('Use at least 8 characters for your password.');
+    await type('account-password', 'worship123');
+    await tap(screen.getByTestId('account-submit'));
+    await settle(6);
+    expect(screen.getByTestId('account-signed-in-email').props.children).toBe('ama@example.com');
+
+    // backup is locked without Premium; Premium isn't on sale until the store key is set
+    expect(screen.queryByTestId('backup-now')).toBeNull();
+    expect(screen.getByText('Backup and restore are part of Selah Premium.')).toBeTruthy();
+    await tap(screen.getByTestId('see-plans'));
+    expect(screen.getByTestId('plans-note').props.children).toBe("Selah Premium isn't on sale yet. It's coming soon.");
+    await tap(screen.getByTestId('premium-back'));
+
+    // log out, then log in as Kofi on this "new phone" and restore his backup
+    await tap(screen.getByTestId('account-logout'));
     await settle(4);
-    const put = global.fetch.mock.calls.find(([u, o]) => String(u).includes('/api/backup') && o && o.method === 'PUT');
-    expect(put).toBeTruthy();
-    expect(Alert.alert).toHaveBeenCalledWith('Backed up', expect.any(String));
+    await type('account-email', 'kofi@example.com');
+    await type('account-password', 'wrong-pass');
+    await tap(screen.getByTestId('account-submit'));
+    await settle(4);
+    expect(screen.getByTestId('account-error').props.children).toBe('That email or password is not right.');
+    await type('account-password', 'praise1234');
+    await tap(screen.getByTestId('account-submit'));
+    await settle(6);
+    expect(screen.getByText('Gifted to you')).toBeTruthy();
 
-    await fireEvent.changeText(screen.getByTestId('restore-code'), 'wxyz-2345-6789-abcd-efgh');
     await tap(screen.getByTestId('restore-now'));
     await settle(6);
     expect(Alert.alert).toHaveBeenCalledWith('Restored', expect.stringContaining('1 playlist'));
-    expect(screen.getByTestId('backup-code').props.children).toBe('WXYZ-2345-6789-ABCD-EFGH'); // keeps backing up there
+    await tap(screen.getByTestId('backup-now'));
+    await settle(4);
+    expect(server.calls.some((c) => c.method === 'PUT' && c.path === '/api/backup')).toBe(true);
+    expect(Alert.alert).toHaveBeenCalledWith('Backed up', expect.any(String));
 
-    await tap(screen.getByTestId('backup-close'));
+    // delete the account (Google Play requires this to be in the app)
+    await tap(screen.getByTestId('go-delete-account'));
+    await type('delete-password', 'praise1234');
+    await tap(screen.getByTestId('delete-account-confirm'));
+    await settle(6);
+    expect(Alert.alert).toHaveBeenCalledWith('Account deleted', expect.any(String));
+    expect(server.users.has('kofi@example.com')).toBe(false);
+    expect(screen.getByTestId('account-submit')).toBeTruthy(); // back to log in
+
+    await tap(screen.getByTestId('account-close'));
     await tap(screen.getByTestId('tab-playlists'));
     await tap(screen.getByText('From my old phone'));
     expect(screen.getByText('1 song • Custom Collection')).toBeTruthy();
@@ -228,24 +276,74 @@ test('Backup & Restore: hidden until Selah cloud is set up, then backs up and re
   }
 });
 
-androidOnly('lyrics typed by other Selah users show when LRCLIB has none, and can be reported', async () => {
+test('buying Premium in the app unlocks backup straight away', async () => {
   const cloud = require('../src/services/cloudService');
-  cloud.setApiUrlForTests('https://selah-api.test');
-  global.fetch = jest.fn(async (url, options = {}) => {
-    const u = String(url);
-    if (u.includes('selah-api.test/api/lyrics/report')) return { ok: true, status: 200, json: async () => ({ reported: true }) };
-    if (u.includes('selah-api.test/api/lyrics')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          found: true,
-          lyrics: { id: 42, title: 'Way Maker 1', artist: 'Sinach', duration: 241, synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' }
-        })
-      };
-    }
-    return { ok: true, status: 200, json: async () => [], text: async () => '' }; // LRCLIB has nothing
+  const { createFakeServer, BASE } = require('./fakeServer');
+  const Purchases = require('./mocks/purchases');
+  const Constants = require('expo-constants').default;
+  const savedExtra = Constants.expoConfig.extra;
+  Constants.expoConfig.extra = { ...(savedExtra || {}), revenueCatAndroidKey: 'goog_test', revenueCatIosKey: 'appl_test' };
+  cloud.setApiUrlForTests(BASE);
+  const server = createFakeServer({ otherFetch: global.fetch });
+  server.users.set('ama@example.com', {
+    id: 'user-ama',
+    name: 'Ama',
+    email: 'ama@example.com',
+    password: 'worship123',
+    premium: { active: false, until: null, source: null }
   });
+  global.fetch = server.fetch;
+  // the store tells Selah's server about the purchase
+  Purchases.__state.onPurchase = async () =>
+    server.giftPremium('ama@example.com', { active: true, until: '2026-12-13T00:00:00.000Z', source: 'store' });
+  try {
+    await render(<App />);
+    await settle(15);
+    if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+    await tap(screen.getByTestId('open-menu'));
+    await tap(screen.getByTestId('open-account'));
+    await fireEvent.changeText(screen.getByTestId('account-email'), 'ama@example.com');
+    await fireEvent.changeText(screen.getByTestId('account-password'), 'worship123');
+    await tap(screen.getByTestId('account-submit'));
+    await settle(6);
+    expect(Purchases.configure).toHaveBeenCalledWith({ apiKey: expect.any(String), appUserID: 'user-ama' });
+
+    await tap(screen.getByTestId('see-plans'));
+    await settle(2);
+    expect(screen.getByText('GH₵15.00 per month')).toBeTruthy();
+    expect(screen.getByText('GH₵150.00 per year')).toBeTruthy();
+    await tap(screen.getByTestId('plan-$rc_monthly'));
+    await settle(4);
+    expect(Alert.alert).toHaveBeenCalledWith('Welcome to Selah Premium', expect.any(String));
+    expect(screen.getByTestId('backup-now')).toBeTruthy();
+    expect(screen.getByText('Manage or cancel your subscription')).toBeTruthy();
+  } finally {
+    cloud.setApiUrlForTests(null);
+    Constants.expoConfig.extra = savedExtra;
+  }
+});
+
+androidOnly('lyrics typed by other Selah users show when LRCLIB has none; reporting needs an account', async () => {
+  const cloud = require('../src/services/cloudService');
+  const { resetTokenCacheForTests } = require('../src/services/apiClient');
+  const { logIn } = require('../src/services/accountService');
+  const { createFakeServer, BASE } = require('./fakeServer');
+  cloud.setApiUrlForTests(BASE);
+  resetTokenCacheForTests();
+  const server = createFakeServer({
+    otherFetch: async () => ({ ok: true, status: 200, json: async () => [], text: async () => '' }) // LRCLIB has nothing
+  });
+  server.sharedLyrics = { id: 42, title: 'Way Maker 1', artist: 'Sinach', duration: 241, synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' };
+  server.users.set('esi@example.com', { id: 'user-esi', name: 'Esi', email: 'esi@example.com', password: 'praise1234', premium: { active: false, until: null, source: null } });
+  global.fetch = server.fetch;
+  const reportOnce = async () => {
+    Alert.alert.mockClear();
+    await tap(screen.getByText('Report'));
+    const confirm = Alert.alert.mock.calls.find((c) => c[0] === 'Report these lyrics?');
+    await act(async () => {
+      await confirm[2].find((b) => b.text === 'Report').onPress();
+    });
+  };
   try {
     media.__state.audio = phoneSongs(2);
     await render(<App />);
@@ -259,13 +357,15 @@ androidOnly('lyrics typed by other Selah users show when LRCLIB has none, and ca
     expect(screen.getByText('SHARED BY SELAH USERS')).toBeTruthy();
     expect(screen.getByText('Your love is so amazing')).toBeTruthy();
 
-    await tap(screen.getByText('Report'));
-    const confirm = Alert.alert.mock.calls.find((c) => c[0] === 'Report these lyrics?');
+    await reportOnce();
+    expect(Alert.alert).toHaveBeenCalledWith('Log in to report', expect.stringContaining('Account & Backup'));
+    expect(server.reports).toHaveLength(0);
+
     await act(async () => {
-      await confirm[2].find((b) => b.text === 'Report').onPress();
+      await logIn({ email: 'esi@example.com', password: 'praise1234' });
     });
-    const sent = global.fetch.mock.calls.find(([u]) => String(u).includes('/api/lyrics/report'));
-    expect(JSON.parse(sent[1].body)).toEqual({ id: 42 });
+    await reportOnce();
+    expect(server.reports).toEqual([{ by: 'esi@example.com', id: 42 }]);
   } finally {
     cloud.setApiUrlForTests(null);
   }

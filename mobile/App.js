@@ -38,7 +38,10 @@ import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
 import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 import { isCloudReady, autoBackupIfDue } from './src/services/cloudService';
-import BackupModal from './src/components/BackupModal';
+import { onLoginChange } from './src/services/apiClient';
+import { loadAccount } from './src/services/accountService';
+import { connectStore, disconnectStore } from './src/services/premiumService';
+import AccountModal from './src/components/AccountModal';
 import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeContext';
 
 // Merge a finished scan into a song list: add new songs, drop songs that are gone, refresh moved paths
@@ -130,7 +133,25 @@ function SelahApp() {
   const [repeatMode, setRepeatMode] = useState('off'); // 'off' | 'all' | 'one'
   const isRepeat = repeatMode !== 'off';
   const [favorites, setFavorites] = useState([]);
-  const [isBackupVisible, setIsBackupVisible] = useState(false);
+  const [isAccountVisible, setIsAccountVisible] = useState(false);
+  // Your Selah account: { user, premium } when logged in, null when not
+  const [account, setAccount] = useState(null);
+  const handleAccountChange = useCallback((next) => {
+    setAccount(next);
+    if (next && next.user) connectStore(next.user.id);
+    else disconnectStore();
+  }, []);
+
+  useEffect(() => {
+    if (!isCloudReady()) return undefined;
+    loadAccount()
+      .then((acc) => handleAccountChange(acc))
+      .catch(() => {});
+    // the server ended the login (password changed, account deleted on another phone)
+    return onLoginChange((loggedIn) => {
+      if (!loggedIn) setAccount(null);
+    });
+  }, [handleAccountChange]);
   const [playerView, setPlayerView] = useState('now'); // 'now' | 'lyrics' | 'queue' | 'library'
   const [scanStatus, setScanStatus] = useState({ state: 'idle', count: 0, latest: '' });
   const [deepScan, setDeepScan] = useState({ visible: false, state: 'idle' });
@@ -1600,13 +1621,15 @@ function SelahApp() {
         onOpenEq={() => setIsEqVisible(true)}
         onOpenStats={openStats}
         onOpenSleepTimer={() => setIsEqVisible(true)}
-        onOpenBackup={isCloudReady() ? () => setIsBackupVisible(true) : undefined}
+        onOpenAccount={isCloudReady() ? () => setIsAccountVisible(true) : undefined}
         streakDays={streakData?.streakDays || 1}
       />
 
-      <BackupModal
-        visible={isBackupVisible}
-        onClose={() => setIsBackupVisible(false)}
+      <AccountModal
+        visible={isAccountVisible}
+        onClose={() => setIsAccountVisible(false)}
+        account={account}
+        onAccountChange={handleAccountChange}
         getState={() => backupStateRef.current}
         onRestore={handleRestore}
       />

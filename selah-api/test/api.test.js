@@ -51,9 +51,11 @@ afterEach(() => {
   global.fetch = realFetch;
 });
 
-function request(path, { method = 'GET', token, body } = {}) {
+function request(path, { method = 'GET', token, body, cookie, origin } = {}) {
   const headers = { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
+  if (cookie) headers.cookie = cookie;
+  if (origin) headers.origin = origin;
   return new Request(`${BASE}${path}`, {
     method,
     headers,
@@ -124,6 +126,31 @@ test('sign up, see my account, log out, log in again', async () => {
   const again = await auth('sign-in/email', { email: 'ama@example.com', password: 'worship123' }, { direct: true });
   assert.equal(again.status, 200);
   assert.equal((await call(me.GET, '/api/me', { token: again.token })).body.user.email, 'ama@example.com');
+});
+
+test('phones also send the login cookie: Selah\'s app address (selah://) keeps those requests working', async () => {
+  // Phones keep cookies automatically, so after logging in every request carries the session cookie too.
+  // A cookie without an Origin is refused (protection for websites); the app always sends Origin: selah://
+  const signUpRes = await authApi.POST(request('/api/auth?path=sign-up/email', {
+    method: 'POST',
+    body: { email: 'ama@example.com', password: 'worship123', name: 'Ama' },
+    origin: 'selah://'
+  }));
+  assert.equal(signUpRes.status, 200);
+  const token = signUpRes.headers.get('set-auth-token');
+  const cookie = signUpRes.headers.get('set-cookie').split(';')[0];
+  assert.match(cookie, /session_token=/);
+
+  const refused = await call(authApi.POST, '/api/auth?path=sign-out', { method: 'POST', token, cookie, body: {} });
+  assert.equal(refused.status, 403);
+
+  const withApp = (path, body) => call(authApi.POST, `/api/auth?path=${path}`, { method: 'POST', token, cookie, origin: 'selah://', body });
+  assert.equal((await withApp('sign-in/email', { email: 'ama@example.com', password: 'worship123' })).status, 200);
+  assert.equal((await call(me.GET, '/api/me', { token, cookie, origin: 'selah://' })).status, 200);
+  assert.equal((await withApp('delete-user', { password: 'worship123' })).status, 200);
+
+  // other websites are still refused
+  assert.equal((await call(authApi.POST, '/api/auth?path=sign-out', { method: 'POST', token, cookie, origin: 'https://evil.example', body: {} })).status, 403);
 });
 
 test('passwords must be at least 8 characters', async () => {

@@ -18,6 +18,8 @@ import LyricCardModal from './LyricCardModal';
 import { parseLrc } from '../services/lyricsService';
 import { isCloudReady, shareLyrics, reportSharedLyrics } from '../services/cloudService';
 
+const NEEDS_ACCOUNT = 'This needs a free Selah account. Open the menu (☰) › Account & Backup to log in or sign up.';
+
 // The player reports whole seconds, so look slightly ahead to feel in time
 const LOOKAHEAD = 0.5;
 
@@ -135,7 +137,8 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
               });
               Alert.alert('Thank you!', 'Your lyrics are now shared with other Selah users.');
             } catch (err) {
-              Alert.alert('Not shared', err?.message || 'Please try again later.');
+              if (err?.kind === 'logged-out') Alert.alert('Log in to share', NEEDS_ACCOUNT);
+              else Alert.alert('Not shared', err?.message || 'Please try again later.');
             }
           }
         }
@@ -156,7 +159,8 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
             await reportSharedLyrics(id);
             Alert.alert('Thank you', 'We have received your report.');
           } catch (err) {
-            Alert.alert('Not sent', err?.message || 'Please try again later.');
+            if (err?.kind === 'logged-out') Alert.alert('Log in to report', NEEDS_ACCOUNT);
+            else Alert.alert('Not sent', err?.message || 'Please try again later.');
           }
         }
       }

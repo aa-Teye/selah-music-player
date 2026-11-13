@@ -1,105 +1,24 @@
 // ═════════════════════════════════════════════════════════════════════════
-//  SELAH — CLOUD (backup & restore, shared lyrics)
-//  Talks to Selah's small service on Vercel (folder selah-api/).
-//  • No account or e-mail: each phone gets a private backup code
-//    (like ABCD-EFGH-JKLM-NPQR-STUV). Type it on a new phone to restore.
-//  • Your songs are never uploaded: only playlists, loved songs, play counts
-//    and lyrics you typed, with each song's name so it can be found again.
-//  • Switched off until the service address is set in app.json
-//    (expo.extra.selahApiUrl).
+//  SELAH — CLOUD BACKUP (Premium) & SHARED LYRICS
+//  • Backup & restore need a Selah account with Premium. Log in on a new
+//    phone and tap Restore: playlists, loved songs, play counts and the
+//    lyrics you typed come back.
+//  • Your songs are never uploaded: only those lists, with each song's
+//    name so it can be found again on another phone.
+//  • Lyrics shared by Selah users can be read by everyone; sharing and
+//    reporting need a (free) account.
 // ═════════════════════════════════════════════════════════════════════════
-import Constants from 'expo-constants';
-import * as Crypto from 'expo-crypto';
 import AsyncStoragePackage from '@react-native-async-storage/async-storage';
+import { call, isCloudReady, getToken, CloudError } from './apiClient';
 import { songKey } from './songKey';
 
+export { apiUrl, isCloudReady, setApiUrlForTests, CloudError } from './apiClient';
+
 const AsyncStorage = AsyncStoragePackage?.default || AsyncStoragePackage;
-const CODE_KEY = '@selah_backup_code';
 const LAST_BACKUP_KEY = '@selah_last_backup';
 const AUTO_KEY = '@selah_auto_backup';
 const LYRICS_PREFIX = '@selah_lyrics_';
 const NOT_LYRICS = /^@selah_lyrics_(cache|offset)_/;
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I, O, 0, 1: easy to read out
-export const CODE_PATTERN = /^[A-HJ-NP-Z2-9]{4}(-[A-HJ-NP-Z2-9]{4}){4}$/;
-
-export class CloudError extends Error {
-  constructor(kind, message, status) {
-    super(message);
-    this.kind = kind; // 'not-configured' | 'offline' | 'not-found' | 'bad-code' | 'http'
-    this.status = status;
-  }
-}
-
-// ── Where the service lives ─────────────────────────────────────────────────
-let urlForTests = null;
-export function setApiUrlForTests(url) {
-  urlForTests = url;
-}
-export function apiUrl() {
-  const url = urlForTests ?? Constants.expoConfig?.extra?.selahApiUrl ?? '';
-  return String(url || '').trim().replace(/\/+$/, '');
-}
-export const isCloudReady = () => Boolean(apiUrl());
-
-async function call(path, { method = 'GET', code, body, timeout = 15000 } = {}) {
-  const base = apiUrl();
-  if (!base) throw new CloudError('not-configured', 'Selah cloud is not set up yet.');
-  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), timeout) : null;
-  let res;
-  try {
-    res = await fetch(`${base}${path}`, {
-      method,
-      headers: {
-        Accept: 'application/json',
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-        ...(code ? { Authorization: `Bearer ${code}` } : {})
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller ? controller.signal : undefined
-    });
-  } catch {
-    throw new CloudError('offline', 'Could not reach Selah cloud. Check your internet connection and try again.');
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-  let data = {};
-  try {
-    data = (await res.json()) || {};
-  } catch {}
-  if (!res.ok) {
-    const kind = res.status === 404 ? 'not-found' : res.status === 401 ? 'bad-code' : 'http';
-    throw new CloudError(kind, data.error || `Selah cloud answered with an error (${res.status}).`, res.status);
-  }
-  return data;
-}
-
-// ── Backup code ─────────────────────────────────────────────────────────────
-export function makeCode(bytes = Crypto.getRandomBytes(20)) {
-  let raw = '';
-  for (let i = 0; i < 20; i++) raw += ALPHABET[bytes[i] % 32]; // 256 is a multiple of 32: every letter equally likely
-  return raw.match(/.{4}/g).join('-');
-}
-
-/** Accepts the code however it was typed (spaces, dashes, small letters); null if it can't be right */
-export function normalizeCode(input) {
-  const raw = String(input || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (raw.length !== 20) return null;
-  const code = raw.match(/.{4}/g).join('-');
-  return CODE_PATTERN.test(code) ? code : null;
-}
-
-export async function getBackupCode() {
-  let code = null;
-  try {
-    code = normalizeCode(await AsyncStorage.getItem(CODE_KEY));
-  } catch {}
-  if (!code) {
-    code = makeCode();
-    await AsyncStorage.setItem(CODE_KEY, code);
-  }
-  return code;
-}
 
 export async function getBackupStatus() {
   const [last, auto] = await Promise.all([AsyncStorage.getItem(LAST_BACKUP_KEY), AsyncStorage.getItem(AUTO_KEY)]);
@@ -153,16 +72,15 @@ export async function buildBackup({ tracks = [], playlists = [], favorites = [],
 }
 
 export async function backupNow(state) {
-  const code = await getBackupCode();
   const data = await buildBackup(state);
-  const result = await call('/api/backup', { method: 'PUT', code, body: { data } });
+  const result = await call('/api/backup', { method: 'PUT', auth: true, body: { data } });
   await AsyncStorage.setItem(LAST_BACKUP_KEY, result.savedAt || new Date().toISOString());
   return { ...result, playlists: data.playlists.length, songs: Object.keys(data.songs).length };
 }
 
-/** Once a day at most, only if you turned automatic backup on */
+/** Once a day at most, only if you turned automatic backup on (and are logged in with Premium) */
 export async function autoBackupIfDue(state) {
-  if (!isCloudReady()) return false;
+  if (!isCloudReady() || !(await getToken())) return false;
   const { lastBackupAt, auto } = await getBackupStatus();
   if (!auto) return false;
   if (lastBackupAt && Date.now() - Date.parse(lastBackupAt) < 24 * 60 * 60 * 1000) return false;
@@ -175,8 +93,7 @@ export async function autoBackupIfDue(state) {
 }
 
 export async function deleteBackup() {
-  const code = await getBackupCode();
-  const result = await call('/api/backup', { method: 'DELETE', code });
+  const result = await call('/api/backup', { method: 'DELETE', auth: true });
   await AsyncStorage.removeItem(LAST_BACKUP_KEY);
   return result.deleted;
 }
@@ -206,15 +123,13 @@ export function matchSongs(backupSongs = {}, tracks = []) {
   return idMap;
 }
 
-/** Downloads the backup for a code and fits it to the songs on this phone */
-export async function fetchRestore(codeInput, tracks) {
-  const code = normalizeCode(codeInput);
-  if (!code) throw new CloudError('bad-code', 'That code is not complete. It looks like ABCD-EFGH-JKLM-NPQR-STUV.');
+/** Downloads your backup and fits it to the songs on this phone */
+export async function fetchRestore(tracks) {
   let answer;
   try {
-    answer = await call('/api/backup', { code });
+    answer = await call('/api/backup', { auth: true });
   } catch (err) {
-    if (err.kind === 'not-found') throw new CloudError('not-found', 'There is no backup for that code.');
+    if (err.kind === 'not-found') throw new CloudError('not-found', 'There is no backup in your account yet.');
     throw err;
   }
   const data = answer.data || {};
@@ -228,7 +143,6 @@ export async function fetchRestore(codeInput, tracks) {
     return out;
   };
   return {
-    code,
     savedAt: answer.savedAt,
     playlists: (data.playlists || []).map((pl) => ({ ...pl, trackIds: mapIds(pl.trackIds) })),
     favorites: mapIds(data.favorites),
@@ -237,12 +151,6 @@ export async function fetchRestore(codeInput, tracks) {
     found: Object.keys(idMap).length,
     total: Object.keys(data.songs || {}).length
   };
-}
-
-/** After restoring, this phone keeps backing up to the same place */
-export async function adoptBackupCode(code) {
-  const clean = normalizeCode(code);
-  if (clean) await AsyncStorage.setItem(CODE_KEY, clean);
 }
 
 // ── Lyrics shared between Selah users ───────────────────────────────────────
@@ -260,11 +168,9 @@ export async function findSharedLyrics({ title, artist, duration }) {
 }
 
 export async function shareLyrics({ title, artist, duration, text, synced }) {
-  const code = await getBackupCode();
-  return call('/api/lyrics', { method: 'POST', code, body: { title, artist, duration, text, synced } });
+  return call('/api/lyrics', { method: 'POST', auth: true, body: { title, artist, duration, text, synced } });
 }
 
 export async function reportSharedLyrics(id) {
-  const code = await getBackupCode();
-  return call('/api/lyrics/report', { method: 'POST', code, body: { id } });
+  return call('/api/lyrics/report', { method: 'POST', auth: true, body: { id } });
 }

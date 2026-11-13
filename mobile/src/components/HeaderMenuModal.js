@@ -19,7 +19,7 @@ export default function HeaderMenuModal({
   onOpenEq,
   onOpenStats,
   onOpenSleepTimer,
-  onOpenBackup,
+  onOpenAccount,
   streakDays = 14
 }) {
   const c = useColors();
@@ -106,21 +106,21 @@ export default function HeaderMenuModal({
                 <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>
 
-              {onOpenBackup && (
+              {onOpenAccount && (
                 <TouchableOpacity
                   style={styles.menuItem}
-                  testID="open-backup"
+                  testID="open-account"
                   onPress={() => {
                     onClose();
-                    onOpenBackup();
+                    onOpenAccount();
                   }}
                 >
                   <View style={styles.menuIconWrap}>
-                    <Ionicons name="cloud-upload-outline" size={20} color={c.ink} />
+                    <Ionicons name="person-circle-outline" size={20} color={c.ink} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.menuTitle}>Backup &amp; Restore</Text>
-                    <Text style={styles.menuSub}>Keep your playlists safe, move to a new phone</Text>
+                    <Text style={styles.menuTitle}>Account &amp; Backup</Text>
+                    <Text style={styles.menuSub}>Log in, Selah Premium, back up your playlists</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
                 </TouchableOpacity>

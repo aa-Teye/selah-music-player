@@ -81,10 +81,13 @@
           "backgroundColor": "#08090C"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-secure-store"
     ],
     "extra": {
       "selahApiUrl": "",
+      "revenueCatAndroidKey": "",
+      "revenueCatIosKey": "",
       "eas": {
         "projectId": "72220d9c-cf3f-43aa-9f34-492dfccce201"
       }

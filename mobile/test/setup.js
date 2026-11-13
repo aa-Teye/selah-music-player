@@ -44,6 +44,8 @@ jest.mock('react-native-view-shot', () => ({
   captureRef: jest.fn(async () => 'file:///cache/lyric-card.png')
 }));
 jest.mock('expo-notifications', () => require('./mocks/notifications'));
+jest.mock('expo-secure-store', () => require('./mocks/secureStore'));
+jest.mock('react-native-purchases', () => require('./mocks/purchases'));
 jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn(async () => true),
   shareAsync: jest.fn(async () => {})
