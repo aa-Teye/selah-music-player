@@ -2,10 +2,11 @@
 //
 //   GET  /api/lyrics?title=Way%20Maker&artist=Sinach&duration=300
 //        → { found: true, lyrics: { id, title, artist, duration, text, synced } } or { found: false }
-//   POST /api/lyrics   (Authorization: Bearer <backup code>)
+//   POST /api/lyrics   (a logged-in account: Authorization: Bearer <login token>)
 //        { title, artist, duration, text, synced } → { id }
-//        One entry per phone per song: sharing again replaces your earlier version.
-import { json, preflight, readJson, codeFrom, fingerprint, endpoint, HttpError } from '../../lib/http.js';
+//        One entry per account per song: sharing again replaces your earlier version.
+import { json, preflight, readJson, endpoint, HttpError } from '../../lib/http.js';
+import { requireUser } from '../../lib/auth.js';
 import { lyricsForSong, saveLyrics } from '../../lib/db.js';
 import { songKey, cleanName } from '../../lib/songKey.js';
 
@@ -46,7 +47,7 @@ export const GET = endpoint(async (request) => {
 });
 
 export const POST = endpoint(async (request) => {
-  const device = await fingerprint(codeFrom(request));
+  const user = await requireUser(request);
   const body = await readJson(request, 64 * 1024);
   const title = String(body.title || '').trim().slice(0, 200);
   const artist = String(body.artist || '').trim().slice(0, 200);
@@ -61,7 +62,7 @@ export const POST = endpoint(async (request) => {
   if (synced && (text.match(TIMESTAMP) || []).length < 3) throw new HttpError(400, 'Synced lyrics need [mm:ss] times');
   if (duration !== null && (duration < 0 || duration > 36000)) throw new HttpError(400, 'Song length is not right');
 
-  const id = await saveLyrics({ songKey: songKey(title, artist), title, artist, duration, lyrics: text, synced, device });
+  const id = await saveLyrics({ songKey: songKey(title, artist), title, artist, duration, lyrics: text, synced, userId: user.id });
   return json(200, { id });
 });
 

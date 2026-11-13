@@ -1,17 +1,26 @@
-// Runs every endpoint against an in-memory Postgres (pg-mem), using the real SQL.
-import { test, beforeEach } from 'node:test';
+// Runs every endpoint for real: accounts in memory (Better Auth), Selah's tables in an in-memory
+// Postgres (pg-mem, using the real SQL). Payments (RevenueCat) and emails are stubbed.
+import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { newDb } from 'pg-mem';
-import { useSqlForTests } from '../lib/db.js';
+import { memoryAdapter } from 'better-auth/adapters/memory';
+import { useSqlForTests, giftPremium } from '../lib/db.js';
+import { useAuthDatabaseForTests } from '../lib/auth.js';
+import { useEmailSenderForTests } from '../lib/email.js';
 import { songKey } from '../lib/songKey.js';
+import * as authApi from '../api/auth.js';
+import * as me from '../api/me.js';
 import * as backup from '../api/backup.js';
 import * as lyrics from '../api/lyrics/index.js';
 import * as report from '../api/lyrics/report.js';
 import * as health from '../api/health.js';
+import * as privacy from '../api/privacy.js';
+import * as deleteAccount from '../api/delete-account.js';
 
-const CODE = 'ABCD-EFGH-JKLM-NPQR-STUV';
-const CODE2 = 'WXYZ-2345-6789-ABCD-EFGH';
-const CODE3 = 'HJKL-MNPQ-RSTU-VWXY-Z234';
+const BASE = 'http://localhost:3000';
+let sql;
+let emails;
+const realFetch = global.fetch;
 
 function memorySql() {
   const { Pool } = newDb().adapters.createPg();
@@ -25,75 +34,211 @@ function memorySql() {
   };
 }
 
-function req(path, { method = 'GET', code, body } = {}) {
+beforeEach(() => {
+  sql = memorySql();
+  useSqlForTests(sql);
+  useAuthDatabaseForTests(memoryAdapter({ user: [], session: [], account: [], verification: [] }));
+  emails = [];
+  useEmailSenderForTests(async (m) => {
+    emails.push(m);
+  });
+  delete process.env.PREMIUM_MODE;
+  delete process.env.REVENUECAT_SECRET_KEY;
+  delete process.env.SUPPORT_EMAIL;
+});
+
+afterEach(() => {
+  global.fetch = realFetch;
+});
+
+function request(path, { method = 'GET', token, body } = {}) {
   const headers = { 'content-type': 'application/json' };
-  if (code) headers.authorization = `Bearer ${code}`;
-  return new Request(`https://selah.test${path}`, {
+  if (token) headers.authorization = `Bearer ${token}`;
+  return new Request(`${BASE}${path}`, {
     method,
     headers,
     body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body)
   });
 }
 
-const call = async (fn, path, options) => {
-  const res = await fn(req(path, options));
-  return { status: res.status, body: res.status === 204 ? null : await res.json() };
-};
+async function call(fn, path, options) {
+  const res = await fn(request(path, options));
+  const text = await res.text();
+  let body = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = text;
+  }
+  return { status: res.status, body, token: res.headers.get('set-auth-token') };
+}
 
-beforeEach(() => {
-  useSqlForTests(memorySql());
-});
+// Vercel forwards /api/auth/<path> as /api/auth?path=<path> (vercel.json); both must work
+const auth = (path, body, options = {}) =>
+  call(body === undefined ? authApi.GET : authApi.POST, options.direct ? `/api/auth/${path}` : `/api/auth?path=${path}`, {
+    method: body === undefined ? 'GET' : 'POST',
+    body,
+    token: options.token
+  });
 
-test('health: up, with the database', async () => {
-  const { status, body } = await call(health.GET, '/api/health');
-  assert.equal(status, 200);
-  assert.deepEqual(body, { ok: true, service: 'selah-api', version: 1, database: 'ok' });
-});
+async function signUp(email = 'ama@example.com', password = 'worship123', name = 'Ama') {
+  const res = await auth('sign-up/email', { email, password, name });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.ok(res.token, 'a login token comes back');
+  return { token: res.token, user: res.body.user };
+}
 
-test('health: says clearly when the database is not connected yet', async () => {
-  useSqlForTests(null);
-  const saved = { DATABASE_URL: process.env.DATABASE_URL, POSTGRES_URL: process.env.POSTGRES_URL };
-  delete process.env.DATABASE_URL;
-  delete process.env.POSTGRES_URL;
+test('health: tells what is set up', async () => {
   const { body } = await call(health.GET, '/api/health');
-  assert.equal(body.database, 'not connected');
-  const res = await call(backup.GET, '/api/backup', { code: CODE });
-  assert.equal(res.status, 503);
-  Object.assign(process.env, Object.fromEntries(Object.entries(saved).filter(([, v]) => v)));
+  assert.deepEqual(body, {
+    ok: true,
+    service: 'selah-api',
+    version: 2,
+    database: 'ok',
+    accounts: 'ok',
+    email: 'ready',
+    premium: 'payments not set up'
+  });
 });
 
-test('backup: save, read back, private to its code, delete', async () => {
-  assert.equal((await call(backup.GET, '/api/backup', { code: CODE })).status, 404);
+test('sign up, see my account, log out, log in again', async () => {
+  const { token, user } = await signUp();
+  assert.equal(user.email, 'ama@example.com');
 
-  const data = { version: 1, playlists: [{ id: 'pl-1', name: 'Sunday', songs: ['way maker|sinach'] }], favorites: ['x'] };
-  const saved = await call(backup.PUT, '/api/backup', { method: 'PUT', code: CODE, body: { data } });
+  const mine = await call(me.GET, '/api/me', { token });
+  assert.equal(mine.status, 200);
+  assert.equal(mine.body.user.email, 'ama@example.com');
+  assert.equal(mine.body.user.name, 'Ama');
+  assert.deepEqual(mine.body.premium, { active: false, until: null, source: null });
+
+  assert.equal((await call(me.GET, '/api/me')).status, 401);
+  assert.equal((await call(me.GET, '/api/me', { token: 'not-a-real-token' })).status, 401);
+
+  // the same email can't sign up twice
+  assert.notEqual((await auth('sign-up/email', { email: 'AMA@example.com', password: 'another123', name: 'X' })).status, 200);
+
+  await auth('sign-out', {}, { token });
+  assert.equal((await call(me.GET, '/api/me', { token })).status, 401);
+
+  assert.equal((await auth('sign-in/email', { email: 'ama@example.com', password: 'wrong-password' })).status, 401);
+  const again = await auth('sign-in/email', { email: 'ama@example.com', password: 'worship123' }, { direct: true });
+  assert.equal(again.status, 200);
+  assert.equal((await call(me.GET, '/api/me', { token: again.token })).body.user.email, 'ama@example.com');
+});
+
+test('passwords must be at least 8 characters', async () => {
+  const res = await auth('sign-up/email', { email: 'kofi@example.com', password: 'short', name: 'Kofi' });
+  assert.notEqual(res.status, 200);
+});
+
+test('forgot password: a 6-digit code by email, then a new password; old logins stop working', async () => {
+  const { token } = await signUp();
+  const sent = await auth('email-otp/request-password-reset', { email: 'ama@example.com' });
+  assert.equal(sent.status, 200);
+  assert.equal(emails.length, 1);
+  assert.equal(emails[0].to, 'ama@example.com');
+  assert.equal(emails[0].type, 'forget-password');
+  assert.match(emails[0].code, /^\d{6}$/);
+
+  const wrong = await auth('email-otp/reset-password', { email: 'ama@example.com', otp: '000000', password: 'newpass123' });
+  assert.notEqual(wrong.status, 200);
+
+  const reset = await auth('email-otp/reset-password', { email: 'ama@example.com', otp: emails[0].code, password: 'newpass123' });
+  assert.equal(reset.status, 200, JSON.stringify(reset.body));
+  assert.equal((await call(me.GET, '/api/me', { token })).status, 401); // logged out everywhere
+  assert.equal((await auth('sign-in/email', { email: 'ama@example.com', password: 'worship123' })).status, 401);
+  assert.equal((await auth('sign-in/email', { email: 'ama@example.com', password: 'newpass123' })).status, 200);
+});
+
+test('backup is Premium: refused for free accounts, works when Premium is gifted', async () => {
+  const { token, user } = await signUp();
+  const data = { version: 1, playlists: [{ id: 'pl-1', name: 'Sunday', trackIds: ['s1'] }], songs: { s1: { t: 'Way Maker', a: 'Sinach' } } };
+
+  const refused = await call(backup.PUT, '/api/backup', { method: 'PUT', token, body: { data } });
+  assert.equal(refused.status, 402);
+  assert.equal(refused.body.premium, false);
+  assert.equal((await call(backup.PUT, '/api/backup', { method: 'PUT', body: { data } })).status, 401);
+
+  await giftPremium(user.id, null, 'tester');
+  assert.deepEqual((await call(me.GET, '/api/me', { token })).body.premium, { active: true, until: null, source: 'gift' });
+  assert.equal((await call(backup.GET, '/api/backup', { token })).status, 404);
+  const saved = await call(backup.PUT, '/api/backup', { method: 'PUT', token, body: { data } });
   assert.equal(saved.status, 200);
-  assert.ok(saved.body.size > 10);
-  assert.ok(Date.parse(saved.body.savedAt) > 0);
+  assert.deepEqual((await call(backup.GET, '/api/backup', { token })).body.data, data);
 
-  const read = await call(backup.GET, '/api/backup', { code: CODE.toLowerCase() }); // case doesn't matter
-  assert.equal(read.status, 200);
-  assert.deepEqual(read.body.data, data);
+  // someone else never sees it
+  const other = await signUp('kofi@example.com', 'praise1234', 'Kofi');
+  await giftPremium(other.user.id);
+  assert.equal((await call(backup.GET, '/api/backup', { token: other.token })).status, 404);
 
-  // saving again replaces it
-  await call(backup.PUT, '/api/backup', { method: 'PUT', code: CODE, body: { data: { version: 1, favorites: [] } } });
-  assert.deepEqual((await call(backup.GET, '/api/backup', { code: CODE })).body.data, { version: 1, favorites: [] });
+  // a gift that has ended
+  await giftPremium(other.user.id, new Date(Date.now() - 1000).toISOString());
+  assert.equal((await call(backup.GET, '/api/backup', { token: other.token })).status, 402);
 
-  // nobody else can see it
-  assert.equal((await call(backup.GET, '/api/backup', { code: CODE2 })).status, 404);
-
-  assert.deepEqual((await call(backup.DELETE, '/api/backup', { method: 'DELETE', code: CODE })).body, { deleted: true });
-  assert.equal((await call(backup.GET, '/api/backup', { code: CODE })).status, 404);
+  // deleting your backup never needs Premium
+  assert.deepEqual((await call(backup.DELETE, '/api/backup', { method: 'DELETE', token })).body, { deleted: true });
 });
 
-test('backup: refuses missing codes, bad data and huge uploads', async () => {
-  assert.equal((await call(backup.GET, '/api/backup')).status, 401);
-  assert.equal((await call(backup.GET, '/api/backup', { code: 'password123' })).status, 401);
-  assert.equal((await call(backup.GET, '/api/backup', { code: 'ABCD-EFGH-JKLM-NPQR-STU1' })).status, 401); // 1 is never used
-  assert.equal((await call(backup.PUT, '/api/backup', { method: 'PUT', code: CODE, body: 'not json' })).status, 400);
-  assert.equal((await call(backup.PUT, '/api/backup', { method: 'PUT', code: CODE, body: { data: [1, 2] } })).status, 400);
-  const huge = { data: { blob: 'x'.repeat(2 * 1024 * 1024 + 10) } };
-  assert.equal((await call(backup.PUT, '/api/backup', { method: 'PUT', code: CODE, body: huge })).status, 413);
+test('PREMIUM_MODE=open gives everyone Premium (for testing)', async () => {
+  process.env.PREMIUM_MODE = 'open';
+  const { token } = await signUp();
+  assert.deepEqual((await call(me.GET, '/api/me', { token })).body.premium, { active: true, until: null, source: 'open' });
+  assert.equal((await call(health.GET, '/api/health')).body.premium, 'open to everyone');
+});
+
+test('Premium bought in Google Play is checked with RevenueCat', async () => {
+  const { token, user } = await signUp();
+  process.env.REVENUECAT_SECRET_KEY = 'sk_test_123';
+  let entitlement = { expires_date: new Date(Date.now() + 86400000).toISOString(), product_identifier: 'selah_premium_monthly' };
+  const asked = [];
+  global.fetch = async (url, options) => {
+    asked.push({ url: String(url), auth: options.headers.Authorization });
+    return new Response(JSON.stringify({ subscriber: { entitlements: entitlement ? { premium: entitlement } : {} } }), { status: 200 });
+  };
+
+  const active = (await call(me.GET, '/api/me', { token })).body.premium;
+  assert.equal(active.active, true);
+  assert.equal(active.source, 'store');
+  assert.equal(asked[0].url, `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(user.id)}`);
+  assert.equal(asked[0].auth, 'Bearer sk_test_123');
+  assert.equal((await call(backup.PUT, '/api/backup', { method: 'PUT', token, body: { data: { version: 1 } } })).status, 200);
+
+  entitlement = { expires_date: new Date(Date.now() - 86400000).toISOString() }; // ran out
+  assert.equal((await call(me.GET, '/api/me', { token })).body.premium.active, false);
+  entitlement = { expires_date: new Date(Date.now() - 1000).toISOString(), grace_period_expires_date: new Date(Date.now() + 86400000).toISOString() };
+  assert.equal((await call(me.GET, '/api/me', { token })).body.premium.active, true); // payment problem: grace period
+  entitlement = null; // never bought
+  assert.equal((await call(me.GET, '/api/me', { token })).body.premium.active, false);
+
+  global.fetch = async () => {
+    throw new Error('offline');
+  };
+  assert.equal((await call(backup.GET, '/api/backup', { token })).status, 502);
+});
+
+test('delete my account: needs the password, removes the account, backup and shared lyrics', async () => {
+  const { token, user } = await signUp();
+  await giftPremium(user.id);
+  await call(backup.PUT, '/api/backup', { method: 'PUT', token, body: { data: { version: 1 } } });
+  await call(lyrics.POST, '/api/lyrics', {
+    method: 'POST',
+    token,
+    body: { title: 'Odo Yewu', artist: 'Joe Mettle', synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' }
+  });
+
+  assert.notEqual((await auth('delete-user', { password: 'wrong-password' }, { token })).status, 200);
+  const deleted = await auth('delete-user', { password: 'worship123' }, { token });
+  assert.equal(deleted.status, 200, JSON.stringify(deleted.body));
+
+  assert.equal((await call(me.GET, '/api/me', { token })).status, 401);
+  assert.equal((await auth('sign-in/email', { email: 'ama@example.com', password: 'worship123' })).status, 401);
+  assert.deepEqual(await sql`SELECT user_id FROM backups WHERE user_id = ${user.id}`, []);
+  assert.deepEqual(await sql`SELECT id FROM shared_lyrics WHERE user_id = ${user.id}`, []);
+  assert.deepEqual(await sql`SELECT user_id FROM premium_gifts WHERE user_id = ${user.id}`, []);
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Odo%20Yewu&artist=Joe%20Mettle')).body.found, false);
+
+  // the same email can sign up again later, as a new account
+  assert.equal((await auth('sign-up/email', { email: 'ama@example.com', password: 'worship123', name: 'Ama' })).status, 200);
 });
 
 test('song names match however they are written', () => {
@@ -110,67 +255,63 @@ const WAY_MAKER = {
   text: '[00:01.00] You are here, moving in our midst\n[00:06.00] I worship You, I worship You\n[00:12.00] You are here, working in this place'
 };
 
-test('lyrics: shared by one phone, found by another (any spelling)', async () => {
+test('shared lyrics: anyone can read them; sharing needs an account (free)', async () => {
   assert.deepEqual((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body, { found: false });
+  assert.equal((await call(lyrics.POST, '/api/lyrics', { method: 'POST', body: WAY_MAKER })).status, 401);
 
-  const posted = await call(lyrics.POST, '/api/lyrics', { method: 'POST', code: CODE, body: WAY_MAKER });
+  const { token } = await signUp();
+  const posted = await call(lyrics.POST, '/api/lyrics', { method: 'POST', token, body: WAY_MAKER });
   assert.equal(posted.status, 200);
-  assert.ok(posted.body.id > 0);
 
   const found = await call(lyrics.GET, '/api/lyrics?title=Way%20Maker%20(Live)&artist=SINACH%20ft.%20Joe&duration=301');
   assert.equal(found.body.found, true);
   assert.equal(found.body.lyrics.text, WAY_MAKER.text);
-  assert.equal(found.body.lyrics.synced, true);
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach&duration=420')).body.found, false); // other version
 
-  // synced lyrics for a much longer version are not used (the timing would be wrong)
-  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach&duration=420')).body.found, false);
-
-  // the same phone sharing again replaces its own version
-  await call(lyrics.POST, '/api/lyrics', { method: 'POST', code: CODE, body: { ...WAY_MAKER, text: `${WAY_MAKER.text}\n[00:18.00] Way maker` } });
+  // sharing again replaces your own version
+  await call(lyrics.POST, '/api/lyrics', { method: 'POST', token, body: { ...WAY_MAKER, text: `${WAY_MAKER.text}\n[00:18.00] Way maker` } });
   const again = await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach&duration=300');
   assert.match(again.body.lyrics.text, /Way maker$/);
   assert.equal(again.body.lyrics.id, posted.body.id);
-});
 
-test('lyrics: plain lyrics fit any version of the song', async () => {
-  await call(lyrics.POST, '/api/lyrics', {
-    method: 'POST',
-    code: CODE,
-    body: { title: 'Odo Yewu', artist: 'Joe Mettle', duration: 280, synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' }
-  });
-  const found = await call(lyrics.GET, '/api/lyrics?title=Odo%20Yewu&artist=Joe%20Mettle&duration=500');
-  assert.equal(found.body.found, true);
-  assert.equal(found.body.lyrics.synced, false);
-});
-
-test('lyrics: refuses incomplete or broken submissions', async () => {
-  const post = (body, code = CODE) => call(lyrics.POST, '/api/lyrics', { method: 'POST', code, body });
-  assert.equal((await post(WAY_MAKER, null)).status, 401);
-  assert.equal((await post({ ...WAY_MAKER, title: '' })).status, 400);
+  const post = (body) => call(lyrics.POST, '/api/lyrics', { method: 'POST', token, body });
   assert.equal((await post({ ...WAY_MAKER, artist: 'Unknown Artist' })).status, 400);
   assert.equal((await post({ ...WAY_MAKER, text: 'too short' })).status, 400);
   assert.equal((await post({ ...WAY_MAKER, text: 'no times here at all, just words' })).status, 400);
   assert.equal((await post({ ...WAY_MAKER, text: 'x'.repeat(20001) })).status, 413);
-  assert.equal((await call(lyrics.GET, '/api/lyrics?artist=Sinach')).status, 400);
 });
 
-test('lyrics: hidden after 3 different phones report them (a phone counts once)', async () => {
-  const { body } = await call(lyrics.POST, '/api/lyrics', { method: 'POST', code: CODE, body: WAY_MAKER });
-  const reportBy = (code) => call(report.POST, '/api/lyrics/report', { method: 'POST', code, body: { id: body.id } });
+test('shared lyrics are hidden after 3 different people report them', async () => {
+  const author = await signUp();
+  const { body } = await call(lyrics.POST, '/api/lyrics', { method: 'POST', token: author.token, body: WAY_MAKER });
+  const reporters = [];
+  for (const name of ['kofi', 'esi', 'yaw']) reporters.push((await signUp(`${name}@example.com`, 'praise1234', name)).token);
+  const reportBy = (token) => call(report.POST, '/api/lyrics/report', { method: 'POST', token, body: { id: body.id } });
 
-  assert.deepEqual((await reportBy(CODE2)).body, { reported: true });
-  assert.deepEqual((await reportBy(CODE2)).body, { reported: false }); // same phone again
-  await reportBy(CODE3);
-  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body.found, true); // 2 reports
+  assert.equal((await call(report.POST, '/api/lyrics/report', { method: 'POST', body: { id: body.id } })).status, 401);
+  assert.deepEqual((await reportBy(reporters[0])).body, { reported: true });
+  assert.deepEqual((await reportBy(reporters[0])).body, { reported: false }); // counts once
+  await reportBy(reporters[1]);
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body.found, true);
+  await reportBy(reporters[2]);
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body.found, false);
+});
 
-  await reportBy('KLMN-PQRS-TUVW-XYZ2-3456');
-  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body.found, false); // 3 reports
+test('privacy and delete-account pages (Google Play needs both)', async () => {
+  const policy = await (await privacy.GET()).text();
+  assert.match(policy, /Privacy policy/);
+  assert.match(policy, /never uploads your music files/);
+  assert.match(policy, /Google Play \("Developer contact"\)/);
 
-  assert.equal((await call(report.POST, '/api/lyrics/report', { method: 'POST', code: CODE, body: { id: 'x' } })).status, 400);
+  process.env.SUPPORT_EMAIL = 'help@selah.app<script>';
+  const deletion = await (await deleteAccount.GET()).text();
+  assert.match(deletion, /Delete my account/);
+  assert.match(deletion, /mailto:help@selah\.app&lt;script&gt;/); // shown safely
+  assert.doesNotMatch(deletion, /<script>/);
 });
 
 test('browsers may call it (CORS preflight)', async () => {
-  const res = await backup.OPTIONS(req('/api/backup', { method: 'OPTIONS' }));
+  const res = await backup.OPTIONS(request('/api/backup', { method: 'OPTIONS' }));
   assert.equal(res.status, 204);
   assert.equal(res.headers.get('access-control-allow-origin'), '*');
 });

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/api/auth/:path*", "destination": "/api/auth?path=:path*" },
+    { "source": "/privacy", "destination": "/api/privacy" },
+    { "source": "/delete-account", "destination": "/api/delete-account" }
+  ]
+}
