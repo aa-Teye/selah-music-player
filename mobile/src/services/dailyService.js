@@ -27,9 +27,19 @@ export function dayNumber(date = new Date()) {
   return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 }
 
+// Where each month starts in the list of 366 (a leap-year calendar: 29 February is number 59)
+const MONTH_STARTS = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+
+/** Each date of the year has its own verse: 1 January always gets the same one, Christmas Day too */
+export function devotionIndexForDay(day) {
+  const date = new Date(day * 86400000); // dayNumber() counts whole days, so this is that date (in UTC)
+  return MONTH_STARTS[date.getUTCMonth()] + date.getUTCDate() - 1;
+}
+
 export function devotionForDay(day) {
   const n = DEVOTIONS.length;
-  return DEVOTIONS[((day % n) + n) % n];
+  const index = n === 366 ? devotionIndexForDay(day) : day;
+  return DEVOTIONS[((index % n) + n) % n];
 }
 
 /** A song from your own music for the day: the same all day, different each day */

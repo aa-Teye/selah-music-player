@@ -19,24 +19,46 @@ beforeEach(async () => {
   jest.useRealTimers();
 });
 
-test('30 different verses, each with a reference and a thought', () => {
-  expect(DEVOTIONS).toHaveLength(30);
-  expect(new Set(DEVOTIONS.map((d) => d.id)).size).toBe(30);
-  expect(new Set(DEVOTIONS.map((d) => d.reference)).size).toBe(30);
+test('a whole year of different verses (366, with 29 February), all King James Version, each with a thought', () => {
+  expect(DEVOTIONS).toHaveLength(366);
+  expect(new Set(DEVOTIONS.map((d) => d.id)).size).toBe(366);
+  expect(new Set(DEVOTIONS.map((d) => d.reference)).size).toBe(366);
+  expect(new Set(DEVOTIONS.map((d) => d.verse)).size).toBe(366);
+  expect(new Set(DEVOTIONS.map((d) => d.reflection)).size).toBe(366);
   DEVOTIONS.forEach((d) => {
     expect(d.verse).toMatch(/^“.+”$/);
-    expect(d.reference).toMatch(/\((ESV|KJV)\)$/);
+    expect(d.verse.length).toBeLessThan(340);
+    expect(d.reference).toMatch(/^[1-3]? ?[A-Z][a-zA-Z ]+ \d+:\d+(-\d+)? \(KJV\)$/); // no ESV (it needs a copyright notice)
     expect(d.reflection.length).toBeGreaterThan(30);
+    expect(d.reflection.length).toBeLessThanOrEqual(160);
   });
 });
 
-test('the verse changes at midnight (phone time) and repeats after 30 days', () => {
+test('the verse changes at midnight (phone time), and each date always has its own verse', () => {
   const lateNight = new Date(2026, 10, 12, 23, 59);
   const morning = new Date(2026, 10, 13, 0, 1);
   expect(dayNumber(morning)).toBe(dayNumber(lateNight) + 1);
   expect(devotionForDay(dayNumber(lateNight))).not.toBe(devotionForDay(dayNumber(morning)));
-  expect(devotionForDay(100)).toBe(devotionForDay(130));
+  const on = (y, m, d) => devotionForDay(dayNumber(new Date(y, m - 1, d, 12))).reference;
+  expect(on(2027, 1, 1)).toBe('Isaiah 43:19 (KJV)'); // a new thing, on New Year's Day
+  expect(on(2026, 12, 25)).toBe('Luke 2:10-11 (KJV)'); // Christmas
+  expect(on(2028, 12, 25)).toBe('Luke 2:10-11 (KJV)'); // also in a leap year
+  expect(on(2027, 12, 24)).toBe('Isaiah 9:6 (KJV)');
+  expect(on(2026, 12, 31)).toBe('1 Samuel 7:12 (KJV)');
+  expect(on(2027, 2, 14)).toBe('1 John 4:19 (KJV)');
+  expect(on(2028, 2, 29)).toBe('Psalm 90:4 (KJV)'); // the leap day has its own
+  expect(on(2027, 3, 1)).toBe(on(2028, 3, 1)); // leap years don't shift the rest of the year
+  expect(on(2026, 5, 3)).toBe(on(2031, 5, 3));
+  // every day of a year shows a different verse
+  const year = Array.from({ length: 365 }, (_, i) => devotionForDay(dayNumber(new Date(2027, 0, 1 + i, 12))).id);
+  expect(new Set(year).size).toBe(365);
   expect(devotionForDay(-1)).toBeTruthy();
+});
+
+test("“Another verse” moves on to the next day's verse, and from 31 December back to 1 January", () => {
+  const dec31 = dayNumber(new Date(2026, 11, 31, 12));
+  expect(devotionForDay(dec31 + 1).reference).toBe('Isaiah 43:19 (KJV)');
+  expect(devotionForDay(dec31 + 1)).not.toBe(devotionForDay(dec31));
 });
 
 test('song of the day: from your own songs, the same all day, often different the next day', () => {
