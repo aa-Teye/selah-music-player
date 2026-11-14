@@ -1351,6 +1351,8 @@ function SelahApp() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onOpenMenu={() => setIsHeaderMenuVisible(true)}
+          account={account}
+          onOpenAccount={isCloudReady() ? () => setIsAccountVisible(true) : undefined}
         />
       )}
 

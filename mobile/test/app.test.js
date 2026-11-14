@@ -180,8 +180,9 @@ test('Account & Backup: hidden until Selah cloud is set up; sign up, Premium unl
   await render(<App />);
   await settle(25);
   if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  expect(screen.queryByTestId('header-account')).toBeNull(); // not set up yet: nothing to see
   await tap(screen.getByTestId('open-menu'));
-  expect(screen.queryByTestId('open-account')).toBeNull(); // not set up yet: nothing to see
+  expect(screen.queryByTestId('open-account')).toBeNull();
   await cleanup();
 
   cloud.setApiUrlForTests(BASE);
@@ -212,8 +213,9 @@ test('Account & Backup: hidden until Selah cloud is set up; sign up, Premium unl
   try {
     await render(<App />);
     await settle(25);
-    await tap(screen.getByTestId('open-menu'));
-    await tap(screen.getByTestId('open-account'));
+    // the account button sits at the top, beside the light/dark button (signing in is never required)
+    expect(screen.getByTestId('header-account').props.accessibilityLabel).toBe('Log in or create an account');
+    await tap(screen.getByTestId('header-account'));
 
     // sign up: a free account
     await tap(screen.getByTestId('go-signup'));
@@ -226,6 +228,7 @@ test('Account & Backup: hidden until Selah cloud is set up; sign up, Premium unl
     await tap(screen.getByTestId('account-submit'));
     await settle(6);
     expect(screen.getByTestId('account-signed-in-email').props.children).toBe('ama@example.com');
+    expect(screen.getByTestId('header-account').props.accessibilityLabel).toBe('Your account, Ama'); // shows "A"
 
     // backup is locked without Premium; Premium isn't on sale until the store key is set
     expect(screen.queryByTestId('backup-now')).toBeNull();

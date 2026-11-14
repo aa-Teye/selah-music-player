@@ -7,7 +7,9 @@ export default function TopHeader({
   streakDays,
   searchQuery,
   onSearchChange,
-  onOpenMenu
+  onOpenMenu,
+  account,
+  onOpenAccount
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -21,6 +23,26 @@ export default function TopHeader({
         </View>
 
         <View style={styles.actionsRow}>
+          {/* Your account (optional): log in / sign up, Premium and backup */}
+          {onOpenAccount && (
+            <TouchableOpacity
+              onPress={onOpenAccount}
+              testID="header-account"
+              accessibilityRole="button"
+              accessibilityLabel={account && account.user ? `Your account, ${account.user.name || account.user.email}` : 'Log in or create an account'}
+              style={[styles.menuBtn, account && account.user && styles.accountBtnOn, account && account.premium && account.premium.active && styles.accountBtnPremium]}
+              activeOpacity={0.7}
+            >
+              {account && account.user ? (
+                <Text style={styles.accountInitial}>
+                  {String(account.user.name || account.user.email || '?').trim().charAt(0).toUpperCase()}
+                </Text>
+              ) : (
+                <Ionicons name="person-outline" size={19} color={c.text} />
+              )}
+            </TouchableOpacity>
+          )}
+
           {/* Light / dark mode: one tap */}
           <TouchableOpacity
             onPress={() => setMode(isDark ? 'light' : 'dark')}
@@ -120,6 +142,23 @@ const makeStyles = (c) => StyleSheet.create({
     backgroundColor: c.surfaceAlt,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: c.border
+    borderColor: c.border,
+    minWidth: 38,
+    minHeight: 38,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  accountBtnOn: {
+    backgroundColor: c.inverse,
+    borderColor: c.inverse
+  },
+  accountBtnPremium: {
+    borderColor: '#F59E0B',
+    borderWidth: 2
+  },
+  accountInitial: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 15
   }
 });
