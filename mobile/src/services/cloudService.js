@@ -30,8 +30,17 @@ export async function setAutoBackup(on) {
 }
 
 // ── Backup ──────────────────────────────────────────────────────────────────
-/** Everything worth keeping, with each song's name so it can be found on another phone */
-export async function buildBackup({ tracks = [], playlists = [], favorites = [], playCounts = {} }) {
+const cleanArtists = (list) => [
+  ...new Set((Array.isArray(list) ? list : []).filter((n) => typeof n === 'string' && n.trim()).map((n) => n.trim()))
+];
+const YOUTUBE_ID = /^[\w-]{11}$/;
+
+/**
+ * Everything worth keeping, with each song's name so it can be found on another phone.
+ * artists: the artists you follow. getBack: songs from an earlier restore that are not
+ * on this phone yet (they stay in your account until you have them again).
+ */
+export async function buildBackup({ tracks = [], playlists = [], favorites = [], playCounts = {}, artists = [], getBack = [] }) {
   const byId = new Map(tracks.filter(Boolean).map((t) => [t.id, t]));
   const songs = {};
   const remember = (id) => {
@@ -59,15 +68,32 @@ export async function buildBackup({ tracks = [], playlists = [], favorites = [],
     });
   } catch {}
 
+  const outPlaylists = playlists.map((pl) => ({ id: pl.id, name: pl.name, trackIds: (pl.trackIds || []).filter((id) => songs[id]) }));
+  const outFavorites = favorites.filter((id) => songs[id]);
+
+  // Songs still to get back keep their place in your playlists
+  (getBack || []).forEach((g) => {
+    if (!g || !g.title) return;
+    const id = `getback:${g.key || songKey(g.title, g.artist)}`;
+    if (songs[id]) return;
+    songs[id] = { t: g.title, a: g.artist || '', d: Math.round(g.duration || 0) };
+    (g.playlists || []).forEach((plId) => {
+      const pl = outPlaylists.find((p) => p.id === plId);
+      if (pl && !pl.trackIds.includes(id)) pl.trackIds.push(id);
+    });
+    if (g.loved && !outFavorites.includes(id)) outFavorites.push(id);
+  });
+
   return {
     version: 1,
     app: 'selah',
     createdAt: new Date().toISOString(),
     songs,
-    playlists: playlists.map((pl) => ({ id: pl.id, name: pl.name, trackIds: (pl.trackIds || []).filter((id) => songs[id]) })),
-    favorites: favorites.filter((id) => songs[id]),
+    playlists: outPlaylists,
+    favorites: outFavorites,
     playCounts: counts,
-    lyrics
+    lyrics,
+    artists: cleanArtists(artists)
   };
 }
 
@@ -99,9 +125,10 @@ export async function deleteBackup() {
 }
 
 // ── Restore ─────────────────────────────────────────────────────────────────
-/** Finds each backed-up song on this phone (same id, or same name, artist and length) */
+/** Finds each backed-up song on this phone (same id, same YouTube video, or same name, artist and length) */
 export function matchSongs(backupSongs = {}, tracks = []) {
   const here = new Map(tracks.filter(Boolean).map((t) => [t.id, t]));
+  const byVideo = new Map(tracks.filter((t) => t && t.youtubeId).map((t) => [t.youtubeId, t]));
   const byName = new Map();
   tracks.forEach((t) => {
     if (!t) return;
@@ -116,6 +143,10 @@ export function matchSongs(backupSongs = {}, tracks = []) {
       return;
     }
     const s = backupSongs[oldId] || {};
+    if (s.y && byVideo.has(s.y)) {
+      idMap[oldId] = byVideo.get(s.y).id;
+      return;
+    }
     const options = byName.get(songKey(s.t, s.a)) || [];
     const best = options.find((t) => !s.d || !t.duration || Math.abs(t.duration - s.d) <= 3) || options[0];
     if (best) idMap[oldId] = best.id;
@@ -133,7 +164,45 @@ export async function fetchRestore(tracks) {
     throw err;
   }
   const data = answer.data || {};
-  const idMap = matchSongs(data.songs, tracks);
+  const backupSongs = data.songs || {};
+  const idMap = matchSongs(backupSongs, tracks);
+
+  // YouTube songs need no file on the phone: they come straight back
+  const youtube = [];
+  Object.keys(backupSongs).forEach((oldId) => {
+    const s = backupSongs[oldId] || {};
+    if (idMap[oldId] || !s.y || !YOUTUBE_ID.test(s.y)) return;
+    const id = `yt-${s.y}`;
+    if (!youtube.some((t) => t.id === id)) {
+      youtube.push({
+        id,
+        title: s.t || 'YouTube video',
+        artist: s.a || 'YouTube',
+        album: 'YouTube Watch',
+        duration: s.d || 0,
+        youtubeId: s.y,
+        sourceType: 'youtube',
+        coverUrl: `https://img.youtube.com/vi/${s.y}/hqdefault.jpg`
+      });
+    }
+    idMap[oldId] = id;
+  });
+
+  // The rest are songs to get back: not on this phone yet
+  const missing = Object.keys(backupSongs)
+    .filter((oldId) => !idMap[oldId] && backupSongs[oldId] && backupSongs[oldId].t)
+    .map((oldId) => {
+      const s = backupSongs[oldId];
+      return {
+        key: songKey(s.t, s.a),
+        title: s.t,
+        artist: s.a || '',
+        duration: s.d || 0,
+        playlists: (data.playlists || []).filter((pl) => (pl.trackIds || []).includes(oldId)).map((pl) => pl.id),
+        loved: (data.favorites || []).includes(oldId)
+      };
+    });
+
   const mapIds = (ids) => [...new Set((ids || []).map((id) => idMap[id]).filter(Boolean))];
   const remap = (obj) => {
     const out = {};
@@ -148,8 +217,11 @@ export async function fetchRestore(tracks) {
     favorites: mapIds(data.favorites),
     playCounts: remap(data.playCounts),
     lyrics: remap(data.lyrics),
+    artists: cleanArtists(data.artists),
+    youtube,
+    missing,
     found: Object.keys(idMap).length,
-    total: Object.keys(data.songs || {}).length
+    total: Object.keys(backupSongs).length
   };
 }
 

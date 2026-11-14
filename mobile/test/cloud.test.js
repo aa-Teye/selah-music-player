@@ -61,6 +61,58 @@ test('a backup has playlists, loved songs, counts and your lyrics, with song nam
   expect(JSON.stringify(data)).not.toContain('file:///'); // no file paths
 });
 
+const OCEANS_VIDEO = { id: 'yt-dy9nwe9_xzw', title: 'Oceans', artist: 'Hillsong United', duration: 534, youtubeId: 'dy9nwe9_xzw', sourceType: 'youtube' };
+
+test('a backup also keeps the artists you follow, your YouTube songs, and the songs you still need to get back', async () => {
+  const data = await buildBackup({
+    tracks: [song('s1', 'Way Maker', 'Sinach', 300), OCEANS_VIDEO],
+    playlists: [{ id: 'pl-1', name: 'Sunday', trackIds: ['s1', 'yt-dy9nwe9_xzw'] }],
+    favorites: [],
+    playCounts: {},
+    artists: ['Joe Mettle', ' Joe Mettle ', '', 5, 'Sinach'],
+    getBack: [{ key: 'imela|nathaniel bassey', title: 'Imela', artist: 'Nathaniel Bassey', duration: 0, playlists: ['pl-1', 'pl-gone'], loved: true }]
+  });
+  expect(data.artists).toEqual(['Joe Mettle', 'Sinach']);
+  expect(data.songs['yt-dy9nwe9_xzw']).toEqual({ t: 'Oceans', a: 'Hillsong United', d: 534, y: 'dy9nwe9_xzw' });
+  expect(data.songs['getback:imela|nathaniel bassey']).toEqual({ t: 'Imela', a: 'Nathaniel Bassey', d: 0 });
+  expect(data.playlists).toEqual([{ id: 'pl-1', name: 'Sunday', trackIds: ['s1', 'yt-dy9nwe9_xzw', 'getback:imela|nathaniel bassey'] }]);
+  expect(data.favorites).toEqual(['getback:imela|nathaniel bassey']);
+});
+
+test('restore on a new phone: YouTube songs come straight back, the others are listed to get back', async () => {
+  await signUp({ name: 'Ama', email: 'ama@example.com', password: 'worship123' });
+  server.giftPremium('ama@example.com');
+  server.backups.set(server.users.get('ama@example.com').id, {
+    savedAt: '2026-11-11T10:00:00.000Z',
+    data: {
+      songs: {
+        a: { t: 'Way Maker', a: 'Sinach', d: 26 },
+        b: { t: 'Imela', a: 'Nathaniel Bassey', d: 0 },
+        c: { t: 'Oceans', a: 'Hillsong United', d: 534, y: 'dy9nwe9_xzw' }
+      },
+      playlists: [{ id: 'pl-old', name: 'Sunday Service', trackIds: ['a', 'b', 'c'] }],
+      favorites: ['b'],
+      playCounts: {},
+      lyrics: {},
+      artists: ['Joe Mettle']
+    }
+  });
+  const restored = await fetchRestore([song('here-1', 'Way Maker', 'Sinach', 26)]);
+  expect(restored.youtube).toEqual([
+    expect.objectContaining({ id: 'yt-dy9nwe9_xzw', title: 'Oceans', youtubeId: 'dy9nwe9_xzw', sourceType: 'youtube' })
+  ]);
+  expect(restored.playlists).toEqual([{ id: 'pl-old', name: 'Sunday Service', trackIds: ['here-1', 'yt-dy9nwe9_xzw'] }]);
+  expect(restored.missing).toEqual([
+    { key: 'imela|nathaniel bassey', title: 'Imela', artist: 'Nathaniel Bassey', duration: 0, playlists: ['pl-old'], loved: true }
+  ]);
+  expect(restored.artists).toEqual(['Joe Mettle']);
+
+  // the same video already on this phone (under another id) is used, not added twice
+  const again = await fetchRestore([song('here-1', 'Way Maker', 'Sinach', 26), { ...OCEANS_VIDEO, id: 'yt-mine' }]);
+  expect(again.youtube).toEqual([]);
+  expect(again.playlists[0].trackIds).toEqual(['here-1', 'yt-mine']);
+});
+
 test('restore finds the songs on a new phone by name, artist and length', () => {
   const backupSongs = {
     old1: { t: 'Way Maker', a: 'Sinach', d: 300 },

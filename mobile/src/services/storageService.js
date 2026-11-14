@@ -51,8 +51,28 @@ const KEYS = {
   SETTINGS: '@selah_settings',
   FAV_ARTISTS: '@selah_fav_artists',
   LAST_PLAYED: '@selah_last_played',
-  HAS_ONBOARDED: '@selah_has_onboarded'
+  HAS_ONBOARDED: '@selah_has_onboarded',
+  YOUTUBE_SONGS: '@selah_youtube_songs',
+  GET_BACK: '@selah_get_back'
 };
+
+async function readList(key) {
+  try {
+    const data = await AsyncStorage.getItem(key);
+    const list = data ? JSON.parse(data) : [];
+    return Array.isArray(list) ? list : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function writeList(key, list) {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(Array.isArray(list) ? list : []));
+  } catch (e) {
+    console.log(`Error saving ${key}:`, e);
+  }
+}
 
 export const StorageService = {
   // Favorites
@@ -486,6 +506,24 @@ export const StorageService = {
     } catch (e) {
       console.log('Error saving favorite artists:', e);
     }
+  },
+
+  // YouTube songs you kept (in a playlist or loved), so they are still there after a restart
+  async getYouTubeSongs() {
+    return readList(KEYS.YOUTUBE_SONGS);
+  },
+
+  async saveYouTubeSongs(list) {
+    await writeList(KEYS.YOUTUBE_SONGS, list);
+  },
+
+  // Songs from your backup that are not on this phone yet
+  async getSongsToGetBack() {
+    return readList(KEYS.GET_BACK);
+  },
+
+  async saveSongsToGetBack(list) {
+    await writeList(KEYS.GET_BACK, list);
   },
 
   async getHasOnboarded() {

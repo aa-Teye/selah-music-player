@@ -27,6 +27,7 @@ import DeepScanModal from './src/components/DeepScanModal';
 import { MOOD_TAGS } from './src/data/mockData';
 import LibrariesModal from './src/components/LibrariesModal';
 import { artistSearch } from './src/data/discover';
+import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
 import {
   dayNumber,
   devotionForDay,
@@ -166,6 +167,9 @@ function SelahApp() {
   const [devotionOffset, setDevotionOffset] = useState(0);
   const [isLibrariesVisible, setIsLibrariesVisible] = useState(false);
   const [externalSearch, setExternalSearch] = useState(null); // { query, at } from Libraries
+  const [songsToGetBack, setSongsToGetBack] = useState([]); // from a restore: not on this phone yet
+  const storageLoadedRef = useRef(false);
+  const keptYouTubeRef = useRef(null);
 
   const soundRef = useRef(null);
   const statusSubRef = useRef(null);
@@ -430,6 +434,16 @@ function SelahApp() {
           setCurrentTrack(savedLocal[0]);
           setDuration(savedLocal[0].duration || 0);
         }
+        // YouTube songs you kept, and songs from a restore that are not on this phone yet
+        const [savedYouTube, savedGetBack] = [await StorageService.getYouTubeSongs(), await StorageService.getSongsToGetBack()];
+        if (savedYouTube.length > 0) {
+          setTracks((prev) => {
+            const have = new Set(prev.map((t) => t.youtubeId).filter(Boolean));
+            return [...prev, ...savedYouTube.filter((t) => t && t.youtubeId && !have.has(t.youtubeId))];
+          });
+        }
+        if (savedGetBack.length > 0) setSongsToGetBack(savedGetBack);
+        storageLoadedRef.current = true;
 
         // Resume the last played track (paused, ready to continue)
         try {
@@ -1157,6 +1171,29 @@ function SelahApp() {
     playCountsRef.current = counts;
     setPlayCounts(counts);
     StorageService.savePlayCounts(counts);
+    // YouTube songs come straight back (they need no file)
+    if (result.youtube && result.youtube.length > 0) {
+      setTracks((prev) => {
+        const have = new Set(prev.map((t) => t.youtubeId).filter(Boolean));
+        const add = result.youtube.filter((t) => !have.has(t.youtubeId));
+        return add.length ? [...prev, ...add] : prev;
+      });
+    }
+    if (result.artists && result.artists.length > 0) {
+      setFavoriteArtists((prev) => {
+        const updated = [...new Set([...prev, ...result.artists])];
+        StorageService.saveFavoriteArtists(updated);
+        return updated;
+      });
+    }
+    // Songs that are not on this phone: listed in Account, with "Find on YouTube"
+    if (result.missing && result.missing.length > 0) {
+      setSongsToGetBack((prev) => {
+        const updated = mergeGetBack(prev, result.missing);
+        StorageService.saveSongsToGetBack(updated);
+        return updated;
+      });
+    }
     await Promise.all(Object.keys(result.lyrics).map((id) => StorageService.saveCustomLyrics(id, result.lyrics[id])));
   }, []);
 
@@ -1244,7 +1281,56 @@ function SelahApp() {
   };
 
   // What a cloud backup contains, always up to date (read when backing up)
-  backupStateRef.current = { tracks, playlists, favorites, playCounts };
+  backupStateRef.current = { tracks, playlists, favorites, playCounts, artists: favoriteArtists, getBack: songsToGetBack };
+
+  // YouTube songs you kept (in a playlist or loved) are saved, so they are still there after a restart
+  useEffect(() => {
+    if (!storageLoadedRef.current) return;
+    const keep = new Set(favorites);
+    playlists.forEach((pl) => (pl.trackIds || []).forEach((id) => keep.add(id)));
+    const kept = tracks.filter((t) => t && t.youtubeId && keep.has(t.id));
+    const sig = kept.map((t) => t.id).join('|');
+    if (sig === keptYouTubeRef.current) return;
+    keptYouTubeRef.current = sig;
+    StorageService.saveYouTubeSongs(
+      kept.map(({ id, title, artist, album, duration, durationFormatted, youtubeId, coverUrl }) => ({
+        id,
+        title,
+        artist,
+        album,
+        duration,
+        durationFormatted,
+        youtubeId,
+        sourceType: 'youtube',
+        coverUrl
+      }))
+    );
+  }, [tracks, favorites, playlists]);
+
+  // A song to get back is on this phone now: it goes back into its playlists by itself
+  useEffect(() => {
+    if (songsToGetBack.length === 0 || localTracks.length === 0) return;
+    const { found, still } = findGotBack(songsToGetBack, localTracks);
+    if (found.length === 0) return;
+    setPlaylists((prev) => {
+      const updated = prev.map((pl) => {
+        const add = found.filter(({ song }) => (song.playlists || []).includes(pl.id)).map(({ track }) => track.id);
+        return add.length ? { ...pl, trackIds: [...new Set([...(pl.trackIds || []), ...add])] } : pl;
+      });
+      StorageService.savePlaylists(updated);
+      return updated;
+    });
+    const loved = found.filter(({ song }) => song.loved).map(({ track }) => track.id);
+    if (loved.length > 0) {
+      setFavorites((prev) => {
+        const updated = [...new Set([...prev, ...loved])];
+        StorageService.saveFavorites(updated);
+        return updated;
+      });
+    }
+    setSongsToGetBack(still);
+    StorageService.saveSongsToGetBack(still);
+  }, [localTracks, songsToGetBack]);
 
   // Long songs, sermons and videos you stopped part-way (newest first)
   const continueListening = useMemo(() => {
@@ -1295,6 +1381,20 @@ function SelahApp() {
     setActiveTab('youtube');
   }, []);
   const openArtist = useCallback((name) => discoverOnYouTube(artistSearch(name)), [discoverOnYouTube]);
+  const findSongOnYouTube = useCallback(
+    (song) => {
+      setIsAccountVisible(false);
+      discoverOnYouTube(getBackSearch(song));
+    },
+    [discoverOnYouTube]
+  );
+  const forgetSongToGetBack = useCallback((song) => {
+    setSongsToGetBack((prev) => {
+      const updated = prev.filter((g) => g.key !== song.key);
+      StorageService.saveSongsToGetBack(updated);
+      return updated;
+    });
+  }, []);
   const toggleFollowArtist = useCallback(
     (name) => {
       const next = favoriteArtists.includes(name)
@@ -1605,6 +1705,9 @@ function SelahApp() {
         onAccountChange={handleAccountChange}
         getState={() => backupStateRef.current}
         onRestore={handleRestore}
+        songsToGetBack={songsToGetBack}
+        onFindSong={findSongOnYouTube}
+        onForgetSong={forgetSongToGetBack}
       />
 
       {/* Equalizer & Sound Settings Modal */}

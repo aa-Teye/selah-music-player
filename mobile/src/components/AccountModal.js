@@ -44,11 +44,21 @@ function Field({ styles, c, ...props }) {
  * Premium, backup & restore, log out and delete account when logged in.
  * account = { user, premium } or null. onAccountChange(next) updates the app.
  */
-export default function AccountModal({ visible, onClose, account, onAccountChange, getState, onRestore }) {
+export default function AccountModal({
+  visible,
+  onClose,
+  account,
+  onAccountChange,
+  getState,
+  onRestore,
+  songsToGetBack = [],
+  onFindSong,
+  onForgetSong
+}) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
   const [mode, setMode] = useState('login'); // login | signup | forgot | reset
-  const [view, setView] = useState('home'); // home | premium | delete (when logged in)
+  const [view, setView] = useState('home'); // home | premium | delete | getback (when logged in)
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -199,12 +209,18 @@ export default function AccountModal({ visible, onClose, account, onAccountChang
     run('restore', async () => {
       const result = await fetchRestore(getState().tracks);
       await onRestore(result);
-      const missing = result.total - result.found;
+      const missing = (result.missing || []).length;
       Alert.alert(
         'Restored',
         `${result.playlists.length} playlist${result.playlists.length === 1 ? '' : 's'} and ${result.favorites.length} loved song${
           result.favorites.length === 1 ? '' : 's'
-        } are back.${missing > 0 ? ` ${missing} song${missing === 1 ? ' is' : 's are'} not on this phone yet, so ${missing === 1 ? 'it was' : 'they were'} skipped.` : ''}`
+        } are back.${
+          missing > 0
+            ? ` ${missing} song${missing === 1 ? ' is' : 's are'} not on this phone yet: see "Songs to get back". Once ${
+                missing === 1 ? "it's" : "they're"
+              } on this phone, ${missing === 1 ? 'it goes' : 'they go'} back into your playlists by ${missing === 1 ? 'itself' : 'themselves'}.`
+            : ''
+        }`
       );
     });
 
@@ -310,6 +326,18 @@ export default function AccountModal({ visible, onClose, account, onAccountChang
           <Text style={styles.small}>Backup and restore are part of Selah Premium.</Text>
         )}
       </View>
+
+      {songsToGetBack.length > 0 && (
+        <TouchableOpacity style={styles.box} onPress={() => setView('getback')} testID="open-get-back" activeOpacity={0.85}>
+          <View style={styles.rowCenter}>
+            <Ionicons name="musical-notes-outline" size={18} color={c.ink} />
+            <Text style={styles.boxTitle}>Songs to get back</Text>
+            <Text style={styles.count}>{songsToGetBack.length}</Text>
+            <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+          </View>
+          <Text style={styles.small}>From your backup, not on this phone yet. Find them on YouTube.</Text>
+        </TouchableOpacity>
+      )}
 
       {error ? <Text style={styles.error} testID="account-error">{error}</Text> : null}
 
@@ -421,6 +449,50 @@ export default function AccountModal({ visible, onClose, account, onAccountChang
     </>
   );
 
+  // ── Songs to get back (after a restore) ───────────────────────────────────
+  const renderGetBack = () => (
+    <>
+      <TouchableOpacity style={styles.back} onPress={() => setView('home')} testID="get-back-back">
+        <Ionicons name="arrow-back" size={18} color={c.ink} />
+        <Text style={styles.secondaryText}>Account</Text>
+      </TouchableOpacity>
+      <Text style={styles.heading}>Songs to get back</Text>
+      <Text style={styles.note}>
+        These songs are in your backup but not on this phone. Once a song is on this phone, it goes back into its
+        playlists by itself.
+      </Text>
+      {songsToGetBack.length === 0 ? <Text style={styles.small}>All your songs are back.</Text> : null}
+      {songsToGetBack.map((song) => (
+        <View key={song.key} style={styles.songRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowTitle} numberOfLines={1}>{song.title}</Text>
+            <Text style={styles.small} numberOfLines={1}>
+              {[song.artist, song.playlists && song.playlists.length ? `in ${song.playlists.length} playlist${song.playlists.length === 1 ? '' : 's'}` : '', song.loved ? 'loved' : '']
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
+          </View>
+          {onFindSong && (
+            <TouchableOpacity style={styles.findBtn} onPress={() => onFindSong(song)} testID={`find-${song.title}`}>
+              <Ionicons name="logo-youtube" size={14} color="#EF4444" />
+              <Text style={styles.findText}>Find</Text>
+            </TouchableOpacity>
+          )}
+          {onForgetSong && (
+            <TouchableOpacity
+              onPress={() => onForgetSong(song)}
+              accessibilityLabel={`Remove ${song.title} from the list`}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              testID={`forget-${song.title}`}
+            >
+              <Ionicons name="close" size={18} color={c.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
+    </>
+  );
+
   // ── Logged in: delete account ─────────────────────────────────────────────
   const doDeleteAccount = () =>
     run('delete-account', async () => {
@@ -477,7 +549,15 @@ export default function AccountModal({ visible, onClose, account, onAccountChang
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
-            {!account ? renderAuth() : view === 'premium' ? renderPremium() : view === 'delete' ? renderDelete() : renderHome()}
+            {!account
+              ? renderAuth()
+              : view === 'premium'
+              ? renderPremium()
+              : view === 'delete'
+              ? renderDelete()
+              : view === 'getback'
+              ? renderGetBack()
+              : renderHome()}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
@@ -573,5 +653,26 @@ const makeStyles = (c) =>
       padding: 14
     },
     planTitle: { color: c.text, fontWeight: '900', fontSize: 15 },
-    planBuy: { color: c.ink, fontWeight: '900', fontSize: 14 }
+    planBuy: { color: c.ink, fontWeight: '900', fontSize: 14 },
+    count: { color: c.ink, fontWeight: '900', fontSize: 14 },
+    songRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border
+    },
+    findBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surfaceAlt
+    },
+    findText: { color: c.ink, fontWeight: '800', fontSize: 12 }
   });

@@ -279,6 +279,90 @@ test('Account & Backup: hidden until Selah cloud is set up; sign up, Premium unl
   }
 });
 
+test('restore on a new phone: songs not on it are listed to get back, and go back into their playlist once they are', async () => {
+  const cloud = require('../src/services/cloudService');
+  const { resetTokenCacheForTests } = require('../src/services/apiClient');
+  const { createFakeServer, BASE } = require('./fakeServer');
+  const songsFolder = { 'track01.mp3': { bytes: fx.mp3WithTags() } }; // Way Maker, Sinach, 0:26
+  fs.__reset({
+    'file:///docs/': { dirs: ['Selah Music'], files: {} },
+    'file:///docs/Selah%20Music/': { dirs: [], files: songsFolder }
+  });
+  cloud.setApiUrlForTests(BASE);
+  resetTokenCacheForTests();
+  const server = createFakeServer({ otherFetch: global.fetch });
+  global.fetch = server.fetch;
+  server.users.set('kofi@example.com', {
+    id: 'user-old',
+    name: 'Kofi',
+    email: 'kofi@example.com',
+    password: 'praise1234',
+    premium: { active: true, until: null, source: 'gift' }
+  });
+  server.backups.set('user-old', {
+    savedAt: '2026-11-11T10:00:00.000Z',
+    data: {
+      songs: {
+        a: { t: 'Way Maker', a: 'Sinach', d: 26 },
+        b: { t: 'Imela', a: 'Nathaniel Bassey', d: 0 },
+        c: { t: 'Oceans', a: 'Hillsong United', d: 534, y: 'dy9nwe9_xzw' }
+      },
+      playlists: [{ id: 'pl-old', name: 'Sunday Service', trackIds: ['a', 'b', 'c'] }],
+      favorites: ['b'],
+      playCounts: {},
+      lyrics: {},
+      artists: ['Joe Mettle']
+    }
+  });
+  try {
+    await render(<App />);
+    await settle(25);
+    if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+    await tap(screen.getByTestId('header-account'));
+    await fireEvent.changeText(screen.getByTestId('account-email'), 'kofi@example.com');
+    await fireEvent.changeText(screen.getByTestId('account-password'), 'praise1234');
+    await tap(screen.getByTestId('account-submit'));
+    await settle(6);
+    await tap(screen.getByTestId('restore-now'));
+    await settle(6);
+    expect(Alert.alert).toHaveBeenCalledWith('Restored', expect.stringContaining('1 song is not on this phone yet'));
+
+    // Imela is not on this phone; the YouTube song needs no file, so it is simply back
+    await tap(screen.getByTestId('open-get-back'));
+    const list = within(screen.getByTestId('account-modal'));
+    expect(list.getByText('Imela')).toBeTruthy();
+    expect(list.getByText('Nathaniel Bassey · in 1 playlist · loved')).toBeTruthy();
+    expect(list.queryByText('Oceans')).toBeNull();
+
+    global.fetch.mockClear();
+    await tap(screen.getByTestId('find-Imela'));
+    expect(youtubeSearches()).toEqual([expect.stringContaining('search_query=Imela Nathaniel Bassey')]);
+    expect(screen.queryByTestId('account-modal')).toBeNull();
+
+    await tap(screen.getByTestId('tab-home'));
+    expect(screen.getByTestId('home-artist-Joe Mettle')).toBeTruthy(); // the artists you follow came back
+    await tap(screen.getByTestId('tab-playlists'));
+    await tap(screen.getByText('Sunday Service'));
+    expect(screen.getAllByText('Way Maker').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Oceans').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Imela')).toBeNull();
+
+    // later, Imela is on the phone: next time Selah opens it is back in Sunday Service, and loved
+    await cleanup();
+    songsFolder['Imela.mp3'] = { bytes: fx.mp3WithId3v1() }; // Imela, Nathaniel Bassey
+    await render(<App />);
+    await settle(25);
+    await tap(screen.getByTestId('tab-playlists'));
+    await tap(screen.getByText('Sunday Service'));
+    expect(screen.getAllByText('Imela').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Oceans').length).toBeGreaterThan(0); // YouTube songs you kept stay after a restart
+    expect(JSON.parse(await AsyncStorage.getItem('@selah_get_back'))).toEqual([]);
+    expect(JSON.parse(await AsyncStorage.getItem('@selah_favorites'))).toHaveLength(1);
+  } finally {
+    cloud.setApiUrlForTests(null);
+  }
+});
+
 test('buying Premium in the app unlocks backup straight away', async () => {
   const cloud = require('../src/services/cloudService');
   const { createFakeServer, BASE } = require('./fakeServer');
