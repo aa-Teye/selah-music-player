@@ -28,6 +28,9 @@ import { MOOD_TAGS } from './src/data/mockData';
 import * as SplashScreen from 'expo-splash-screen';
 import IntroSplash, { introSettings, hideNativeSplash } from './src/components/IntroSplash';
 import LibrariesModal from './src/components/LibrariesModal';
+import GuidedTour from './src/components/GuidedTour';
+import WhatsNewModal from './src/components/WhatsNewModal';
+import { whatsNewToShow, LATEST_WHATS_NEW } from './src/data/whatsNew';
 import { artistSearch } from './src/data/discover';
 import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
 import { videosDue, checkVideos, applyVideoCheck } from './src/services/savedVideos';
@@ -190,6 +193,26 @@ function SelahApp() {
   const [externalSearch, setExternalSearch] = useState(null); // { query, at } from Libraries
   const [songsToGetBack, setSongsToGetBack] = useState([]); // from a restore: not on this phone yet
   const [inPip, setInPip] = useState(false); // Android: shrunk to the small picture-in-picture window
+  const [tourVisible, setTourVisible] = useState(false);
+  const [whatsNew, setWhatsNew] = useState(null);
+  const pendingTourRef = useRef(false);
+  const startTourAfterOnboarding = useCallback(() => {
+    if (!pendingTourRef.current) return;
+    pendingTourRef.current = false;
+    setTourVisible(true);
+  }, []);
+  const endTour = useCallback(() => {
+    setTourVisible(false);
+    StorageService.setFlag('tourDone', true);
+  }, []);
+  // From the menu (after it has closed: two windows can't open at once on iPhone)
+  const openTour = useCallback(() => {
+    setActiveTab('home');
+    setTimeout(() => setTourVisible(true), 400);
+  }, []);
+  const openWhatsNew = useCallback(() => {
+    setTimeout(() => setWhatsNew(LATEST_WHATS_NEW), 400);
+  }, []);
   const storageLoadedRef = useRef(false);
   const keptYouTubeRef = useRef(null);
 
@@ -454,7 +477,12 @@ function SelahApp() {
         if (savedBookmarks) setBookmarks(savedBookmarks);
         if (savedHasOnboarded === false) {
           setIsOnboardingVisible(true);
+          pendingTourRef.current = true; // the guided tour follows the artist picker
         }
+        // After an update: what's new (once). A fresh install gets the guided tour instead.
+        whatsNewToShow(savedHasOnboarded === false).then((news) => {
+          if (news) setWhatsNew(news);
+        });
         if (savedFavArtists && savedFavArtists.length > 0) {
           setFavoriteArtists(savedFavArtists);
         }
@@ -1794,6 +1822,8 @@ function SelahApp() {
         onOpenStats={openStats}
         onOpenSleepTimer={() => setIsEqVisible(true)}
         onOpenAccount={isCloudReady() ? () => setIsAccountVisible(true) : undefined}
+        onOpenTour={openTour}
+        onOpenWhatsNew={openWhatsNew}
         streakDays={streakData?.streakDays || 1}
       />
 
@@ -1843,25 +1873,35 @@ function SelahApp() {
         onClose={() => {
           setIsOnboardingVisible(false);
           StorageService.setHasOnboarded(true);
+          startTourAfterOnboarding();
         }}
         onFinish={(selectedArtists) => {
-          const list = Array.isArray(selectedArtists) 
-            ? selectedArtists 
+          const list = Array.isArray(selectedArtists)
+            ? selectedArtists
             : (selectedArtists?.artists || []);
           setFavoriteArtists(list);
           StorageService.saveFavoriteArtists(list);
           StorageService.setHasOnboarded(true);
           setIsOnboardingVisible(false);
+          startTourAfterOnboarding();
         }}
         onComplete={(res) => {
-          const list = Array.isArray(res) 
-            ? res 
+          const list = Array.isArray(res)
+            ? res
             : (res?.artists || []);
           setFavoriteArtists(list);
           StorageService.saveFavoriteArtists(list);
           StorageService.setHasOnboarded(true);
           setIsOnboardingVisible(false);
+          startTourAfterOnboarding();
         }}
+      />
+
+      {/* The guided tour (first start, or "Show me around") and what's new (after an update) */}
+      <GuidedTour visible={tourVisible && !showIntro && !isOnboardingVisible} onDone={endTour} />
+      <WhatsNewModal
+        news={!showIntro && !tourVisible && !isOnboardingVisible ? whatsNew : null}
+        onClose={() => setWhatsNew(null)}
       />
 
       {/* Bottom Navigation Tabs */}

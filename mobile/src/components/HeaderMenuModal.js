@@ -25,6 +25,8 @@ export default function HeaderMenuModal({
   onOpenStats,
   onOpenSleepTimer,
   onOpenAccount,
+  onOpenTour,
+  onOpenWhatsNew,
   streakDays = 14
 }) {
   const c = useColors();
@@ -126,6 +128,46 @@ export default function HeaderMenuModal({
                   <View style={{ flex: 1 }}>
                     <Text style={styles.menuTitle}>Account &amp; Backup</Text>
                     <Text style={styles.menuSub}>Log in, Selah Premium, back up your playlists</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
+                </TouchableOpacity>
+              )}
+
+              {onOpenWhatsNew && (
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  testID="open-whats-new"
+                  onPress={() => {
+                    onClose();
+                    onOpenWhatsNew();
+                  }}
+                >
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons name="megaphone-outline" size={20} color={c.ink} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuTitle}>What&apos;s new</Text>
+                    <Text style={styles.menuSub}>The latest things in Selah</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
+                </TouchableOpacity>
+              )}
+
+              {onOpenTour && (
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  testID="open-tour"
+                  onPress={() => {
+                    onClose();
+                    onOpenTour();
+                  }}
+                >
+                  <View style={styles.menuIconWrap}>
+                    <Ionicons name="compass-outline" size={20} color={c.ink} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuTitle}>Show me around</Text>
+                    <Text style={styles.menuSub}>A quick tour of Selah</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
                 </TouchableOpacity>

@@ -891,6 +891,60 @@ test('YouTube and Google Play rules: links to the terms and privacy policy are i
   setApiUrlForTests(null);
 });
 
+test('first start: after choosing artists, the guided tour shows once; the menu shows it again', async () => {
+  await AsyncStorage.setItem('@selah_has_onboarded', 'false');
+  await render(<App />);
+  await settle();
+  if (isAndroid && screen.queryByTestId('deep-scan-done')) await tap(screen.getByTestId('deep-scan-done'));
+  expect(screen.queryByTestId('guided-tour')).toBeNull(); // not before the artist picker is done
+  await tap(screen.getByText(/Start Listening/));
+  expect(screen.getByTestId('guided-tour')).toBeTruthy();
+  expect(screen.getByTestId('tour-title').props.children).toBe('Home');
+  await tap(screen.getByTestId('tour-next'));
+  expect(screen.getByTestId('tour-title').props.children).toBe('Libraries');
+  await tap(screen.getByTestId('tour-skip'));
+  expect(screen.queryByTestId('guided-tour')).toBeNull();
+  expect(await AsyncStorage.getItem('@selah_flag_tourDone')).toBe('true');
+
+  // not again on the next start
+  await cleanup();
+  await render(<App />);
+  await settle();
+  expect(screen.queryByTestId('guided-tour')).toBeNull();
+
+  // "Show me around" in the menu
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByTestId('open-tour'));
+  await settle(10);
+  expect(screen.getByTestId('guided-tour')).toBeTruthy();
+});
+
+test("what's new: shows once after an update, not on a fresh install; always in the menu", async () => {
+  const { LATEST_WHATS_NEW } = require('../src/data/whatsNew');
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  expect(screen.queryByTestId('whats-new')).toBeNull(); // first start: nothing
+  await cleanup();
+
+  await AsyncStorage.setItem('@selah_whats_new_seen', 'an-older-update'); // an update arrived
+  await render(<App />);
+  await settle();
+  expect(screen.getByTestId('whats-new')).toBeTruthy();
+  expect(screen.getByText(LATEST_WHATS_NEW.title)).toBeTruthy();
+  await tap(screen.getByTestId('whats-new-close'));
+  expect(screen.queryByTestId('whats-new')).toBeNull();
+  await cleanup();
+
+  await render(<App />);
+  await settle();
+  expect(screen.queryByTestId('whats-new')).toBeNull(); // only once
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByTestId('open-whats-new'));
+  await settle(10);
+  expect(screen.getByTestId('whats-new')).toBeTruthy();
+});
+
 test('the menu shows which version of Selah this is (the one in app.json)', async () => {
   await render(<App />);
   await settle();
