@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from './CoverArt';
 
 export default function MiniPlayerBar({
   currentTrack,
@@ -60,10 +61,7 @@ export default function MiniPlayerBar({
       <View style={styles.innerContent}>
         {/* Animated Vinyl Artwork */}
         <Animated.View style={[styles.discContainer, { transform: [{ rotate: isPlaying ? spin : '0deg' }] }]}>
-          <Image
-            source={{ uri: currentTrack.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' }}
-            style={styles.discImage}
-          />
+          <CoverArt track={currentTrack} size={44} round style={styles.discImage} />
           <View style={styles.discHole} />
         </Animated.View>
 

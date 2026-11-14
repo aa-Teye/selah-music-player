@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from './CoverArt';
 
 export const CARD_STYLES = [
   { id: 'night', name: 'Night', bg: '#12141A', text: '#FFFFFF', soft: 'rgba(255,255,255,0.65)', accent: '#34D399' },
@@ -89,7 +90,7 @@ export default function LyricCardModal({ visible, allLines = [], startIndex = 0,
               {lines.join('\n')}
             </Text>
             <View style={styles.cardFooter}>
-              {track?.coverUrl ? <Image source={{ uri: track.coverUrl }} style={styles.cover} /> : null}
+              {track ? <CoverArt track={track} size={40} style={styles.cover} /> : null}
               <View style={{ flex: 1 }}>
                 <Text style={[styles.songTitle, { color: look.text }]} numberOfLines={1}>
                   {track?.title || 'Unknown song'}

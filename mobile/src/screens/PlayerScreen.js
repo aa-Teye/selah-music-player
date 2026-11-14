@@ -12,6 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import PlayerPanel from '../components/PlayerPanel';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt, { hasRealCover } from '../components/CoverArt';
+
+// A group's picture (album, artist, genre): its first song's real cover, or a colourful one from its name
+const groupCover = (group) => (group.first && hasRealCover(group.first) ? group.first : { title: group.name, artist: '' });
 
 const { width } = Dimensions.get('window');
 
@@ -94,6 +98,7 @@ function LibraryBrowserImpl({
       name,
       count: items.length,
       coverUrl: items[0]?.coverUrl,
+      first: items[0],
       tracks: items
     }));
   }, [allTracks]);
@@ -110,6 +115,7 @@ function LibraryBrowserImpl({
       name,
       count: items.length,
       coverUrl: items[0]?.coverUrl,
+      first: items[0],
       tracks: items
     }));
   }, [allTracks]);
@@ -141,6 +147,7 @@ function LibraryBrowserImpl({
       name: name.toUpperCase(),
       count: items.length,
       coverUrl: items[0]?.coverUrl,
+      first: items[0],
       tracks: items
     }));
   }, [allTracks]);
@@ -292,7 +299,7 @@ function LibraryBrowserImpl({
                       style={styles.recentCard}
                       onPress={() => onPlayTrack(t)}
                     >
-                      <Image source={{ uri: t.coverUrl }} style={styles.recentImg} />
+                      <CoverArt track={t} size={110} style={styles.recentImg} />
                       <Text style={styles.recentCardTitle} numberOfLines={1}>
                         {t.title}
                       </Text>
@@ -364,7 +371,7 @@ function LibraryBrowserImpl({
                   style={styles.gridCard}
                   onPress={() => alb.tracks[0] && onPlayTrack(alb.tracks[0])}
                 >
-                  <Image source={{ uri: alb.coverUrl }} style={styles.gridCover} />
+                  <CoverArt track={groupCover(alb)} size={120} style={styles.gridCover} />
                   <Text style={styles.gridTitle} numberOfLines={1}>
                     {alb.name}
                   </Text>
@@ -388,7 +395,7 @@ function LibraryBrowserImpl({
                 style={styles.artistRow}
                 onPress={() => art.tracks[0] && onPlayTrack(art.tracks[0])}
               >
-                <Image source={{ uri: art.coverUrl }} style={styles.artistAvatar} />
+                <CoverArt track={groupCover(art)} size={48} round style={styles.artistAvatar} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.artistName}>{art.name}</Text>
                   <Text style={styles.artistSub}>{art.count} songs</Text>
@@ -461,7 +468,7 @@ function LibraryBrowserImpl({
                   style={styles.gridCard}
                   onPress={() => gn.tracks[0] && onPlayTrack(gn.tracks[0])}
                 >
-                  <Image source={{ uri: gn.coverUrl }} style={styles.gridCover} />
+                  <CoverArt track={groupCover(gn)} size={120} style={styles.gridCover} />
                   <Text style={styles.gridTitle} numberOfLines={1}>
                     {gn.name}
                   </Text>

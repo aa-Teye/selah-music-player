@@ -1,30 +1,24 @@
-import React, { memo, useState } from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import React, { memo } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt, { hasRealCover } from './CoverArt';
 
 /**
- * A song's small picture in lists: its own cover (read from inside the file)
- * when it has one, otherwise a music note. Shows a speaker while it plays.
+ * A song's small picture in lists: its own cover (read from inside the file) when it has one,
+ * otherwise a colourful cover made from its name. Shows a speaker while it plays.
  */
 function SongThumb({ track, isCurrent, isPlaying, size = 40 }) {
-  const c = useColors();
-  const styles = useThemedStyles(makeStyles);
-  const [failed, setFailed] = useState(false);
-  const hasCover = Boolean(track && track.coverFile && track.coverUrl) && !failed;
-  const box = { width: size, height: size, borderRadius: Math.round(size / 4) };
-
+  const radius = Math.round(size / 4);
   return (
-    <View style={[styles.box, box]} testID={hasCover ? 'song-cover' : undefined}>
-      {hasCover ? (
-        <Image source={{ uri: track.coverUrl }} style={[styles.image, box]} onError={() => setFailed(true)} />
-      ) : null}
+    <View
+      style={[styles.box, { width: size, height: size, borderRadius: radius }]}
+      testID={hasRealCover(track) ? 'song-cover' : undefined}
+    >
+      <CoverArt track={track} size={size} style={{ borderRadius: radius }} />
       {isCurrent && isPlaying ? (
-        <View style={[styles.playing, hasCover && styles.playingOnCover, box]}>
-          <Ionicons name="volume-high" size={18} color={hasCover ? '#FFFFFF' : c.ink} />
+        <View style={[styles.playing, { width: size, height: size, borderRadius: radius }]}>
+          <Ionicons name="volume-high" size={18} color="#FFFFFF" />
         </View>
-      ) : !hasCover ? (
-        <Ionicons name="musical-note" size={20} color={isCurrent ? c.ink : c.textSubtle} />
       ) : null}
     </View>
   );
@@ -32,17 +26,14 @@ function SongThumb({ track, isCurrent, isPlaying, size = 40 }) {
 
 export default memo(SongThumb);
 
-const makeStyles = (c) =>
-  StyleSheet.create({
-    box: {
-      backgroundColor: c.surfaceAlt,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: c.border,
-      overflow: 'hidden'
-    },
-    image: { position: 'absolute', top: 0, left: 0 },
-    playing: { position: 'absolute', top: 0, left: 0, justifyContent: 'center', alignItems: 'center' },
-    playingOnCover: { backgroundColor: 'rgba(0, 0, 0, 0.45)' }
-  });
+const styles = StyleSheet.create({
+  box: { overflow: 'hidden' },
+  playing: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+  }
+});

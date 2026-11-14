@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from './CoverArt';
 
 export default function PlaybackQueueView({
   queue = [],
@@ -98,10 +99,7 @@ export default function PlaybackQueueView({
                 </View>
 
                 {/* Thumbnail Art */}
-                <Image
-                  source={{ uri: track.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' }}
-                  style={styles.trackThumb}
-                />
+                <CoverArt track={track} size={44} style={styles.trackThumb} />
 
                 {/* Track Details */}
                 <View style={styles.trackDetails}>

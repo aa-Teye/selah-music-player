@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ScanStatusBanner from '../components/ScanStatusBanner';
 import TodayCard from '../components/TodayCard';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from '../components/CoverArt';
 
 const HOME_SONG_LIMIT = 30;
 const FALLBACK_COVER = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
@@ -128,7 +129,7 @@ function HomeScreen({
                   accessibilityLabel={`Continue ${track.title}, ${timeLeft(position, length)}`}
                 >
                   <View>
-                    <Image source={{ uri: track.coverUrl || FALLBACK_COVER }} style={styles.continueCover} />
+                    <CoverArt track={track} size={84} style={styles.continueCover} />
                     <View style={styles.continuePlay}>
                       <Ionicons name={isCurrent && isPlaying ? 'volume-high' : 'play'} size={14} color="#FFFFFF" />
                     </View>
@@ -160,10 +161,7 @@ function HomeScreen({
                 onPress={() => onPlayTrack(item)}
                 activeOpacity={0.8}
               >
-                <Image 
-                  source={{ uri: item.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' }} 
-                  style={styles.recentCover} 
-                />
+                <CoverArt track={item} size={94} style={styles.recentCover} />
                 <Text style={styles.recentTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.recentArtist} numberOfLines={1}>{item.artist}</Text>
               </TouchableOpacity>
@@ -232,7 +230,7 @@ function HomeScreen({
                 onPress={() => onPlayTrack(item)}
                 activeOpacity={0.8}
               >
-                <Image source={{ uri: item.coverUrl || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80' }} style={styles.recentCover} />
+                <CoverArt track={item} size={94} style={styles.recentCover} />
                 <Text style={styles.recentTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.recentArtist} numberOfLines={1}>{item.artist}</Text>
               </TouchableOpacity>
@@ -334,7 +332,7 @@ function HomeScreen({
                 activeOpacity={0.8}
               >
                 <View style={styles.cardCoverWrap}>
-                  <Image source={{ uri: track.coverUrl }} style={styles.cardCover} />
+                  <CoverArt track={track} size={120} style={styles.cardCover} />
                   <View style={styles.cardPlayBadge}>
                     <Ionicons 
                       name={isCurrent && isPlaying ? "pause" : "play"} 

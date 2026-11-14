@@ -17,6 +17,7 @@ import Scrubber from './Scrubber';
 import AudioVisualizer from './AudioVisualizer';
 import useTrackLyrics from '../hooks/useTrackLyrics';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from './CoverArt';
 
 const FALLBACK_COVER =
   'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80';
@@ -177,10 +178,7 @@ export default function PlayerPanel({
             }
           ]}
         >
-          <Image
-            source={{ uri: currentTrack.coverUrl || FALLBACK_COVER }}
-            style={{ width: coverSize, height: coverSize, borderRadius: coverSize / 2 }}
-          />
+          <CoverArt track={currentTrack} size={coverSize} round />
           <View style={styles.discHole} />
         </Animated.View>
       </View>
@@ -257,7 +255,7 @@ export default function PlayerPanel({
             onPress={() => onChangeView && onChangeView('now')}
             activeOpacity={0.8}
           >
-            <Image source={{ uri: currentTrack.coverUrl || FALLBACK_COVER }} style={styles.miniCover} />
+            <CoverArt track={currentTrack} size={38} style={styles.miniCover} />
             <View style={{ flex: 1 }}>
               <Text style={styles.miniTitle} numberOfLines={1}>{currentTrack.title}</Text>
               <Text style={styles.miniArtist} numberOfLines={1}>{currentTrack.artist}</Text>

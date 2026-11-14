@@ -35,8 +35,9 @@ export function coverColors(track) {
 /** "Way Maker" → "WM", "Oceans" → "O" */
 export function initialsOf(title) {
   const words = String(title || '')
+    .normalize('NFC') // accents stay part of their letter (Ọlọ́run, Àgbáyé)
     .replace(/\(.*?\)|\[.*?\]/g, ' ')
-    .replace(/[^\p{L}\p{N} ]/gu, ' ')
+    .replace(/[^\p{L}\p{M}\p{N} ]/gu, ' ')
     .trim()
     .split(/\s+/)
     .filter(Boolean);

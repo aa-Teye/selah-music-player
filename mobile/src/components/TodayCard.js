@@ -2,6 +2,7 @@ import React, { memo, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Share, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import CoverArt from './CoverArt';
 import { REMINDER_TIMES, formatReminderTime, getReminder, setReminder } from '../services/dailyService';
 
 const FALLBACK_COVER = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80';
@@ -137,7 +138,7 @@ function TodayCard({ devotion, song, onPlaySong, onNextVerse, isPlayingSong }) {
 
       {song ? (
         <TouchableOpacity style={styles.songRow} onPress={() => onPlaySong(song)} activeOpacity={0.8} testID="song-of-the-day">
-          <Image source={{ uri: song.coverUrl || FALLBACK_COVER }} style={styles.songCover} />
+          <CoverArt track={song} size={44} style={styles.songCover} />
           <View style={{ flex: 1 }}>
             <Text style={styles.songLabel}>Song for today</Text>
             <Text style={styles.songTitle} numberOfLines={1}>{song.title}</Text>
