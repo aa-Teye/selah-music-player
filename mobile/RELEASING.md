@@ -45,6 +45,9 @@ eas update --channel production --message "What changed"
 - Phones download it in the background the next time Selah opens, and use it from the next start.
 - Updates for test APKs: use `--channel preview` instead.
 - An update only reaches phones running the **same version** it was made for (1.0.0 updates reach 1.0.0).
+- **Tell people what changed:** add a new entry at the top of `src/data/whatsNew.js` with a new `id`
+  (for example `1.0.0-2`). Everyone sees it once, the first time Selah opens with the update.
+  Small fixes nobody needs to hear about: skip this step.
 
 **Not by instant update** (these need a new version number and a new Play Store build):
 
@@ -91,7 +94,9 @@ What version 2 adds, and what each part needs:
 - The signing key is kept by Expo for the account **lexiswonders**. Keep that account safe.
   Google Play App Signing keeps the key Google uses for the store.
 - Run the tests before a release: `npx jest` here, and `npm test` in `selah-api`.
-- Server settings (Vercel) are listed in `selah-api/README.md`.
+- Server settings (Vercel) are listed in `selah-api/README.md`. YouTube search needs `YOUTUBE_API_KEY`
+  there; the health link below shows `youtube: ready` once it is set.
+- Before each Play Store release, read `store/policy-check.md` again (every Google Play and YouTube rule).
 
 ## Links
 
