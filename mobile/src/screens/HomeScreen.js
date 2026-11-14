@@ -14,6 +14,7 @@ import TodayCard from '../components/TodayCard';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import CoverArt from '../components/CoverArt';
 import { useTourTarget } from '../tour/tourTargets';
+import useArtistPictures from '../hooks/useArtistPictures';
 
 const HOME_SONG_LIMIT = 30;
 
@@ -55,6 +56,8 @@ function HomeScreen({
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
   const librariesTourRef = useTourTarget('open-libraries');
+  const artistPictures = useArtistPictures(favoriteArtists.length > 0);
+  const showsArtistPictures = favoriteArtists.some((name) => artistPictures[name]);
   const filteredTracks = activeMood === 'all'
     ? tracks 
     : tracks.filter(t => t.category === activeMood);
@@ -381,7 +384,9 @@ function HomeScreen({
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Artists you follow</Text>
               <Text style={styles.sectionSubtitle}>
-                {favoriteArtists.length > 0 ? 'Tap one for their latest songs' : 'Follow artists to see their new songs here'}
+                {favoriteArtists.length > 0
+                  ? `Tap one for their latest songs${showsArtistPictures ? ' · pictures from YouTube' : ''}`
+                  : 'Follow artists to see their new songs here'}
               </Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
@@ -393,7 +398,7 @@ function HomeScreen({
                   activeOpacity={0.8}
                   testID={`home-artist-${artistName}`}
                 >
-                  <CoverArt person track={{ title: artistName }} size={58} round style={{ marginBottom: 8 }} />
+                  <CoverArt person track={{ title: artistName }} picture={artistPictures[artistName]} size={58} round style={{ marginBottom: 8 }} />
                   <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
                   <View style={styles.artistRecPlayRow}>
                     <Ionicons name="logo-youtube" size={13} color="#EF4444" />

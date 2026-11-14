@@ -84,16 +84,31 @@ export function initialsOf(title) {
 /**
  * A song's picture: its own cover when it has one (album art, YouTube thumbnail, your choice),
  * otherwise Selah's photo for it, like before. If no picture can load (offline): a music note.
- * person: an artist, shown as a coloured circle with their initials.
+ * person: an artist: their picture (from their YouTube channel) when there is one,
+ * otherwise a coloured circle with their initials.
  * size: the box size (when style has no width/height).
  */
-function CoverArt({ track, size = 48, style, round = false, testID, person = false }) {
+function CoverArt({ track, size = 48, style, round = false, testID, person = false, picture = null }) {
   const [attempt, setAttempt] = useState(0);
+  const [pictureFailed, setPictureFailed] = useState(false);
   const real = hasRealCover(track);
   const coverUrl = track && track.coverUrl;
   useEffect(() => setAttempt(0), [coverUrl]); // a new song: try its pictures again
+  useEffect(() => setPictureFailed(false), [picture]);
 
   const shape = { width: size, height: size, borderRadius: round ? size / 2 : Math.round(size * 0.16), overflow: 'hidden' };
+
+  if (person && picture && !pictureFailed) {
+    return (
+      <Image
+        source={{ uri: picture }}
+        style={[shape, { backgroundColor: '#1F2430' }, style]}
+        onError={() => setPictureFailed(true)}
+        testID={testID || 'cover-artist'}
+        accessibilityLabel={track && track.title ? track.title : 'Artist'}
+      />
+    );
+  }
 
   if (!person && isVideo(track) && size < MIN_VIDEO_PICTURE_WIDTH) {
     return <VideoTile size={size} round={round} style={style} testID={testID || 'cover-youtube'} />;

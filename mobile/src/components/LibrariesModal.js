@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import CoverArt from './CoverArt';
 import { GENRES, ARTISTS, latestSongsSearch, artistSearch } from '../data/discover';
+import useArtistPictures from '../hooks/useArtistPictures';
 
 /**
  * Libraries: music genres and gospel artists to follow.
@@ -13,7 +14,9 @@ import { GENRES, ARTISTS, latestSongsSearch, artistSearch } from '../data/discov
 export default function LibrariesModal({ visible, onClose, followed = [], onToggleFollow, onSearch }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
+  const pictures = useArtistPictures(visible);
   if (!visible) return null;
+  const showsPictures = Object.keys(pictures).length > 0;
 
   const isFollowed = (name) => followed.includes(name);
   const extraFollowed = followed.filter((name) => !ARTISTS.some((a) => a.name === name));
@@ -62,7 +65,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
                 {followed.map((name) => (
                   <TouchableOpacity key={name} style={styles.followedCard} onPress={() => onSearch(artistSearch(name))} activeOpacity={0.85}>
-                    <CoverArt person track={{ title: name }} size={60} round />
+                    <CoverArt person track={{ title: name }} picture={pictures[name]} size={60} round />
                     <Text style={styles.followedName} numberOfLines={1}>{name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -71,6 +74,12 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
           )}
 
           <Text style={styles.section}>Gospel artists</Text>
+          {showsPictures && (
+            <View style={styles.pictureCredit} testID="artist-pictures-credit">
+              <Ionicons name="logo-youtube" size={14} color="#EF4444" />
+              <Text style={styles.pictureCreditText}>Pictures from the artists&apos; YouTube channels</Text>
+            </View>
+          )}
           {artists.map((a) => {
             const on = isFollowed(a.name);
             return (
@@ -81,7 +90,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
                   activeOpacity={0.8}
                   testID={`artist-${a.name}`}
                 >
-                  <CoverArt person track={{ title: a.name }} size={44} round />
+                  <CoverArt person track={{ title: a.name }} picture={pictures[a.name]} size={44} round />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.artistName} numberOfLines={1}>{a.name}</Text>
                     <Text style={styles.artistFrom}>{a.from ? `${a.from} · latest songs` : 'Latest songs'}</Text>
@@ -144,6 +153,8 @@ const makeStyles = (c) =>
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 6
     },
+    pictureCredit: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -4, marginBottom: 6 },
+    pictureCreditText: { color: c.textMuted, fontSize: 12, fontWeight: '600' },
     followedCard: { width: 76, alignItems: 'center', gap: 6 },
     followedName: { color: c.text, fontSize: 12, fontWeight: '700', textAlign: 'center' },
     artistRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: c.border },

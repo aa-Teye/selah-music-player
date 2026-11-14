@@ -76,6 +76,7 @@ beforeEach(async () => {
   require('./mocks/secureStore').__store.clear();
   require('./mocks/purchases').__reset();
   require('../src/services/apiClient').resetTokenCacheForTests();
+  require('../src/services/artistPictures').resetArtistPicturesForTests();
   media.__state.audio = [];
   media.__state.other = [];
   media.__state.permission = 'granted';
@@ -1202,6 +1203,43 @@ test('following an artist: shows on Home, is remembered, and opens their latest 
   expect(screen.getByLabelText('Follow Joe Mettle')).toBeTruthy();
   expect(JSON.parse(await AsyncStorage.getItem('@selah_fav_artists'))).toEqual([]);
   done();
+});
+
+test("artists show their own YouTube channel pictures, in Libraries and on Home, and say they come from YouTube", async () => {
+  const { createFakeServer, BASE } = require('./fakeServer');
+  const { setApiUrlForTests } = require('../src/services/apiClient');
+  setApiUrlForTests(BASE);
+  const server = createFakeServer({ otherFetch: global.fetch });
+  global.fetch = server.fetch;
+  server.youtubeChannels = {
+    UCcaV40yrjS5R88xYHxK_0rA: 'https://yt3.ggpht.com/sinach',
+    '@JoeMettleMinistries': 'https://yt3.ggpht.com/joe'
+  };
+  const pictureOf = (name) => {
+    const found = screen.queryAllByTestId('cover-artist').find((p) => p.props.accessibilityLabel === name);
+    return found ? found.props.source.uri : null;
+  };
+  try {
+    await render(<App />);
+    await settle();
+    if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+    await tap(screen.getByTestId('open-libraries'));
+    await settle();
+    expect(pictureOf('Sinach')).toBe('https://yt3.ggpht.com/sinach');
+    expect(pictureOf('Joe Mettle')).toBe('https://yt3.ggpht.com/joe');
+    expect(pictureOf('Diana Hamilton')).toBeNull(); // no picture yet: her initials, as before
+    expect(screen.getByTestId('artist-pictures-credit')).toBeTruthy();
+    expect(screen.getByText("Pictures from the artists' YouTube channels")).toBeTruthy();
+
+    // follow Joe Mettle: Home shows his picture too, and says where it comes from
+    await tap(screen.getByTestId('follow-Joe Mettle'));
+    await tap(screen.getByTestId('libraries-close'));
+    await settle();
+    expect(pictureOf('Joe Mettle')).toBe('https://yt3.ggpht.com/joe');
+    expect(screen.getByText('Tap one for their latest songs · pictures from YouTube')).toBeTruthy();
+  } finally {
+    setApiUrlForTests(null);
+  }
 });
 
 androidOnly('YouTube pauses and never takes over when you play one of your own songs', async () => {

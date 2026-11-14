@@ -123,6 +123,15 @@ function createFakeServer({ otherFetch } = {}) {
         const ids = (new URL(u).searchParams.get('ids') || '').split(',');
         return respond(200, { videos: ids.map((id) => server.youtubeVideos && server.youtubeVideos[id]).filter(Boolean) });
       }
+      case 'GET /api/youtube/channels': {
+        // server.youtubeChannels: { "<channel ID or @handle>": "<picture>" }; not set = YouTube not set up yet
+        if (!server.youtubeChannels) return respond(503, { error: 'YouTube search is not set up yet' });
+        const channels = {};
+        (new URL(u).searchParams.get('ids') || '').split(',').forEach((k) => {
+          if (server.youtubeChannels[k]) channels[k] = { id: k, title: k, picture: server.youtubeChannels[k] };
+        });
+        return respond(200, { channels });
+      }
       case 'GET /api/lyrics': {
         const hide = (new URL(u).searchParams.get('hide') || '').split(',').filter(Boolean);
         const lyric = server.sharedLyrics && !hide.includes(server.sharedLyrics.author) ? server.sharedLyrics : null;
