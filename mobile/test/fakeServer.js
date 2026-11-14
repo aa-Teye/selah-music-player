@@ -117,6 +117,12 @@ function createFakeServer({ otherFetch } = {}) {
       case 'DELETE /api/backup':
         if (!me) return respond(401, { error: 'Please log in to your Selah account' });
         return respond(200, { deleted: server.backups.delete(me.id) });
+      case 'GET /api/youtube/search':
+        return respond(200, { results: server.youtubeResults || [] });
+      case 'GET /api/youtube/videos': {
+        const ids = (new URL(u).searchParams.get('ids') || '').split(',');
+        return respond(200, { videos: ids.map((id) => server.youtubeVideos && server.youtubeVideos[id]).filter(Boolean) });
+      }
       case 'GET /api/lyrics': {
         const hide = (new URL(u).searchParams.get('hide') || '').split(',').filter(Boolean);
         const lyric = server.sharedLyrics && !hide.includes(server.sharedLyrics.author) ? server.sharedLyrics : null;

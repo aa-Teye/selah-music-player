@@ -336,7 +336,7 @@ test('restore on a new phone: songs not on it are listed to get back, and go bac
 
     global.fetch.mockClear();
     await tap(screen.getByTestId('find-Imela'));
-    expect(youtubeSearches()).toEqual([expect.stringContaining('search_query=Imela Nathaniel Bassey')]);
+    expect(youtubeSearches()).toEqual([expect.stringContaining('q=Imela Nathaniel Bassey')]);
     expect(screen.queryByTestId('account-modal')).toBeNull();
 
     await tap(screen.getByTestId('tab-home'));
@@ -1081,13 +1081,21 @@ test('no small-window button where picture-in-picture does not exist (iPhone, Ex
   expect(screen.queryByTestId('yt-small-window')).toBeNull();
 });
 
+// YouTube searches go to YouTube's official search through Selah's server (never youtube.com pages)
 function youtubeSearches() {
-  return global.fetch.mock.calls
-    .map(([url]) => decodeURIComponent(String(url)))
-    .filter((url) => url.includes('youtube.com/results'));
+  const urls = global.fetch.mock.calls.map(([url]) => decodeURIComponent(String(url)));
+  expect(urls.filter((url) => url.includes('youtube.com/results'))).toEqual([]);
+  return urls.filter((url) => url.includes('/api/youtube/search'));
+}
+
+function useSelahServer() {
+  const { setApiUrlForTests } = require('../src/services/apiClient');
+  setApiUrlForTests('https://selah.example');
+  return () => setApiUrlForTests(null);
 }
 
 test('Libraries: genres and gospel artists; a genre shows its latest songs on YouTube', async () => {
+  const done = useSelahServer();
   await render(<App />);
   await settle();
   if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
@@ -1100,12 +1108,14 @@ test('Libraries: genres and gospel artists; a genre shows its latest songs on Yo
   global.fetch.mockClear();
   await tap(screen.getByTestId('genre-ghana'));
   const year = new Date().getFullYear();
-  expect(youtubeSearches()).toEqual([expect.stringContaining(`search_query=latest Ghana gospel songs ${year}`)]);
+  expect(youtubeSearches()).toEqual([expect.stringContaining(`q=latest Ghana gospel songs ${year}`)]);
   expect(screen.queryByText('Gospel artists')).toBeNull(); // Libraries closed, YouTube is showing
   expect(screen.getByTestId('yt-search-input').props.value).toBe(`latest Ghana gospel songs ${year}`);
+  done();
 });
 
 test('following an artist: shows on Home, is remembered, and opens their latest songs', async () => {
+  const done = useSelahServer();
   await render(<App />);
   await settle();
   if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
@@ -1119,7 +1129,7 @@ test('following an artist: shows on Home, is remembered, and opens their latest 
   global.fetch.mockClear();
   await tap(screen.getByTestId('home-artist-Joe Mettle'));
   const year = new Date().getFullYear();
-  expect(youtubeSearches()).toEqual([expect.stringContaining(`search_query=latest Joe Mettle songs ${year}`)]);
+  expect(youtubeSearches()).toEqual([expect.stringContaining(`q=latest Joe Mettle songs ${year}`)]);
 
   // still followed after closing and opening Selah again
   await cleanup();
@@ -1132,6 +1142,7 @@ test('following an artist: shows on Home, is remembered, and opens their latest 
   await tap(screen.getByTestId('follow-Joe Mettle'));
   expect(screen.getByLabelText('Follow Joe Mettle')).toBeTruthy();
   expect(JSON.parse(await AsyncStorage.getItem('@selah_fav_artists'))).toEqual([]);
+  done();
 });
 
 androidOnly('YouTube pauses and never takes over when you play one of your own songs', async () => {
