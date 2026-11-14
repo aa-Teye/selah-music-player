@@ -252,7 +252,7 @@ test('delete my account: needs the password, removes the account, backup and sha
   await call(lyrics.POST, '/api/lyrics', {
     method: 'POST',
     token,
-    body: { title: 'Odo Yewu', artist: 'Joe Mettle', synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' }
+    body: { title: 'Odo Yewu', artist: 'Joe Mettle', synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing', agreedToRules: true }
   });
 
   assert.notEqual((await auth('delete-user', { password: 'wrong-password' }, { token })).status, 200);
@@ -263,6 +263,7 @@ test('delete my account: needs the password, removes the account, backup and sha
   assert.equal((await auth('sign-in/email', { email: 'ama@example.com', password: 'worship123' })).status, 401);
   assert.deepEqual(await sql`SELECT user_id FROM backups WHERE user_id = ${user.id}`, []);
   assert.deepEqual(await sql`SELECT id FROM shared_lyrics WHERE user_id = ${user.id}`, []);
+  assert.deepEqual(await sql`SELECT user_id FROM sharing_rules WHERE user_id = ${user.id}`, []);
   assert.deepEqual(await sql`SELECT user_id FROM premium_gifts WHERE user_id = ${user.id}`, []);
   assert.equal((await call(lyrics.GET, '/api/lyrics?title=Odo%20Yewu&artist=Joe%20Mettle')).body.found, false);
 
@@ -281,8 +282,57 @@ const WAY_MAKER = {
   artist: 'Sinach',
   duration: 300,
   synced: true,
-  text: '[00:01.00] You are here, moving in our midst\n[00:06.00] I worship You, I worship You\n[00:12.00] You are here, working in this place'
+  text: '[00:01.00] You are here, moving in our midst\n[00:06.00] I worship You, I worship You\n[00:12.00] You are here, working in this place',
+  agreedToRules: true
 };
+
+test('sharing lyrics needs the sharing rules accepted first (Google Play: things users share)', async () => {
+  const { token, user } = await signUp();
+  const { agreedToRules, ...withoutAgreeing } = WAY_MAKER;
+  const refused = await call(lyrics.POST, '/api/lyrics', { method: 'POST', token, body: withoutAgreeing });
+  assert.equal(refused.status, 400);
+  assert.match(refused.body.error, /accept the sharing rules/);
+  assert.equal((await call(lyrics.POST, '/api/lyrics', { method: 'POST', token, body: WAY_MAKER })).status, 200);
+  const [rules] = await sql`SELECT version FROM sharing_rules WHERE user_id = ${user.id}`;
+  assert.equal(rules.version, '2026-11-14');
+});
+
+test('hide a person: lyrics come with an anonymous author code, and hidden people are left out', async () => {
+  const ama = await signUp();
+  const kofi = await signUp('kofi@example.com', 'praise1234', 'Kofi');
+  await call(lyrics.POST, '/api/lyrics', { method: 'POST', token: ama.token, body: WAY_MAKER });
+  await call(lyrics.POST, '/api/lyrics', { method: 'POST', token: kofi.token, body: { ...WAY_MAKER, text: `${WAY_MAKER.text}\n[00:20.00] Promise keeper` } });
+
+  const first = (await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body.lyrics;
+  assert.match(first.author, /^[a-f0-9]{16}$/);
+  assert.doesNotMatch(JSON.stringify(first), /kofi@example|ama@example|Kofi|Ama/); // no names or emails
+  const next = (await call(lyrics.GET, `/api/lyrics?title=Way%20Maker&artist=Sinach&hide=${first.author}`)).body.lyrics;
+  assert.notEqual(next.author, first.author); // the other person's lyrics
+  const both = `${first.author},${next.author}`;
+  assert.equal((await call(lyrics.GET, `/api/lyrics?title=Way%20Maker&artist=Sinach&hide=${both}`)).body.found, false);
+});
+
+test('report a person: after 3 different people report someone, everything they shared is hidden', async () => {
+  const author = await signUp();
+  const { body } = await call(lyrics.POST, '/api/lyrics', { method: 'POST', token: author.token, body: WAY_MAKER });
+  await call(lyrics.POST, '/api/lyrics', {
+    method: 'POST',
+    token: author.token,
+    body: { title: 'Odo Yewu', artist: 'Joe Mettle', synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing', agreedToRules: true }
+  });
+  const reportPerson = (token) => call(report.POST, '/api/lyrics/report', { method: 'POST', token, body: { id: body.id, person: true } });
+
+  assert.deepEqual((await reportPerson(author.token)).body, { reported: true, person: false }); // not yourself
+  for (const name of ['kofi', 'esi']) {
+    const { token } = await signUp(`${name}@example.com`, 'praise1234', name);
+    assert.deepEqual((await reportPerson(token)).body, { reported: true, person: true });
+  }
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Odo%20Yewu&artist=Joe%20Mettle')).body.found, true);
+  const yaw = await signUp('yaw@example.com', 'praise1234', 'Yaw');
+  await reportPerson(yaw.token);
+  // all of that person's lyrics are hidden now, not only the reported ones
+  assert.equal((await call(lyrics.GET, '/api/lyrics?title=Odo%20Yewu&artist=Joe%20Mettle')).body.found, false);
+});
 
 test('shared lyrics: anyone can read them; sharing needs an account (free)', async () => {
   assert.deepEqual((await call(lyrics.GET, '/api/lyrics?title=Way%20Maker&artist=Sinach')).body, { found: false });

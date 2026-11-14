@@ -53,6 +53,20 @@ export async function createTables(sql) {
     user_id text NOT NULL,
     PRIMARY KEY (lyric_id, user_id)
   )`;
+  // People reported by others (Google Play's rules for things users share):
+  // 3 different reports hide everything that person shared
+  await sql`CREATE TABLE IF NOT EXISTS user_reports (
+    reported_user_id text NOT NULL,
+    reporter_user_id text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (reported_user_id, reporter_user_id)
+  )`;
+  // Who accepted the sharing rules (in /terms), and which version
+  await sql`CREATE TABLE IF NOT EXISTS sharing_rules (
+    user_id text PRIMARY KEY,
+    version text NOT NULL,
+    accepted_at timestamptz NOT NULL DEFAULT now()
+  )`;
   // Premium given for free (testers, church partners...). Add a row by hand to gift Premium.
   await sql`CREATE TABLE IF NOT EXISTS premium_gifts (
     user_id text PRIMARY KEY,
@@ -97,12 +111,39 @@ export async function deleteBackup(userId) {
 }
 
 // ── Shared lyrics ──────────────────────────────────────────────────────────
+export const PERSON_REPORT_LIMIT = 3;
+
 export async function lyricsForSong(songKey) {
   const sql = await db();
-  return sql`SELECT id, title, artist, duration, lyrics, synced, created_at FROM shared_lyrics
+  const rows = await sql`SELECT id, title, artist, duration, lyrics, synced, created_at, user_id FROM shared_lyrics
     WHERE song_key = ${songKey} AND reports < 3
     ORDER BY synced DESC, created_at DESC
     LIMIT 20`;
+  if (rows.length === 0) return rows;
+  // Everything from people reported by several others stays hidden
+  const hiddenIds = new Set();
+  for (const userId of new Set(rows.map((r) => r.user_id))) {
+    const reports = await sql`SELECT reporter_user_id FROM user_reports WHERE reported_user_id = ${userId}`;
+    if (reports.length >= PERSON_REPORT_LIMIT) hiddenIds.add(userId);
+  }
+  return rows.filter((r) => !hiddenIds.has(r.user_id));
+}
+
+export async function acceptSharingRules(userId, version) {
+  const sql = await db();
+  await sql`INSERT INTO sharing_rules (user_id, version) VALUES (${userId}, ${version})
+    ON CONFLICT (user_id) DO UPDATE SET version = EXCLUDED.version, accepted_at = now()`;
+}
+
+/** Reports the person who shared these lyrics. Returns false for your own lyrics or a repeat report. */
+export async function reportPerson(lyricId, reporterId) {
+  const sql = await db();
+  const rows = await sql`SELECT user_id FROM shared_lyrics WHERE id = ${lyricId}`;
+  const reported = rows[0] && rows[0].user_id;
+  if (!reported || reported === reporterId) return false;
+  const added = await sql`INSERT INTO user_reports (reported_user_id, reporter_user_id) VALUES (${reported}, ${reporterId})
+    ON CONFLICT DO NOTHING RETURNING reported_user_id`;
+  return added.length > 0;
 }
 
 export async function saveLyrics({ songKey, title, artist, duration, lyrics, synced, userId }) {
@@ -144,5 +185,7 @@ export async function deleteUserData(userId) {
   await sql`DELETE FROM lyric_reports WHERE user_id = ${userId}`;
   await sql`DELETE FROM lyric_reports WHERE lyric_id IN (SELECT id FROM shared_lyrics WHERE user_id = ${userId})`;
   await sql`DELETE FROM shared_lyrics WHERE user_id = ${userId}`;
+  await sql`DELETE FROM user_reports WHERE reported_user_id = ${userId} OR reporter_user_id = ${userId}`;
+  await sql`DELETE FROM sharing_rules WHERE user_id = ${userId}`;
   await sql`DELETE FROM premium_gifts WHERE user_id = ${userId}`;
 }

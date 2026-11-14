@@ -83,14 +83,22 @@ test('real Postgres: tables are created, accounts work, deleting an account clea
     })
   );
   assert.equal(put.status, 200);
-  const shared = await post(lyrics.POST, '/api/lyrics', { title: 'Odo Yewu', artist: 'Joe Mettle', text: 'Odo yewu, odo yewu\nYour love is so amazing' }, token);
+  const shared = await post(
+    lyrics.POST,
+    '/api/lyrics',
+    { title: 'Odo Yewu', artist: 'Joe Mettle', text: 'Odo yewu, odo yewu\nYour love is so amazing', agreedToRules: true },
+    token
+  );
   assert.equal(shared.status, 200);
+  assert.equal((await sql`SELECT user_id FROM sharing_rules`).length, 1);
 
   const deleted = await post(authApi.POST, '/api/auth?path=delete-user', { password: 'worship123' }, token);
   assert.equal(deleted.status, 200);
   assert.deepEqual(await sql`SELECT id FROM "user"`, []);
   assert.deepEqual(await sql`SELECT user_id FROM backups`, []);
   assert.deepEqual(await sql`SELECT id FROM shared_lyrics`, []);
+  assert.deepEqual(await sql`SELECT user_id FROM sharing_rules`, []);
+  assert.deepEqual(await sql`SELECT reported_user_id FROM user_reports`, []);
   assert.deepEqual(await sql`SELECT user_id FROM premium_gifts`, []);
   await pg.close();
 });

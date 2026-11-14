@@ -1,14 +1,19 @@
 // Lyrics typed by Selah users, shared with everyone who has the same song.
 //
-//   GET  /api/lyrics?title=Way%20Maker&artist=Sinach&duration=300
-//        → { found: true, lyrics: { id, title, artist, duration, text, synced } } or { found: false }
+//   GET  /api/lyrics?title=Way%20Maker&artist=Sinach&duration=300[&hide=<author>,<author>]
+//        → { found: true, lyrics: { id, title, artist, duration, text, synced, author } } or { found: false }
+//        author: an anonymous code for the person who shared them; "hide" leaves out people you hid.
 //   POST /api/lyrics   (a logged-in account: Authorization: Bearer <login token>)
-//        { title, artist, duration, text, synced } → { id }
+//        { title, artist, duration, text, synced, agreedToRules: true } → { id }
+//        The sharing rules (/terms) must be accepted first (Google Play's rules for things users share).
 //        One entry per account per song: sharing again replaces your earlier version.
 import { json, preflight, readJson, endpoint, HttpError } from '../../lib/http.js';
 import { requireUser } from '../../lib/auth.js';
-import { lyricsForSong, saveLyrics } from '../../lib/db.js';
+import { lyricsForSong, saveLyrics, acceptSharingRules } from '../../lib/db.js';
 import { songKey, cleanName } from '../../lib/songKey.js';
+import { authorCode, hiddenAuthors } from '../../lib/authorCode.js';
+
+export const SHARING_RULES_VERSION = '2026-11-14';
 
 const MAX_LYRICS = 20000;
 const TIMESTAMP = /\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]/g;
@@ -30,8 +35,11 @@ export function pickLyrics(rows, duration) {
 }
 
 export const GET = endpoint(async (request) => {
-  const { title, artist, duration } = songFromQuery(new URL(request.url));
-  const row = pickLyrics(await lyricsForSong(songKey(title, artist)), duration);
+  const url = new URL(request.url);
+  const { title, artist, duration } = songFromQuery(url);
+  const hide = hiddenAuthors(url.searchParams.get('hide'));
+  const rows = (await lyricsForSong(songKey(title, artist))).filter((r) => !hide.has(authorCode(r.user_id)));
+  const row = pickLyrics(rows, duration);
   if (!row) return json(200, { found: false });
   return json(200, {
     found: true,
@@ -41,7 +49,8 @@ export const GET = endpoint(async (request) => {
       artist: row.artist,
       duration: row.duration,
       text: row.lyrics,
-      synced: row.synced
+      synced: row.synced,
+      author: authorCode(row.user_id)
     }
   });
 });
@@ -49,6 +58,7 @@ export const GET = endpoint(async (request) => {
 export const POST = endpoint(async (request) => {
   const user = await requireUser(request);
   const body = await readJson(request, 64 * 1024);
+  if (body.agreedToRules !== true) throw new HttpError(400, 'Please read and accept the sharing rules first');
   const title = String(body.title || '').trim().slice(0, 200);
   const artist = String(body.artist || '').trim().slice(0, 200);
   const text = String(body.text || '').replace(/\r\n?/g, '\n').trim();
@@ -62,6 +72,7 @@ export const POST = endpoint(async (request) => {
   if (synced && (text.match(TIMESTAMP) || []).length < 3) throw new HttpError(400, 'Synced lyrics need [mm:ss] times');
   if (duration !== null && (duration < 0 || duration > 36000)) throw new HttpError(400, 'Song length is not right');
 
+  await acceptSharingRules(user.id, SHARING_RULES_VERSION);
   const id = await saveLyrics({ songKey: songKey(title, artist), title, artist, duration, lyrics: text, synced, userId: user.id });
   return json(200, { id });
 });
