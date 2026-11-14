@@ -55,7 +55,8 @@ All tables are created automatically on first use.
 | `REVENUECAT_SECRET_KEY` | Premium payments | RevenueCat › Project settings › API keys › **Secret** key |
 | `REVENUECAT_ENTITLEMENT` | Premium payments | Only if your entitlement is not called `premium` |
 | `PREMIUM_MODE` | Testing only | `open` gives everyone Premium. Remove it before launch |
-| `SUPPORT_EMAIL` | `/privacy`, `/delete-account` | The email people can write to |
+| `SUPPORT_EMAIL` | `/privacy`, `/terms`, `/delete-account` | The email people can write to |
+| `YOUTUBE_API_KEY` | YouTube search in the app | Google Cloud Console › new project › APIs & Services › Library › **YouTube Data API v3** › Enable › Credentials › Create credentials › API key. Restrict it to "YouTube Data API v3". Free: 10,000 units a day (a search costs 100; the server remembers searches for 12 hours). For more, ask Google for a quota increase (a free compliance check). |
 
 5. Open `https://<your-project>.vercel.app/api/health` and check each line.
 6. Put that address in the app: `mobile/app.json` → `expo.extra.selahApiUrl`. Put RevenueCat's **public** keys in
