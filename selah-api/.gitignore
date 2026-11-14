@@ -1,0 +1,4 @@
+# Private settings (passwords, keys) stay on this computer: never upload them
+.env
+.env.*
+node_modules/
