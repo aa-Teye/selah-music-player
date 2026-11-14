@@ -10,7 +10,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.selah.musicplayer",
-      "buildNumber": "1",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
@@ -21,10 +20,10 @@
     },
     "android": {
       "package": "com.selah.musicplayer",
-      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#08090C",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
         "android.permission.INTERNET",
@@ -82,7 +81,14 @@
         }
       ],
       "expo-sharing",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C9A227"
+        }
+      ]
     ],
     "extra": {
       "selahApiUrl": "",
