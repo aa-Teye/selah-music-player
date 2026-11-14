@@ -16,6 +16,7 @@ import * as report from '../api/lyrics/report.js';
 import * as health from '../api/health.js';
 import * as privacy from '../api/privacy.js';
 import * as deleteAccount from '../api/delete-account.js';
+import * as home from '../api/home.js';
 
 const BASE = 'http://localhost:3000';
 let sql;
@@ -335,6 +336,22 @@ test('privacy and delete-account pages (Google Play needs both)', async () => {
   assert.match(deletion, /Delete my account/);
   assert.match(deletion, /mailto:help@selah\.app&lt;script&gt;/); // shown safely
   assert.doesNotMatch(deletion, /<script>/);
+});
+
+test('front page says the server is running and whether the database is connected', async () => {
+  const ready = await (await home.GET()).text();
+  assert.match(ready, /Selah server is running ✓/);
+  assert.match(ready, /connected ✓/);
+
+  useSqlForTests(null);
+  useAuthDatabaseForTests(null);
+  const saved = process.env.DATABASE_URL;
+  delete process.env.DATABASE_URL;
+  delete process.env.POSTGRES_URL;
+  const waiting = await (await home.GET()).text();
+  assert.match(waiting, /almost ready/);
+  assert.match(waiting, /Create Database › Neon/);
+  if (saved) process.env.DATABASE_URL = saved;
 });
 
 test('browsers may call it (CORS preflight)', async () => {
