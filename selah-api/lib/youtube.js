@@ -7,6 +7,7 @@ import { cachedYouTube, saveYouTubeCache, clearOldYouTubeCache } from './db.js';
 const API = 'https://www.googleapis.com/youtube/v3';
 const SEARCH_MAX_AGE = 12 * 60 * 60 * 1000;
 const VIDEOS_MAX_AGE = 24 * 60 * 60 * 1000;
+const CHANNELS_MAX_AGE = 24 * 60 * 60 * 1000;
 let fetchForTests = null;
 
 export function useYouTubeFetchForTests(fn) {
@@ -79,6 +80,52 @@ export async function videoDetails(ids) {
   const videos = (data.items || []).map(videoFromApi);
   await saveYouTubeCache(key, videos);
   return videos;
+}
+
+function channelFromApi(item) {
+  const snippet = item.snippet || {};
+  const thumbs = snippet.thumbnails || {};
+  return {
+    id: item.id,
+    title: decode(snippet.title),
+    picture: (thumbs.medium || thumbs.high || thumbs.default || {}).url || ''
+  };
+}
+
+/**
+ * Artists' pictures: each artist's own YouTube channel picture, asked by channel ID ("UC…", up to 50
+ * in one call, 1 unit) or by handle ("@name", one call each). Remembered for a day; YouTube's rules
+ * say stored details must be refreshed within 30 days. Answer: { "<ID or @handle>": { id, title, picture } }.
+ * Channels that don't exist (any more) are left out.
+ */
+export async function channelPictures(keys) {
+  const wanted = [...new Set(keys.map((k) => String(k || '').trim()).filter(Boolean))];
+  const ids = wanted.filter((k) => /^UC[\w-]{22}$/.test(k)).slice(0, 50);
+  const handles = wanted.filter((k) => /^@[\w.-]{3,30}$/.test(k)).slice(0, 25);
+  const found = {};
+  if (ids.length) {
+    const key = `channels:${[...ids].sort().join(',')}`;
+    let channels = await cachedYouTube(key, CHANNELS_MAX_AGE);
+    if (!channels) {
+      const data = await api('channels', { part: 'snippet', id: ids.join(','), maxResults: '50' });
+      channels = (data.items || []).map(channelFromApi).filter((c) => c.picture);
+      await saveYouTubeCache(key, channels);
+    }
+    channels.forEach((c) => {
+      found[c.id] = c;
+    });
+  }
+  for (const handle of handles) {
+    const key = `handle:${handle.toLowerCase()}`;
+    let channels = await cachedYouTube(key, CHANNELS_MAX_AGE);
+    if (!channels) {
+      const data = await api('channels', { part: 'snippet', forHandle: handle });
+      channels = (data.items || []).map(channelFromApi).filter((c) => c.picture);
+      await saveYouTubeCache(key, channels);
+    }
+    if (channels[0]) found[handle] = channels[0];
+  }
+  return found;
 }
 
 /** Search: up to 20 videos that can be played inside apps */

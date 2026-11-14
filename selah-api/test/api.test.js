@@ -19,6 +19,7 @@ import * as deleteAccount from '../api/delete-account.js';
 import * as termsPage from '../api/terms.js';
 import * as youtubeSearch from '../api/youtube/search.js';
 import * as youtubeVideos from '../api/youtube/videos.js';
+import * as youtubeChannels from '../api/youtube/channels.js';
 import { useYouTubeFetchForTests } from '../lib/youtube.js';
 import * as home from '../api/home.js';
 
@@ -158,6 +159,44 @@ test("YouTube's official search through Selah's server: answers are remembered f
     const fresh = await call(youtubeVideos.GET, '/api/youtube/videos?ids=gIWCDgNt5ww,not-an-id');
     assert.equal(fresh.body.videos[0].title, 'Chris Tomlin & Friends // Worship');
     assert.equal((await call(youtubeSearch.GET, '/api/youtube/search?q=')).status, 400);
+  } finally {
+    useYouTubeFetchForTests(null);
+    delete process.env.YOUTUBE_API_KEY;
+  }
+});
+
+test("artists' pictures: their own YouTube channel pictures, by channel ID or @handle, remembered for a day", async () => {
+  delete process.env.YOUTUBE_API_KEY;
+  assert.equal((await call(youtubeChannels.GET, '/api/youtube/channels?ids=UCcaV40yrjS5R88xYHxK_0rA')).status, 503);
+
+  process.env.YOUTUBE_API_KEY = 'test-key';
+  const asked = [];
+  useYouTubeFetchForTests(async (url) => {
+    const u = new URL(url);
+    assert.equal(u.pathname, '/youtube/v3/channels');
+    assert.equal(u.searchParams.get('part'), 'snippet');
+    asked.push(u.searchParams.get('id') || u.searchParams.get('forHandle'));
+    const picture = (name) => ({ medium: { url: `https://yt3.ggpht.com/${name}=s240` }, default: { url: `https://yt3.ggpht.com/${name}=s88` } });
+    if (u.searchParams.get('forHandle') === '@JoeMettleMinistries') {
+      return { ok: true, json: async () => ({ items: [{ id: 'UCEwvM8_QdsFIioyVIiGq01Q', snippet: { title: 'Joe Mettle', thumbnails: picture('joe') } }] }) };
+    }
+    if (u.searchParams.get('forHandle')) return { ok: true, json: async () => ({}) }; // no such handle
+    return {
+      ok: true,
+      json: async () => ({ items: [{ id: 'UCcaV40yrjS5R88xYHxK_0rA', snippet: { title: 'Sinach', thumbnails: picture('sinach') } }] })
+    };
+  });
+  try {
+    const path = '/api/youtube/channels?ids=UCcaV40yrjS5R88xYHxK_0rA,UCaaaaaaaaaaaaaaaaaaaaaa,@JoeMettleMinistries,@nobody-here,not-a-channel';
+    const first = await call(youtubeChannels.GET, path);
+    assert.equal(first.status, 200);
+    assert.deepEqual(first.body.channels, {
+      UCcaV40yrjS5R88xYHxK_0rA: { id: 'UCcaV40yrjS5R88xYHxK_0rA', title: 'Sinach', picture: 'https://yt3.ggpht.com/sinach=s240' },
+      '@JoeMettleMinistries': { id: 'UCEwvM8_QdsFIioyVIiGq01Q', title: 'Joe Mettle', picture: 'https://yt3.ggpht.com/joe=s240' }
+    }); // a channel that doesn't exist is left out
+    assert.deepEqual(asked, ['UCcaV40yrjS5R88xYHxK_0rA,UCaaaaaaaaaaaaaaaaaaaaaa', '@JoeMettleMinistries', '@nobody-here']);
+    await call(youtubeChannels.GET, path); // asked again: from memory, no YouTube units used
+    assert.equal(asked.length, 3);
   } finally {
     useYouTubeFetchForTests(null);
     delete process.env.YOUTUBE_API_KEY;
