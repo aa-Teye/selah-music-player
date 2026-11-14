@@ -1,8 +1,9 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SONG_PHOTOS } from '../services/id3Service';
 
-// Rich colours that look good in light and dark mode: [main, glow]
+// Rich colours for artists' initials (people, not songs): [main, glow]
 const PALETTE = [
   ['#6D28D9', '#C4B5FD'],
   ['#1D4ED8', '#93C5FD'],
@@ -24,7 +25,13 @@ export function hasRealCover(track) {
   return Boolean(track.coverFile || track.youtubeId || track.sourceType === 'youtube' || track.customCover);
 }
 
-/** The same song always gets the same colours */
+/** The photo for a song without its own picture: the one Selah chose for it (as before), or the studio photo */
+export function songPhoto(track) {
+  const url = track && typeof track.coverUrl === 'string' ? track.coverUrl : '';
+  return /^(https?|file|content):/i.test(url) ? url : SONG_PHOTOS.studio;
+}
+
+/** The same name always gets the same colours */
 export function coverColors(track) {
   const key = `${(track && track.title) || ''}|${(track && track.artist) || ''}`.toLowerCase();
   let h = 2166136261;
@@ -32,7 +39,7 @@ export function coverColors(track) {
   return PALETTE[h % PALETTE.length];
 }
 
-/** "Way Maker" → "WM", "Oceans" → "O" */
+/** "Joe Mettle" → "JM", "Sinach" → "S" */
 export function initialsOf(title) {
   const words = String(title || '')
     .normalize('NFC') // accents stay part of their letter (Ọlọ́run, Àgbáyé)
@@ -49,22 +56,39 @@ export function initialsOf(title) {
 }
 
 /**
- * A song's picture. Its real cover when it has one; otherwise a colourful cover
- * made from its name, so every song looks different.
- * size: used for the text size (and the box, when style has no width/height).
+ * A song's picture: its own cover when it has one (album art, YouTube thumbnail, your choice),
+ * otherwise Selah's photo for it, like before. If no picture can load (offline): a music note.
+ * person: an artist, shown as a coloured circle with their initials.
+ * size: the box size (when style has no width/height).
  */
-function CoverArt({ track, size = 48, style, round = false, testID }) {
-  const [failed, setFailed] = useState(false);
+function CoverArt({ track, size = 48, style, round = false, testID, person = false }) {
+  const [attempt, setAttempt] = useState(0);
+  const real = hasRealCover(track);
+  const coverUrl = track && track.coverUrl;
+  useEffect(() => setAttempt(0), [coverUrl]); // a new song: try its pictures again
+
   const shape = { width: size, height: size, borderRadius: round ? size / 2 : Math.round(size * 0.16), overflow: 'hidden' };
 
-  if (hasRealCover(track) && !failed) {
+  if (!person) {
+    const pictures = real ? [coverUrl, songPhoto({})] : [songPhoto(track)];
+    if (attempt < pictures.length) {
+      return (
+        <Image
+          key={pictures[attempt]}
+          source={{ uri: pictures[attempt] }}
+          style={[shape, style]}
+          onError={() => setAttempt((n) => n + 1)}
+          testID={testID || (real && attempt === 0 ? 'cover-real' : 'cover-photo')}
+        />
+      );
+    }
     return (
-      <Image
-        source={{ uri: track.coverUrl }}
-        style={[shape, style]}
-        onError={() => setFailed(true)}
-        testID={testID || 'cover-real'}
-      />
+      <View
+        style={[shape, { backgroundColor: '#1F2430', alignItems: 'center', justifyContent: 'center' }, style]}
+        testID={testID || 'cover-note'}
+      >
+        <Ionicons name="musical-note" size={Math.max(14, Math.round(size * 0.4))} color="rgba(255,255,255,0.75)" />
+      </View>
     );
   }
 
@@ -73,7 +97,7 @@ function CoverArt({ track, size = 48, style, round = false, testID }) {
     <View
       style={[shape, { backgroundColor: main, alignItems: 'center', justifyContent: 'center' }, style]}
       testID={testID || 'cover-made'}
-      accessibilityLabel={track && track.title ? `${track.title} cover` : 'Song cover'}
+      accessibilityLabel={track && track.title ? track.title : 'Artist'}
     >
       <View
         style={{
@@ -87,32 +111,12 @@ function CoverArt({ track, size = 48, style, round = false, testID }) {
           right: -size * 0.5
         }}
       />
-      <View
-        style={{
-          position: 'absolute',
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: '#000000',
-          opacity: 0.14,
-          bottom: -size * 0.45,
-          left: -size * 0.4
-        }}
-      />
       <Text
         style={{ color: '#FFFFFF', fontWeight: '900', fontSize: Math.max(10, Math.round(size * 0.34)), letterSpacing: 0.5 }}
         numberOfLines={1}
       >
         {initialsOf(track && track.title)}
       </Text>
-      {size >= 64 ? (
-        <Ionicons
-          name="musical-notes"
-          size={Math.round(size * 0.14)}
-          color="rgba(255,255,255,0.75)"
-          style={{ position: 'absolute', bottom: size * 0.08, right: size * 0.08 }}
-        />
-      ) : null}
     </View>
   );
 }

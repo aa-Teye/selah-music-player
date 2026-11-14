@@ -390,7 +390,7 @@ function HomeScreen({
                   activeOpacity={0.8}
                   testID={`home-artist-${artistName}`}
                 >
-                  <CoverArt track={{ title: artistName }} size={58} round style={{ marginBottom: 8 }} />
+                  <CoverArt person track={{ title: artistName }} size={58} round style={{ marginBottom: 8 }} />
                   <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
                   <View style={styles.artistRecPlayRow}>
                     <Ionicons name="logo-youtube" size={13} color="#EF4444" />

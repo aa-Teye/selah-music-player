@@ -3,6 +3,16 @@
  * Parses ID3v2 tags (TIT2, TPE1, TALB, APIC) and cleans filenames
  */
 
+// Selah's photos for songs that have no picture of their own
+export const SONG_PHOTOS = {
+  worship: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=500&q=80', // vintage microphone
+  ocean: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80', // ocean at sunset
+  sunrise: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=500&q=80', // tree in the sun
+  guitar: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=500&q=80', // acoustic guitar
+  stage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=500&q=80', // raised hand on stage
+  studio: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=500&q=80' // DJ deck, purple lights
+};
+
 export const Id3Service = {
   /**
    * Parse clean title and artist from filename
@@ -54,23 +64,27 @@ export const Id3Service = {
     const combined = `${title} ${artist}`.toLowerCase();
 
     if (combined.includes('worship') || combined.includes('praise') || combined.includes('god') || combined.includes('lord')) {
-      return "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=500&q=80"; // Worship crowd/light
+      return SONG_PHOTOS.worship;
     }
     if (combined.includes('peace') || combined.includes('still') || combined.includes('ocean') || combined.includes('calm')) {
-      return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80"; // Peaceful ocean
+      return SONG_PHOTOS.ocean;
     }
     if (combined.includes('lofi') || combined.includes('chill') || combined.includes('study') || combined.includes('prayer')) {
-      return "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=500&q=80"; // Lo-fi sunrise Bible
+      return SONG_PHOTOS.sunrise;
     }
     if (combined.includes('acoustic') || combined.includes('guitar') || combined.includes('strings')) {
-      return "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=500&q=80"; // Acoustic guitar
+      return SONG_PHOTOS.guitar;
     }
     if (combined.includes('gospel') || combined.includes('choir') || combined.includes('joy')) {
-      return "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=500&q=80"; // Soulful warm stage
+      return SONG_PHOTOS.stage;
     }
 
-    // Default warm golden studio artwork
-    return "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=500&q=80";
+    // Other songs: one of the six photos, always the same one for the same song,
+    // so that not every song shows the same picture
+    const all = Object.values(SONG_PHOTOS);
+    let h = 2166136261;
+    for (let i = 0; i < combined.length; i++) h = Math.imul(h ^ combined.charCodeAt(i), 16777619) >>> 0;
+    return all[h % all.length];
   },
 
   /**

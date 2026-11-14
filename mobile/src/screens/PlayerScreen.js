@@ -12,10 +12,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import PlayerPanel from '../components/PlayerPanel';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
-import CoverArt, { hasRealCover } from '../components/CoverArt';
+import CoverArt from '../components/CoverArt';
 
-// A group's picture (album, artist, genre): its first song's real cover, or a colourful one from its name
-const groupCover = (group) => (group.first && hasRealCover(group.first) ? group.first : { title: group.name, artist: '' });
+// A group's picture (album, artist, genre): the picture of its first song, like before
+const groupCover = (group) => group.first || { title: group.name, artist: '' };
 
 const { width } = Dimensions.get('window');
 

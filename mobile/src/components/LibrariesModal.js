@@ -56,7 +56,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
                 {followed.map((name) => (
                   <TouchableOpacity key={name} style={styles.followedCard} onPress={() => onSearch(artistSearch(name))} activeOpacity={0.85}>
-                    <CoverArt track={{ title: name }} size={60} round />
+                    <CoverArt person track={{ title: name }} size={60} round />
                     <Text style={styles.followedName} numberOfLines={1}>{name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -75,7 +75,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
                   activeOpacity={0.8}
                   testID={`artist-${a.name}`}
                 >
-                  <CoverArt track={{ title: a.name }} size={44} round />
+                  <CoverArt person track={{ title: a.name }} size={44} round />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.artistName} numberOfLines={1}>{a.name}</Text>
                     <Text style={styles.artistFrom}>{a.from ? `${a.from} · latest songs` : 'Latest songs'}</Text>
