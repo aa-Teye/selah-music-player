@@ -67,6 +67,13 @@ export async function createTables(sql) {
     version text NOT NULL,
     accepted_at timestamptz NOT NULL DEFAULT now()
   )`;
+  // Recent YouTube answers (searches, video details), so the same question is not asked twice.
+  // Kept for hours, far below YouTube's 30-day limit; not linked to anyone.
+  await sql`CREATE TABLE IF NOT EXISTS youtube_cache (
+    key text PRIMARY KEY,
+    data jsonb NOT NULL,
+    fetched_at timestamptz NOT NULL DEFAULT now()
+  )`;
   // Premium given for free (testers, church partners...). Add a row by hand to gift Premium.
   await sql`CREATE TABLE IF NOT EXISTS premium_gifts (
     user_id text PRIMARY KEY,
@@ -163,6 +170,29 @@ export async function reportLyrics(id, userId) {
     ON CONFLICT DO NOTHING RETURNING lyric_id`;
   if (added.length > 0) await sql`UPDATE shared_lyrics SET reports = reports + 1 WHERE id = ${id}`;
   return added.length > 0;
+}
+
+// ── YouTube answers cache ──────────────────────────────────────────────────
+export async function cachedYouTube(key, maxAgeMs) {
+  const sql = await db();
+  const rows = await sql`SELECT data, fetched_at FROM youtube_cache WHERE key = ${key}`;
+  const row = rows[0];
+  if (!row) return null;
+  if (Date.now() - new Date(row.fetched_at).getTime() > maxAgeMs) return null;
+  return row.data;
+}
+
+export async function saveYouTubeCache(key, data) {
+  const sql = await db();
+  await sql`INSERT INTO youtube_cache (key, data, fetched_at) VALUES (${key}, ${JSON.stringify(data)}::jsonb, now())
+    ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, fetched_at = now()`;
+}
+
+/** Old answers are removed (YouTube's rules: never kept longer than 30 days; here, 2 days) */
+export async function clearOldYouTubeCache() {
+  const sql = await db();
+  const cutoff = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  await sql`DELETE FROM youtube_cache WHERE fetched_at < ${cutoff}`;
 }
 
 // ── Premium gifts ──────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { db } from '../lib/db.js';
 import { getAuth } from '../lib/auth.js';
 import { emailProvider } from '../lib/email.js';
 import { premiumSetup } from '../lib/premium.js';
+import { youtubeReady } from '../lib/youtube.js';
 
 export async function GET() {
   let database = 'ok';
@@ -25,6 +26,7 @@ export async function GET() {
     database,
     accounts,
     email: emailProvider() ? 'ready' : 'not set up',
+    youtube: youtubeReady() ? 'ready' : 'not set up',
     premium: premiumSetup()
   });
 }

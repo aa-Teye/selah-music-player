@@ -17,6 +17,9 @@ import * as health from '../api/health.js';
 import * as privacy from '../api/privacy.js';
 import * as deleteAccount from '../api/delete-account.js';
 import * as termsPage from '../api/terms.js';
+import * as youtubeSearch from '../api/youtube/search.js';
+import * as youtubeVideos from '../api/youtube/videos.js';
+import { useYouTubeFetchForTests } from '../lib/youtube.js';
 import * as home from '../api/home.js';
 
 const BASE = 'http://localhost:3000';
@@ -101,8 +104,64 @@ test('health: tells what is set up', async () => {
     database: 'ok',
     accounts: 'ok',
     email: 'ready',
+    youtube: 'not set up',
     premium: 'payments not set up'
   });
+});
+
+test("YouTube's official search through Selah's server: answers are remembered for hours, never 30 days", async () => {
+  delete process.env.YOUTUBE_API_KEY;
+  assert.equal((await call(youtubeSearch.GET, '/api/youtube/search?q=worship')).status, 503); // not set up yet
+
+  process.env.YOUTUBE_API_KEY = 'test-key';
+  const asked = [];
+  useYouTubeFetchForTests(async (url) => {
+    const u = new URL(url);
+    asked.push(u.pathname.split('/').pop());
+    assert.equal(u.searchParams.get('key'), 'test-key');
+    if (u.pathname.endsWith('/search')) {
+      assert.equal(u.searchParams.get('videoEmbeddable'), 'true');
+      return { ok: true, json: async () => ({ items: [{ id: { videoId: 'gIWCDgNt5ww' } }, { id: { videoId: 'livelivexx1' } }] }) };
+    }
+    return {
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: 'gIWCDgNt5ww',
+            snippet: { title: 'Chris Tomlin &amp; Friends // Worship', channelTitle: 'Chris Tomlin', thumbnails: { high: { url: 'https://i.ytimg.com/vi/gIWCDgNt5ww/hqdefault.jpg' } } },
+            contentDetails: { duration: 'PT1H2M10S' }
+          },
+          { id: 'livelivexx1', snippet: { title: 'Live now', channelTitle: 'Church', liveBroadcastContent: 'live' }, contentDetails: { duration: 'P0D' } }
+        ]
+      })
+    };
+  });
+  try {
+    const first = await call(youtubeSearch.GET, '/api/youtube/search?q=Worship%20%20songs');
+    assert.equal(first.status, 200);
+    assert.deepEqual(first.body.results, [
+      {
+        youtubeId: 'gIWCDgNt5ww',
+        title: 'Chris Tomlin & Friends // Worship',
+        channel: 'Chris Tomlin',
+        duration: 3730,
+        durationFormatted: '1:02:10',
+        picture: 'https://i.ytimg.com/vi/gIWCDgNt5ww/hqdefault.jpg',
+        live: false
+      }
+    ]); // live streams are left out
+    assert.deepEqual(asked, ['search', 'videos']);
+    await call(youtubeSearch.GET, '/api/youtube/search?q=worship%20songs'); // the same search again
+    assert.deepEqual(asked, ['search', 'videos']); // answered from memory: no YouTube units used
+
+    const fresh = await call(youtubeVideos.GET, '/api/youtube/videos?ids=gIWCDgNt5ww,not-an-id');
+    assert.equal(fresh.body.videos[0].title, 'Chris Tomlin & Friends // Worship');
+    assert.equal((await call(youtubeSearch.GET, '/api/youtube/search?q=')).status, 400);
+  } finally {
+    useYouTubeFetchForTests(null);
+    delete process.env.YOUTUBE_API_KEY;
+  }
 });
 
 test('sign up, see my account, log out, log in again', async () => {
