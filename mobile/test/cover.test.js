@@ -49,6 +49,19 @@ test('song lists show a music note for songs without art, and the cover when the
   expect(screen.getByTestId('song-cover')).toBeTruthy();
 });
 
+test("YouTube songs: the video's picture only where it is at least 120 wide; a red play tile in smaller spots", async () => {
+  const video = { title: 'Oceans', youtubeId: 'dy9nwe9_xzw', sourceType: 'youtube', coverUrl: 'https://img.youtube.com/vi/dy9nwe9_xzw/hqdefault.jpg' };
+  await render(<CoverArt track={video} size={44} />);
+  expect(screen.getByTestId('cover-youtube')).toBeTruthy();
+  expect(screen.queryByTestId('cover-real')).toBeNull();
+
+  await render(<CoverArt track={video} size={240} round />);
+  expect(screen.getByTestId('cover-real').props.source).toEqual({ uri: video.coverUrl });
+
+  await render(<SongThumb track={video} />);
+  expect(screen.getByTestId('song-video')).toBeTruthy();
+});
+
 test('artists (people, not songs) show a coloured circle with their initials', async () => {
   expect(initialsOf('Joe Mettle')).toBe('JM');
   expect(initialsOf('Ọlọ́run Àgbáyé')).toBe('ỌÀ');

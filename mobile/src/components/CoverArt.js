@@ -19,6 +19,32 @@ const PALETTE = [
   ['#9A3412', '#FED7AA']
 ];
 
+// YouTube's rule: a video picture you tap to start a video must be at least 120×70.
+// Smaller spots show this tile instead of the video's picture.
+export const MIN_VIDEO_PICTURE_WIDTH = 120;
+export const YOUTUBE_RED = '#C4302B';
+
+export function isVideo(track) {
+  return Boolean(track && (track.youtubeId || track.sourceType === 'youtube'));
+}
+
+/** A red tile with a play symbol, for YouTube songs in small spots */
+export function VideoTile({ size = 40, round = false, radius, style, testID = 'cover-youtube' }) {
+  const r = radius != null ? radius : round ? size / 2 : Math.round(size * 0.16);
+  return (
+    <View
+      style={[
+        { width: size, height: size, borderRadius: r, backgroundColor: YOUTUBE_RED, alignItems: 'center', justifyContent: 'center' },
+        style
+      ]}
+      testID={testID}
+      accessibilityLabel="YouTube video"
+    >
+      <Ionicons name="play" size={Math.max(12, Math.round(size * 0.42))} color="#FFFFFF" style={{ marginLeft: Math.round(size * 0.04) }} />
+    </View>
+  );
+}
+
 /** True when the song has its own picture: album art from inside the file, a YouTube thumbnail, or one you chose */
 export function hasRealCover(track) {
   if (!track || !track.coverUrl) return false;
@@ -68,6 +94,10 @@ function CoverArt({ track, size = 48, style, round = false, testID, person = fal
   useEffect(() => setAttempt(0), [coverUrl]); // a new song: try its pictures again
 
   const shape = { width: size, height: size, borderRadius: round ? size / 2 : Math.round(size * 0.16), overflow: 'hidden' };
+
+  if (!person && isVideo(track) && size < MIN_VIDEO_PICTURE_WIDTH) {
+    return <VideoTile size={size} round={round} style={style} testID={testID || 'cover-youtube'} />;
+  }
 
   if (!person) {
     const pictures = real ? [coverUrl, songPhoto({})] : [songPhoto(track)];
