@@ -52,3 +52,12 @@ jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn(async () => true),
   shareAsync: jest.fn(async () => {})
 }));
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(async () => true),
+  hideAsync: jest.fn(async () => {}),
+  hide: jest.fn(),
+  setOptions: jest.fn()
+}));
+
+// The two-second opening animation is skipped in the whole-app tests (test/intro.test.js checks it)
+global.__SELAH_NO_INTRO = true;

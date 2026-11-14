@@ -22,6 +22,12 @@ test('no AI-looking icons or AI features anywhere in the app', () => {
   expect(offenders).toEqual([]);
 });
 
+test('no StyleSheet.absoluteFillObject: this React Native removed it, so it silently does nothing', () => {
+  const offenders = files.filter((file) => fs.readFileSync(file, 'utf8').includes('absoluteFillObject'));
+  expect(offenders).toEqual([]);
+  expect(require('react-native').StyleSheet.absoluteFill).toMatchObject({ position: 'absolute', top: 0, bottom: 0 });
+});
+
 test('Libraries is about music now: no Bible-app or hymn-website links', () => {
   const offenders = files.filter((file) =>
     /YouVersion|Open Hymnal|Daily Audio Bible|Blue Letter Bible|DIGITAL_LIBRARIES/.test(fs.readFileSync(file, 'utf8'))

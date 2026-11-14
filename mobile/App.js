@@ -25,6 +25,8 @@ import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 import DeepScanModal from './src/components/DeepScanModal';
 
 import { MOOD_TAGS } from './src/data/mockData';
+import * as SplashScreen from 'expo-splash-screen';
+import IntroSplash, { introSettings, hideNativeSplash } from './src/components/IntroSplash';
 import LibrariesModal from './src/components/LibrariesModal';
 import { artistSearch } from './src/data/discover';
 import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
@@ -102,9 +104,17 @@ function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
   return changed ? [...newFound, ...kept] : prev;
 }
 
+// Keep the phone's start screen up until Selah's opening animation takes over from it
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 function SelahApp() {
   const { colors: c, scheme } = useTheme();
   const styles = useThemedStyles(makeStyles);
+  const [showIntro, setShowIntro] = useState(introSettings.enabled);
+  const endIntro = useCallback(() => setShowIntro(false), []);
+  useEffect(() => {
+    if (!introSettings.enabled) hideNativeSplash();
+  }, []);
   const [activeTab, setActiveTab] = useState('home');
   const [tracks, setTracks] = useState([]);
   const [localTracks, setLocalTracks] = useState([]);
@@ -1685,7 +1695,7 @@ function SelahApp() {
       />
 
       {/* Detailed music scan */}
-      <DeepScanModal scan={deepScan} onStop={stopDeepScan} onClose={closeDeepScan} />
+      <DeepScanModal scan={showIntro ? null : deepScan} onStop={stopDeepScan} onClose={closeDeepScan} />
 
       {/* Header Menu Drawer Modal */}
       <HeaderMenuModal
@@ -1740,7 +1750,7 @@ function SelahApp() {
 
       {/* First-Time Onboarding Favorite Artists Modal */}
       <OnboardingArtistsModal
-        visible={isOnboardingVisible}
+        visible={isOnboardingVisible && !showIntro}
         onClose={() => {
           setIsOnboardingVisible(false);
           StorageService.setHasOnboarded(true);
@@ -1769,9 +1779,12 @@ function SelahApp() {
       <BottomTabs 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
-        onSelectTab={setActiveTab} 
+        onSelectTab={setActiveTab}
       />
       </SafeAreaView>
+
+      {/* Opening: the logo and "SELAH", then Home */}
+      {showIntro && <IntroSplash onDone={endIntro} />}
     </SafeAreaProvider>
   );
 }
