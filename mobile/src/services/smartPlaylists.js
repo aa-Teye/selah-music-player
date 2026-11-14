@@ -54,7 +54,7 @@ export function buildSmartPlaylists(tracks = [], playCounts = {}) {
     {
       id: 'smart-never',
       name: 'Never played',
-      icon: 'sparkles-outline',
+      icon: 'play-circle-outline',
       description: "Songs you haven't listened to yet",
       empty: "You've listened to every song. Well done!",
       tracks: neverPlayed

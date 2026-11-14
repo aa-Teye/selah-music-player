@@ -1,0 +1,23 @@
+// Guards for how Selah looks: nothing that resembles an AI product (sparkle icons, "AI" features).
+const fs = require('fs');
+const path = require('path');
+
+function sourceFiles(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(full);
+    return entry.name.endsWith('.js') ? [full] : [];
+  });
+}
+
+const files = [path.join(__dirname, '..', 'App.js'), ...sourceFiles(path.join(__dirname, '..', 'src'))];
+
+test('no AI-looking icons or AI features anywhere in the app', () => {
+  const offenders = [];
+  files.forEach((file) => {
+    const text = fs.readFileSync(file, 'utf8');
+    if (/name=["']sparkles|icon:\s*['"]sparkles|["']creation["']|["']auto-awesome["']|["']robot/.test(text)) offenders.push(`${file}: sparkle/robot icon`);
+    if (/\bAI\b|Gemini|ChatGPT/.test(text)) offenders.push(`${file}: mentions AI`);
+  });
+  expect(offenders).toEqual([]);
+});

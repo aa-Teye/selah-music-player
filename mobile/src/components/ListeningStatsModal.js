@@ -52,7 +52,7 @@ export default function ListeningStatsModal({
               {/* Daily Streak */}
               <View style={styles.statCard}>
                 <View style={styles.cardIconRow}>
-                  <Ionicons name="sparkles" size={22} color={c.ink} />
+                  <Ionicons name="flame" size={22} color={c.ink} />
                   <Text style={styles.badge}>ACTIVE</Text>
                 </View>
                 <Text style={styles.statNumber}>{streakDays}</Text>

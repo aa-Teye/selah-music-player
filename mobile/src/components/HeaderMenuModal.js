@@ -43,7 +43,7 @@ export default function HeaderMenuModal({
                 <View style={{ flex: 1 }}>
                   <Text style={styles.profileName}>Selah</Text>
                   <View style={styles.streakRow}>
-                    <Ionicons name="sparkles-outline" size={13} color={c.ink} />
+                    <Ionicons name="flame-outline" size={13} color={c.ink} />
                     <Text style={styles.streakText}>Day {streakDays} Daily Worship</Text>
                   </View>
                 </View>

@@ -225,7 +225,6 @@ async function runTests() {
     './src/screens/YouTubeWatchScreen.js',
     './src/screens/PlaylistsScreen.js',
     './src/screens/EqualizerScreen.js',
-    './src/screens/AiDiscoveryScreen.js',
     './src/components/HeaderMenuModal.js',
     './src/components/OnboardingArtistsModal.js'
   ];
