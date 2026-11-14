@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   Keyboard,
   Share,
-  Linking
+  Linking,
+  useWindowDimensions
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import YoutubePlayer from 'react-native-youtube-iframe';
@@ -105,10 +106,13 @@ function YouTubeWatchScreen({
   onVideoProgress,
   resumeAt,
   onResumeDone,
-  externalSearch // { query, at }: Libraries asking for "the latest songs" of a genre or artist
+  externalSearch, // { query, at }: Libraries asking for "the latest songs" of a genre or artist
+  pipMode = false, // Selah is shrunk to the small picture-in-picture window (Android)
+  onOpenSmallWindow // shows the small-window button (only where picture-in-picture works)
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
+  const win = useWindowDimensions();
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [activeChip, setActiveChip] = useState('curated');
   const [searchResults, setSearchResults] = useState([]);
@@ -175,6 +179,13 @@ function YouTubeWatchScreen({
   const scrollRef = useRef(null);
   const searchTimeoutRef = useRef(null);
   const playerRef = useRef(null);
+
+  // The small window shows the top of the screen: make sure that is the video
+  useEffect(() => {
+    if (pipMode && scrollRef.current && scrollRef.current.scrollTo) {
+      scrollRef.current.scrollTo({ y: 0, animated: false });
+    }
+  }, [pipMode]);
 
 
   const cycleRepeatMode = () => {
@@ -437,24 +448,30 @@ function YouTubeWatchScreen({
   const activeVideoTitle = selectedYtVideo?.title || DEFAULT_FEATURED[0].title;
   const activeVideoArtist = selectedYtVideo?.artist || DEFAULT_FEATURED[0].artist;
 
+  // In the small picture-in-picture window only the video shows, filling it.
+  // (Same player, only resized: the video never restarts.)
+  const playerHeight = pipMode ? win.height : (win.width - 32) * (9 / 16);
+
   return (
-    <ScrollView 
+    <ScrollView
       ref={scrollRef}
-      style={styles.container} 
-      contentContainerStyle={styles.content}
+      style={pipMode ? styles.pipScroll : styles.container}
+      contentContainerStyle={pipMode ? styles.pipContent : styles.content}
+      scrollEnabled={!pipMode}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {/* ── 1. TOP HERO PLAYER AREA ─────────────────────────────────── */}
-      <View style={styles.heroPlayerSection}>
+      <View style={[styles.heroPlayerSection, pipMode && styles.pipFill]}>
         {/* ── Single Persistent YouTube Player Container ── */}
-        <View style={styles.playerContainer}>
+        <View style={[styles.playerContainer, pipMode && styles.pipFill]}>
           {/* Main YouTube Iframe Player (always kept mounted with full 16:9 dimensions so audio stream is never paused by OS) */}
-          <View style={styles.videoPlayerCard}>
+          <View style={[styles.videoPlayerCard, pipMode && styles.pipFill]} testID={pipMode ? 'yt-pip-video' : undefined}>
             <YoutubePlayer
               ref={playerRef}
               forceAndroidAutoplay={true}
-              height={(width - 32) * (9 / 16)}
+              height={playerHeight}
+              width={pipMode ? win.width : undefined}
               play={isYtPlaying}
               videoId={currentYtId}
               onReady={() => setIsPlayerReady(true)}
@@ -480,7 +497,7 @@ function YouTubeWatchScreen({
         </View>
 
         {/* Now Playing Info Bar */}
-        <View style={styles.playingBar}>
+        <View style={[styles.playingBar, pipMode && styles.pipHidden]}>
           <View style={styles.playingBarLeft}>
             <View style={styles.livePulseDot} />
             <View style={{ flex: 1 }}>
@@ -490,6 +507,17 @@ function YouTubeWatchScreen({
           </View>
 
           <View style={styles.playingActions}>
+            {onOpenSmallWindow && ytIsCurrent && (
+              <TouchableOpacity
+                style={styles.actionIconBtn}
+                onPress={onOpenSmallWindow}
+                accessibilityLabel="Keep watching in a small window"
+                testID="yt-small-window"
+              >
+                <MaterialCommunityIcons name="picture-in-picture-bottom-right" size={18} color={c.ink} />
+              </TouchableOpacity>
+            )}
+
             {onOpenAddToPlaylist && (
               <TouchableOpacity 
                 style={styles.actionIconBtn}
@@ -519,7 +547,7 @@ function YouTubeWatchScreen({
         </View>
 
         {/* Playback Controls Row: Shuffle, Prev, Master Play/Pause, Next, Loop */}
-        <View style={styles.controlsRow}>
+        <View style={[styles.controlsRow, pipMode && styles.pipHidden]}>
           {/* Shuffle Toggle */}
           <TouchableOpacity 
             style={[styles.ctrlBtn, isShuffle && styles.ctrlBtnActive]}
@@ -589,6 +617,8 @@ function YouTubeWatchScreen({
         </View>
       </View>
 
+      {/* Everything below the player is hidden in the small window (kept, not removed) */}
+      <View style={pipMode ? styles.pipHidden : null}>
       {/* ── 2. SEARCH BAR & QUICK CHIPS ─────────────────────────────── */}
       <View style={styles.searchSection}>
         <View style={styles.searchBox}>
@@ -774,11 +804,32 @@ function YouTubeWatchScreen({
           </View>
         )}
       </View>
+      </View>
     </ScrollView>
   );
 }
 
 const makeStyles = (c) => StyleSheet.create({
+  // Picture-in-picture: the video alone, edge to edge
+  pipScroll: { flex: 1, backgroundColor: '#000000' },
+  pipContent: { flexGrow: 1 },
+  pipFill: {
+    flex: 1,
+    margin: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    padding: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+    borderRadius: 0,
+    borderWidth: 0,
+    borderBottomWidth: 0,
+    backgroundColor: '#000000',
+    shadowOpacity: 0,
+    elevation: 0
+  },
+  pipHidden: { display: 'none' },
   container: {
     flex: 1,
     backgroundColor: c.bg

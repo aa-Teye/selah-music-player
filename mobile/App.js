@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 
@@ -30,6 +30,15 @@ import IntroSplash, { introSettings, hideNativeSplash } from './src/components/I
 import LibrariesModal from './src/components/LibrariesModal';
 import { artistSearch } from './src/data/discover';
 import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
+import {
+  pipAvailable,
+  setVideoPip,
+  enterVideoPip,
+  isInPip,
+  onPipChange,
+  onPipAction,
+  PIP_PLAY_PAUSE
+} from './src/services/pipService';
 import {
   dayNumber,
   devotionForDay,
@@ -178,6 +187,7 @@ function SelahApp() {
   const [isLibrariesVisible, setIsLibrariesVisible] = useState(false);
   const [externalSearch, setExternalSearch] = useState(null); // { query, at } from Libraries
   const [songsToGetBack, setSongsToGetBack] = useState([]); // from a restore: not on this phone yet
+  const [inPip, setInPip] = useState(false); // Android: shrunk to the small picture-in-picture window
   const storageLoadedRef = useRef(false);
   const keptYouTubeRef = useRef(null);
 
@@ -1317,6 +1327,55 @@ function SelahApp() {
     );
   }, [tracks, favorites, playlists]);
 
+  // ── Picture-in-picture (Android): a playing YouTube video keeps going in a small window ──
+  const isVideoCurrent = Boolean(currentTrack && (currentTrack.sourceType === 'youtube' || currentTrack.youtubeId));
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const togglePlayRef = useRef(handleTogglePlay);
+  togglePlayRef.current = handleTogglePlay;
+
+  // Leaving Selah opens the small window only while a video plays (Android 12+ does it by itself)
+  useEffect(() => {
+    setVideoPip({ video: isVideoCurrent, playing: isVideoCurrent && isPlaying });
+  }, [isVideoCurrent, isPlaying]);
+
+  // The small window opening/closing, and its play/pause button
+  useEffect(() => {
+    if (!pipAvailable()) return undefined;
+    const change = onPipChange(setInPip);
+    const action = onPipAction((name) => {
+      if (name === PIP_PLAY_PAUSE) togglePlayRef.current();
+    });
+    return () => {
+      change.remove();
+      action.remove();
+    };
+  }, []);
+
+  // The window shrinking or growing tells us too (in case the message above is missed)
+  useEffect(() => {
+    if (!pipAvailable()) return undefined;
+    setInPip(isInPip());
+    const again = setTimeout(() => setInPip(isInPip()), 400); // Android can say so a moment later
+    return () => clearTimeout(again);
+  }, [windowWidth, windowHeight]);
+
+  // Closing the small window (✕) pauses the video: YouTube is never played with nothing on screen.
+  // Tapping it to open Selah again keeps it playing.
+  const wasInPipRef = useRef(false);
+  useEffect(() => {
+    const was = wasInPipRef.current;
+    wasInPipRef.current = inPip;
+    if (!was || inPip) return undefined;
+    const timer = setTimeout(() => {
+      if (AppState.currentState !== 'active' && isPlayingRef.current) togglePlayRef.current(false);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [inPip]);
+
+  const openSmallWindow = useCallback(() => {
+    enterVideoPip(isPlayingRef.current);
+  }, []);
+
   // A song to get back is on this phone now: it goes back into its playlists by itself
   useEffect(() => {
     if (songsToGetBack.length === 0 || localTracks.length === 0) return;
@@ -1439,7 +1498,7 @@ function SelahApp() {
         <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={c.bg} />
 
       {/* Top Header */}
-      {!isImmersivePlayer && (
+      {!isImmersivePlayer && !inPip && (
         <TopHeader
           streakDays={streakData.streakDays || 1}
           searchQuery={searchQuery}
@@ -1544,13 +1603,16 @@ function SelahApp() {
         )}
 
         {/* Keep YouTube player persistent across tabs so audio continues playing in background without Android View.GONE pause */}
-        <View 
+        <View
           style={
-            activeTab === 'youtube'
+            inPip
+              ? styles.pipVideo // the small picture-in-picture window: only the video
+              : activeTab === 'youtube'
               ? { flex: 1 }
               : { position: 'absolute', top: -99999, left: -99999, width: 1, height: 1, opacity: 0 }
           }
-          pointerEvents={activeTab === 'youtube' ? 'auto' : 'none'}
+          pointerEvents={inPip || activeTab === 'youtube' ? 'auto' : 'none'}
+          testID="youtube-area"
         >
           <YouTubeWatchScreen
             currentTrack={currentTrack}
@@ -1572,6 +1634,8 @@ function SelahApp() {
             resumeAt={resumeVideo}
             onResumeDone={clearResumeVideo}
             externalSearch={externalSearch}
+            pipMode={inPip}
+            onOpenSmallWindow={pipAvailable() ? openSmallWindow : undefined}
           />
         </View>
 
@@ -1604,7 +1668,7 @@ function SelahApp() {
       </View>
 
       {/* Selah Floating Bottom Mini-Player Bar */}
-      {!isImmersivePlayer && (
+      {!isImmersivePlayer && !inPip && (
         <MiniPlayerBar
           currentTrack={currentTrack}
           isPlaying={isPlaying}
@@ -1776,11 +1840,13 @@ function SelahApp() {
       />
 
       {/* Bottom Navigation Tabs */}
-      <BottomTabs 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        onSelectTab={setActiveTab}
-      />
+      {!inPip && (
+        <BottomTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onSelectTab={setActiveTab}
+        />
+      )}
       </SafeAreaView>
 
       {/* Opening: the logo and "SELAH", then Home */}
@@ -1796,6 +1862,12 @@ const makeStyles = (c) => StyleSheet.create({
   },
   mainContent: {
     flex: 1
+  },
+  pipVideo: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 50,
+    elevation: 50,
+    backgroundColor: '#000000'
   }
 });
 

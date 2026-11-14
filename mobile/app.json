@@ -89,6 +89,15 @@
           "icon": "./assets/notification-icon.png",
           "color": "#C9A227"
         }
+      ],
+      [
+        "expo-pip",
+        {
+          "icons": [
+            "./assets/pip/pip_play.png",
+            "./assets/pip/pip_pause.png"
+          ]
+        }
       ]
     ],
     "extra": {

@@ -782,6 +782,122 @@ test('YouTube has no "Play as MP3" mode that hides the video (YouTube and Google
   expect(screen.queryByText(/STREAMING AS MP3/)).toBeNull();
 });
 
+// A stand-in for Android's picture-in-picture (the expo-pip module)
+function fakePip() {
+  const listeners = {};
+  return {
+    listeners,
+    setPictureInPictureParams: jest.fn(),
+    enterPipMode: jest.fn(),
+    isInPipMode: jest.fn(() => false),
+    addListener: jest.fn((name, fn) => {
+      listeners[name] = fn;
+      return { remove: () => delete listeners[name] };
+    })
+  };
+}
+
+function setAppState(value) {
+  Object.defineProperty(AppState, 'currentState', { value, configurable: true, writable: true });
+}
+
+androidOnly('picture-in-picture: a playing YouTube video keeps going in a small window that shows only the video', async () => {
+  const pipService = require('../src/services/pipService');
+  const pip = fakePip();
+  pipService.setPipModuleForTests(pip);
+  const appStateBefore = Object.getOwnPropertyDescriptor(AppState, 'currentState');
+  try {
+    await render(<App />);
+    await settle();
+    await tap(screen.getByTestId('deep-scan-done'));
+    // nothing playing: leaving Selah does not open a small window
+    expect(pip.setPictureInPictureParams).toHaveBeenLastCalledWith({ autoEnterEnabled: false, actions: [] });
+
+    await tap(screen.getByTestId('tab-youtube'));
+    await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+    await act(async () => {
+      global.__youtubeProps.onReady();
+    });
+    await settle(2);
+    // a video plays: leaving Selah opens the small window by itself, with a pause button in it
+    expect(pip.setPictureInPictureParams).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        width: 16,
+        height: 9,
+        autoEnterEnabled: true,
+        actions: [expect.objectContaining({ iconName: 'pip_pause', action: 'selah-play-pause', title: 'Pause' })]
+      })
+    );
+
+    // the small-window button (for phones older than Android 12)
+    await tap(screen.getByTestId('yt-small-window'));
+    expect(pip.enterPipMode).toHaveBeenCalledWith(expect.objectContaining({ width: 16, height: 9 }));
+
+    // in the small window: only the video, edge to edge, still playing
+    await act(async () => {
+      pip.listeners.onPipModeChange({ isInPipMode: true });
+    });
+    await settle(2);
+    expect(screen.queryByTestId('tab-home')).toBeNull();
+    expect(screen.queryByTestId('mini-play-pause')).toBeNull();
+    expect(screen.queryByTestId('yt-search-input')).toBeNull(); // hidden...
+    expect(screen.getByTestId('yt-search-input', { includeHiddenElements: true })).toBeTruthy(); // ...but kept
+    expect(screen.getByTestId('yt-pip-video')).toBeTruthy();
+    expect(StyleSheet.flatten(screen.getByTestId('youtube-area').props.style)).toMatchObject({ position: 'absolute', top: 0, bottom: 0 });
+    expect(global.__youtubeProps.play).toBe(true);
+
+    // the window's own pause / play button
+    await act(async () => {
+      pip.listeners.onPipActionPressed({ action: 'selah-play-pause' });
+    });
+    await settle(2);
+    expect(global.__youtubeProps.play).toBe(false);
+    expect(pip.setPictureInPictureParams).toHaveBeenLastCalledWith(
+      expect.objectContaining({ autoEnterEnabled: false, actions: [expect.objectContaining({ iconName: 'pip_play' })] })
+    );
+    await act(async () => {
+      pip.listeners.onPipActionPressed({ action: 'selah-play-pause' });
+    });
+    await settle(2);
+    expect(global.__youtubeProps.play).toBe(true);
+
+    // tapping the window opens Selah again: the video keeps playing and everything is back
+    setAppState('active');
+    await act(async () => {
+      pip.listeners.onPipModeChange({ isInPipMode: false });
+    });
+    await settle(20);
+    expect(global.__youtubeProps.play).toBe(true);
+    expect(screen.getByTestId('tab-home')).toBeTruthy();
+
+    // closing the small window (✕) while Selah stays behind other apps: the video pauses
+    await act(async () => {
+      pip.listeners.onPipModeChange({ isInPipMode: true });
+    });
+    await settle(2);
+    setAppState('background');
+    await act(async () => {
+      pip.listeners.onPipModeChange({ isInPipMode: false });
+    });
+    await settle(20);
+    expect(global.__youtubeProps.play).toBe(false);
+  } finally {
+    pipService.setPipModuleForTests(null);
+    if (appStateBefore) Object.defineProperty(AppState, 'currentState', appStateBefore);
+    else delete AppState.currentState;
+  }
+});
+
+test('no small-window button where picture-in-picture does not exist (iPhone, Expo Go)', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+  expect(global.__youtubeProps.play).toBe(true);
+  expect(screen.queryByTestId('yt-small-window')).toBeNull();
+});
+
 function youtubeSearches() {
   return global.fetch.mock.calls
     .map(([url]) => decodeURIComponent(String(url)))
