@@ -31,6 +31,8 @@ rules (Developer Policies and Required Minimum Functionality).
 | --- | --- | --- |
 | Bible verses | ✅ | King James Version (public domain) |
 | Song photos | ✅ | Unsplash (free to use in apps) |
+| Genre photos in Libraries | ✅ | 12 free Unsplash photos inside the app: not Unsplash+, no recognizable faces, no logos. List with photographers: `assets/genres/CREDITS.md` |
+| Artist pictures | ✅ | Each artist's own YouTube channel picture, through YouTube's official service (see the YouTube rules below). Not Deezer: its rules forbid apps that earn money. No pictures copied from other websites |
 | YouTube videos | ✅ | Official player and official search; Selah never downloads videos |
 | Lyrics from LRCLIB | ⚠️ | Song lyrics belong to their writers. LRCLIB is a community library many music apps use. If a writer or publisher complains, remove that song's lyrics; a licensed lyrics service (for example Musixmatch) is the long-term answer |
 
@@ -45,7 +47,8 @@ rules (Developer Policies and Required Minimum Functionality).
 | Player at least 200 × 200 | ✅ | The player is never less than 200 high |
 | A video picture that starts a video: at least 120 × 70 | ✅ | Search results show 128 × 72; smaller spots show a red play tile instead of the picture |
 | Users agree to YouTube's Terms; Google's Privacy Policy linked | ✅ | In `/terms`, `/privacy` and at the bottom of the YouTube tab |
-| Stored YouTube details: at most 30 days | ✅ | Saved videos are checked again after 25 days (fresh details; removed videos dropped). Backups keep only video IDs. The server forgets searches after 12 hours and deletes them after 2 days |
+| Stored YouTube details: at most 30 days | ✅ | Saved videos are checked again after 25 days (fresh details; removed videos dropped). Backups keep only video IDs. The server forgets searches after 12 hours and deletes them after 2 days. Artist pictures: asked again after 25 days, never shown after 30 |
+| Say when something comes from YouTube | ✅ | Libraries: "Pictures from the artists' YouTube channels" with the YouTube logo; Home: "pictures from YouTube" |
 | Do not change, cover or block the player | ✅ | Play and pause use the player's own documented functions; nothing covers the player |
 | Autoplay only when the player can be seen | ✅ | Videos start when you tap them on the YouTube tab |
 | **No playing from a player that is not on screen** | ⚠️ | **Accepted by the owner.** When you leave the YouTube tab for another tab, the video keeps playing with the player hidden. YouTube's rule III.I.9 forbids this. If YouTube or Google objects: pause the video when you leave the YouTube tab (one small change) |
