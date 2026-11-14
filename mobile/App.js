@@ -37,6 +37,7 @@ import {
   isInPip,
   onPipChange,
   onPipAction,
+  onPipClosed,
   PIP_PLAY_PAUSE
 } from './src/services/pipService';
 import {
@@ -1332,6 +1333,8 @@ function SelahApp() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const togglePlayRef = useRef(handleTogglePlay);
   togglePlayRef.current = handleTogglePlay;
+  const isVideoCurrentRef = useRef(isVideoCurrent);
+  isVideoCurrentRef.current = isVideoCurrent;
 
   // Leaving Selah opens the small window only while a video plays (Android 12+ does it by itself)
   useEffect(() => {
@@ -1345,9 +1348,15 @@ function SelahApp() {
     const action = onPipAction((name) => {
       if (name === PIP_PLAY_PAUSE) togglePlayRef.current();
     });
+    // Closed with ✕: pause straight away (YouTube is never played with nothing on screen)
+    const closed = onPipClosed(() => {
+      setInPip(false);
+      if (isVideoCurrentRef.current && isPlayingRef.current) togglePlayRef.current(false);
+    });
     return () => {
       change.remove();
       action.remove();
+      closed.remove();
     };
   }, []);
 

@@ -78,3 +78,9 @@ export function onPipAction(listener) {
   if (!native || typeof native.addListener !== 'function') return noSubscription;
   return native.addListener('onPipActionPressed', (event) => listener(event && event.action));
 }
+
+/** The small window was closed (✕): the video has to pause (patches/expo-pip+2.1.0.patch sends this) */
+export function onPipClosed(listener) {
+  if (!native || typeof native.addListener !== 'function') return noSubscription;
+  return native.addListener('onPipClosed', () => listener());
+}

@@ -1,0 +1,204 @@
+diff --git a/node_modules/expo-pip/android/build.gradle b/node_modules/expo-pip/android/build.gradle
+index 59b340e..42b900c 100644
+--- a/node_modules/expo-pip/android/build.gradle
++++ b/node_modules/expo-pip/android/build.gradle
+@@ -44,4 +44,6 @@ android {
+ 
+ dependencies {
+     implementation 'androidx.fragment:fragment-ktx:1.8.9'
++    // Selah: to keep React Native drawing while the app is in the small window
++    implementation 'com.facebook.react:react-android'
+ }
+diff --git a/node_modules/expo-pip/android/src/main/java/expo/modules/pip/ExpoPipModule.kt b/node_modules/expo-pip/android/src/main/java/expo/modules/pip/ExpoPipModule.kt
+index 9d96250..0f0ea51 100644
+--- a/node_modules/expo-pip/android/src/main/java/expo/modules/pip/ExpoPipModule.kt
++++ b/node_modules/expo-pip/android/src/main/java/expo/modules/pip/ExpoPipModule.kt
+@@ -7,11 +7,18 @@ import android.content.Intent
+ import android.graphics.Rect
+ import android.graphics.drawable.Icon
+ import android.os.Build
++import android.os.Handler
++import android.os.Looper
++import android.os.SystemClock
+ import android.util.Log
+ import android.util.Rational
+ import androidx.annotation.RequiresApi
+ import androidx.core.os.bundleOf
+ import androidx.fragment.app.FragmentActivity
++import androidx.lifecycle.DefaultLifecycleObserver
++import androidx.lifecycle.Lifecycle
++import androidx.lifecycle.LifecycleOwner
++import com.facebook.react.bridge.ReactContext
+ import expo.modules.kotlin.modules.Module
+ import expo.modules.kotlin.modules.ModuleDefinition
+ import expo.modules.pip.fragments.PictureInPictureHelperFragment
+@@ -23,11 +30,40 @@ import expo.modules.pip.utils.getResIdByIconName
+ const val moduleName = "ExpoPip"
+ 
+ class ExpoPipModule : Module(), PictureInPictureHelperListener {
++    // Selah patch (patches/expo-pip+2.1.0.patch):
++    // Android pauses the app while it is in the small window, and React Native stops drawing
++    // while the app is paused. Keep it drawing in the small window, so the app can show only
++    // the video there. When the small window is closed, send "onPipClosed" (the app pauses the
++    // video) and let React Native rest again.
++    private val mainHandler = Handler(Looper.getMainLooper())
++    private var inPip = false
++    private var leftPipAt = 0L
++    private var observedActivity: FragmentActivity? = null
++
++    private val lifecycleObserver = object : DefaultLifecycleObserver {
++        override fun onPause(owner: LifecycleOwner) {
++            if (inPip || isInPipMode()) keepReactNativeDrawing()
++        }
++
++        override fun onStop(owner: LifecycleOwner) {
++            val closedWindow = inPip || SystemClock.uptimeMillis() - leftPipAt < 2000
++            if (!closedWindow) return
++            inPip = false
++            leftPipAt = 0L
++            this@ExpoPipModule.sendEvent("onPipClosed", bundleOf("closed" to true))
++            mainHandler.postDelayed({
++                val activity = observedActivity
++                val resumed = activity?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) == true
++                if (!resumed) (appContext.reactContext as? ReactContext)?.onHostPause()
++            }, 500)
++        }
++    }
++
+     override fun definition() = ModuleDefinition {
+ 
+         Name(moduleName)
+ 
+-        Events("onPipModeChange", "onPipActionPressed")
++        Events("onPipModeChange", "onPipActionPressed", "onPipClosed")
+ 
+         Function<Boolean>("isInPipMode", this@ExpoPipModule::isInPipMode)
+ 
+@@ -42,9 +78,21 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+ 
+         OnCreate(this@ExpoPipModule::onCreate)
+ 
++        OnActivityEntersForeground {
++            ensureAttached()
++        }
++
+         OnDestroy(this@ExpoPipModule::onDestroy)
+     }
+ 
++    private fun keepReactNativeDrawing() {
++        // Runs after React Native has handled the pause
++        mainHandler.post {
++            val activity = appContext.currentActivity ?: return@post
++            if (isInPipMode()) (appContext.reactContext as? ReactContext)?.onHostResume(activity)
++        }
++    }
++
+     private fun buildPictureInPictureParams(options: ParamsRecord): PictureInPictureParams? {
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+             val pictureInPictureParamsBuilder = PictureInPictureParams.Builder()
+@@ -81,6 +129,7 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+     }
+ 
+     private fun setPictureInPictureParams(options: ParamsRecord) {
++        ensureAttached()
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+             val pictureInPictureParamsBuilder = buildPictureInPictureParams(options)
+ 
+@@ -91,6 +140,7 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+     }
+ 
+     private fun enterPipMode(options: ParamsRecord) {
++        ensureAttached()
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+             val pictureInPictureParams = buildPictureInPictureParams(options)
+ 
+@@ -176,7 +226,7 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+     private fun onCreate() {
+         ExpoPipEventBus.module = this
+ 
+-        attachFragment()
++        ensureAttached()
+     }
+ 
+     private fun onDestroy() {
+@@ -186,6 +236,12 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+     }
+ 
+     override fun onPictureInPictureModeChange(isInPictureInPictureMode: Boolean) {
++        inPip = isInPictureInPictureMode
++        if (isInPictureInPictureMode) {
++            keepReactNativeDrawing()
++        } else {
++            leftPipAt = SystemClock.uptimeMillis()
++        }
+         this@ExpoPipModule.sendEvent(
+             "onPipModeChange",
+             bundleOf("isInPipMode" to isInPictureInPictureMode)
+@@ -199,28 +255,50 @@ class ExpoPipModule : Module(), PictureInPictureHelperListener {
+         )
+     }
+ 
+-    fun attachFragment() {
+-        (appContext.currentActivity as? FragmentActivity)?.let { activity ->
+-            val fragment = PictureInPictureHelperFragment()
+-            fragment.setListener(this)
+-            activity.supportFragmentManager
+-                .beginTransaction()
+-                .add(fragment, PictureInPictureHelperFragment.id)
+-                .commit()
++    // The activity may not exist yet when the module is created: attach whenever it is there
++    private fun ensureAttached() {
++        mainHandler.post {
++            val activity = appContext.currentActivity as? FragmentActivity ?: return@post
++            if (observedActivity !== activity) {
++                observedActivity?.lifecycle?.removeObserver(lifecycleObserver)
++                observedActivity = activity
++                activity.lifecycle.addObserver(lifecycleObserver)
++            }
++            val existing = activity.supportFragmentManager
++                .findFragmentByTag(PictureInPictureHelperFragment.id) as? PictureInPictureHelperFragment
++            if (existing != null) {
++                existing.setListener(this)
++            } else if (!activity.isFinishing) {
++                val fragment = PictureInPictureHelperFragment()
++                fragment.setListener(this)
++                activity.supportFragmentManager
++                    .beginTransaction()
++                    .add(fragment, PictureInPictureHelperFragment.id)
++                    .commitAllowingStateLoss()
++            }
+         }
+     }
+ 
+-    fun detachFragment() {
+-        (appContext.currentActivity as? FragmentActivity)?.let { activity ->
+-            val fragment = activity.supportFragmentManager
+-                .findFragmentByTag(PictureInPictureHelperFragment.id)
++    fun attachFragment() {
++        ensureAttached()
++    }
+ 
+-            fragment?.let { fragment ->
+-                activity.supportFragmentManager
+-                    .beginTransaction()
+-                    .remove(fragment)
+-                    .commitAllowingStateLoss()
++    fun detachFragment() {
++        val activity = observedActivity ?: (appContext.currentActivity as? FragmentActivity)
++        mainHandler.post {
++            activity?.lifecycle?.removeObserver(lifecycleObserver)
++            activity?.let { act ->
++                val fragment = act.supportFragmentManager
++                    .findFragmentByTag(PictureInPictureHelperFragment.id)
++
++                fragment?.let { fragment ->
++                    act.supportFragmentManager
++                        .beginTransaction()
++                        .remove(fragment)
++                        .commitAllowingStateLoss()
++                }
+             }
++            observedActivity = null
+         }
+     }
+ 

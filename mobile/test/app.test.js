@@ -905,7 +905,22 @@ androidOnly('picture-in-picture: a playing YouTube video keeps going in a small 
     expect(global.__youtubeProps.play).toBe(true);
     expect(screen.getByTestId('tab-home')).toBeTruthy();
 
-    // closing the small window (✕) while Selah stays behind other apps: the video pauses
+    // closing the small window (✕): Android tells Selah, and the video pauses straight away
+    await act(async () => {
+      pip.listeners.onPipModeChange({ isInPipMode: true });
+    });
+    await settle(2);
+    await act(async () => {
+      pip.listeners.onPipClosed({ closed: true });
+    });
+    await settle(2);
+    expect(global.__youtubeProps.play).toBe(false);
+    expect(screen.getByTestId('tab-home')).toBeTruthy(); // back to the normal layout for next time
+
+    // and if that message were missed: leaving the small window while Selah stays behind other apps also pauses
+    await tap(screen.getByTestId('tab-youtube'));
+    await tap(screen.getByTestId('yt-play-pause'));
+    expect(global.__youtubeProps.play).toBe(true);
     await act(async () => {
       pip.listeners.onPipModeChange({ isInPipMode: true });
     });
