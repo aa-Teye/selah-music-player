@@ -17,29 +17,31 @@ export const GENRES = [
   { id: 'sermons', name: 'Sermons', search: 'sermons', icon: 'chatbubbles-outline', color: '#7E22CE', photo: require('../../assets/genres/sermons.jpg') }
 ];
 
+// youtube: the artist's own YouTube channel (its ID, or its @handle), for the artist's picture.
+// Found in Wikidata, MusicBrainz and the artists' official channel pages.
 export const ARTISTS = [
-  { name: 'Joe Mettle', from: 'Ghana' },
-  { name: 'Diana Hamilton', from: 'Ghana' },
-  { name: 'Piesie Esther', from: 'Ghana' },
-  { name: 'Celestine Donkor', from: 'Ghana' },
-  { name: 'Joyce Blessing', from: 'Ghana' },
-  { name: 'MOGmusic', from: 'Ghana' },
-  { name: 'Minister GUC', from: 'Nigeria' },
-  { name: 'Nathaniel Bassey', from: 'Nigeria' },
-  { name: 'Sinach', from: 'Nigeria' },
-  { name: 'Mercy Chinwo', from: 'Nigeria' },
-  { name: 'Moses Bliss', from: 'Nigeria' },
-  { name: 'Dunsin Oyekan', from: 'Nigeria' },
-  { name: 'Tope Alabi', from: 'Nigeria' },
-  { name: 'Victoria Orenze', from: 'Nigeria' },
-  { name: 'Ada Ehi', from: 'Nigeria' },
-  { name: 'Frank Edwards', from: 'Nigeria' },
-  { name: 'Maverick City Music', from: 'USA' },
-  { name: 'Elevation Worship', from: 'USA' },
-  { name: 'CeCe Winans', from: 'USA' },
-  { name: 'Brandon Lake', from: 'USA' },
-  { name: 'Tasha Cobbs Leonard', from: 'USA' },
-  { name: 'Hillsong Worship', from: 'Australia' }
+  { name: 'Joe Mettle', from: 'Ghana', youtube: '@JoeMettleMinistries' },
+  { name: 'Diana Hamilton', from: 'Ghana', youtube: 'UC7HM1dGmRQC9Nu7rQOEZbow' },
+  { name: 'Piesie Esther', from: 'Ghana', youtube: 'UCli_QDorO9szrEomXPNko3A' },
+  { name: 'Celestine Donkor', from: 'Ghana', youtube: 'UCXUtc8Yz8vHcWEZZO45gs3Q' },
+  { name: 'Joyce Blessing', from: 'Ghana', youtube: 'UC_M7G5ahHJzMS-C6A1tI8XA' },
+  { name: 'MOGmusic', from: 'Ghana', youtube: '@MOGMusic' },
+  { name: 'Minister GUC', from: 'Nigeria', youtube: '@ministerguc' },
+  { name: 'Nathaniel Bassey', from: 'Nigeria', youtube: 'UCRe2Ir9wtPk_YQjElam7n2w' },
+  { name: 'Sinach', from: 'Nigeria', youtube: 'UCcaV40yrjS5R88xYHxK_0rA' },
+  { name: 'Mercy Chinwo', from: 'Nigeria', youtube: 'UCtIRyuESlnOflQCpmk-fHUw' },
+  { name: 'Moses Bliss', from: 'Nigeria', youtube: 'UCv88VZJUuRoot7GfSO_sm-g' },
+  { name: 'Dunsin Oyekan', from: 'Nigeria', youtube: 'UC9unpsMUkOGDIMraqBfZtYg' },
+  { name: 'Tope Alabi', from: 'Nigeria', youtube: 'UCSso6ynLza_BKtcqMDzK-MQ' },
+  { name: 'Victoria Orenze', from: 'Nigeria', youtube: 'UCo9_ALYi0IYcMn7K84YFTzw' },
+  { name: 'Ada Ehi', from: 'Nigeria', youtube: 'UCpM0LdoSSvRgW-AqBTOhKow' },
+  { name: 'Frank Edwards', from: 'Nigeria', youtube: 'UCWhUxVq72zmbcWlm9uguLPg' },
+  { name: 'Maverick City Music', from: 'USA', youtube: 'UCd_Cl1RdIJ99lqFLjqlI27w' },
+  { name: 'Elevation Worship', from: 'USA', youtube: 'UCSf-NCzjwcnXErUBW_qeFvA' },
+  { name: 'CeCe Winans', from: 'USA', youtube: 'UC86Zlc-v_kkZ-yKG2cJZkxQ' },
+  { name: 'Brandon Lake', from: 'USA', youtube: 'UCUvrv1Ox5rRwzG-SHCN7zrg' },
+  { name: 'Tasha Cobbs Leonard', from: 'USA', youtube: 'UC8aCcbdR6hWfeynEmrguPyg' },
+  { name: 'Hillsong Worship', from: 'Australia', youtube: 'UC4q12NoPNySbVqwpw4iO5Vg' }
 ];
 
 /** "latest Ghana gospel songs 2026" — the newest songs on YouTube */
