@@ -16,6 +16,7 @@ import * as report from '../api/lyrics/report.js';
 import * as health from '../api/health.js';
 import * as privacy from '../api/privacy.js';
 import * as deleteAccount from '../api/delete-account.js';
+import * as termsPage from '../api/terms.js';
 import * as home from '../api/home.js';
 
 const BASE = 'http://localhost:3000';
@@ -336,6 +337,22 @@ test('privacy and delete-account pages (Google Play needs both)', async () => {
   assert.match(deletion, /Delete my account/);
   assert.match(deletion, /mailto:help@selah\.app&lt;script&gt;/); // shown safely
   assert.doesNotMatch(deletion, /<script>/);
+});
+
+test('YouTube rules: privacy policy and terms say Selah uses YouTube API Services, with the required links', async () => {
+  const policy = await (await privacy.GET()).text();
+  assert.match(policy, /YouTube API Services/);
+  assert.match(policy, /https:\/\/www\.youtube\.com\/t\/terms/);
+  assert.match(policy, /https:\/\/policies\.google\.com\/privacy/);
+  assert.match(policy, /refreshed at least every 30 days/);
+
+  const terms = await (await termsPage.GET()).text();
+  assert.match(terms, /agree to be\s+bound by the <a href="https:\/\/www\.youtube\.com\/t\/terms">YouTube Terms of Service/);
+  // Google Play's rules for things users share: rules to accept, what is not allowed, reporting, blocking
+  assert.match(terms, /You must accept these rules before you share/);
+  assert.match(terms, /hateful/);
+  assert.match(terms, /report shared lyrics or the person who shared them/);
+  assert.match(terms, /hide everything\s+from a person/);
 });
 
 test('front page says the server is running and whether the database is connected', async () => {

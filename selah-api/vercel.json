@@ -4,6 +4,7 @@
     { "source": "/", "destination": "/api/home" },
     { "source": "/api/auth/:path*", "destination": "/api/auth?path=:path*" },
     { "source": "/privacy", "destination": "/api/privacy" },
+    { "source": "/terms", "destination": "/api/terms" },
     { "source": "/delete-account", "destination": "/api/delete-account" }
   ]
 }
