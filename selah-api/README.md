@@ -48,8 +48,10 @@ All tables are created automatically on first use.
 | Variable | Needed for | Value |
 | --- | --- | --- |
 | `BETTER_AUTH_SECRET` | Accounts (recommended) | Any long random text, 32+ characters |
-| `EMAIL_FROM` | Forgot-password emails | `Selah <hello@yourdomain.com>`, or your confirmed Brevo sender address |
-| `RESEND_API_KEY` *or* `BREVO_API_KEY` | Forgot-password emails | From resend.com (needs a domain) or brevo.com (one confirmed sender is enough) |
+| `GMAIL_USER` | Forgot-password emails (simplest) | The Gmail address that sends the codes |
+| `GMAIL_APP_PASSWORD` | Forgot-password emails (simplest) | A Google **App password** for that Gmail (Google Account › Security › 2-Step Verification › App passwords) |
+| `EMAIL_FROM` | Emails via Resend or Brevo instead | `Selah <hello@yourdomain.com>`, or your confirmed Brevo sender address |
+| `RESEND_API_KEY` *or* `BREVO_API_KEY` | Emails via Resend or Brevo instead | From resend.com (needs a domain) or brevo.com (one confirmed sender is enough) |
 | `REVENUECAT_SECRET_KEY` | Premium payments | RevenueCat › Project settings › API keys › **Secret** key |
 | `REVENUECAT_ENTITLEMENT` | Premium payments | Only if your entitlement is not called `premium` |
 | `PREMIUM_MODE` | Testing only | `open` gives everyone Premium. Remove it before launch |

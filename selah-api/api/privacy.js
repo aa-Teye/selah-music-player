@@ -44,7 +44,7 @@ subscription is active. We never see your card details.</p>
   <li>Vercel: runs Selah's server</li>
   <li>Neon: stores accounts, backups and shared lyrics</li>
   <li>RevenueCat: checks Premium subscriptions</li>
-  <li>Resend or Brevo: sends password reset emails</li>
+  <li>Google (Gmail), Resend or Brevo: sends password reset emails</li>
 </ul>
 
 <h2>Deleting your data</h2>

@@ -1,15 +1,27 @@
-// Sends the 6-digit codes (forgot password). Works with either:
-//   Resend:  RESEND_API_KEY + EMAIL_FROM   (needs your own domain, e.g. "Selah <hello@yourdomain.com>")
-//   Brevo:   BREVO_API_KEY  + EMAIL_FROM   (can send from one confirmed address, no domain needed)
+// Sends the 6-digit codes (forgot password). Works with any one of:
+//   Gmail:   GMAIL_USER + GMAIL_APP_PASSWORD   (your Gmail address and a Google "App password"; free, ~500 a day)
+//   Resend:  RESEND_API_KEY + EMAIL_FROM       (needs your own domain, e.g. "Selah <hello@yourdomain.com>")
+//   Brevo:   BREVO_API_KEY  + EMAIL_FROM       (can send from one confirmed address, no domain needed)
+import nodemailer from 'nodemailer';
+
 let testSender = null;
+let makeTransport = (options) => nodemailer.createTransport(options);
+let gmail = null;
 
 /** Tests capture the emails instead of sending them */
 export function useEmailSenderForTests(fn) {
   testSender = fn;
 }
 
+/** Tests replace the Gmail connection with a fake one */
+export function useMailTransportForTests(factory) {
+  makeTransport = factory;
+  gmail = null;
+}
+
 export function emailProvider() {
   if (testSender) return 'test';
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) return 'gmail';
   if (!process.env.EMAIL_FROM) return null;
   if (process.env.RESEND_API_KEY) return 'resend';
   if (process.env.BREVO_API_KEY) return 'brevo';
@@ -39,11 +51,38 @@ function parseFrom(from) {
   return m ? { name: m[1] || 'Selah', email: m[2] } : { name: 'Selah', email: String(from).trim() };
 }
 
+function gmailConnection() {
+  if (!gmail) {
+    gmail = makeTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER.trim(),
+        // Google shows App passwords in groups of four ("abcd efgh ijkl mnop"): the spaces don't belong
+        pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')
+      }
+    });
+  }
+  return gmail;
+}
+
 export async function sendCodeEmail({ to, code, type }) {
   const { subject, text, html } = message(code, type);
   const provider = emailProvider();
   if (provider === 'test') return testSender({ to, code, type, subject, text });
-  if (!provider) throw new Error('Email is not set up yet: add RESEND_API_KEY or BREVO_API_KEY, and EMAIL_FROM');
+  if (!provider) throw new Error('Email is not set up yet: add GMAIL_USER and GMAIL_APP_PASSWORD (or Resend / Brevo)');
+
+  if (provider === 'gmail') {
+    // Gmail only sends from your own address, so "From" is always your Gmail (shown with the name Selah)
+    const from = { name: 'Selah', address: process.env.GMAIL_USER.trim() };
+    try {
+      await gmailConnection().sendMail({ from, to, subject, text, html });
+    } catch (err) {
+      gmail = null; // try a fresh connection next time
+      throw new Error(`The email could not be sent through Gmail (${err && err.code ? err.code : 'error'})`);
+    }
+    return;
+  }
+
   const from = process.env.EMAIL_FROM;
   let res;
   if (provider === 'resend') {
