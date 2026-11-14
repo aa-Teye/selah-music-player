@@ -90,12 +90,14 @@ export default function MiniPlayerBar({
 
         {/* Actions */}
         <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={styles.playBtn} 
+          <TouchableOpacity
+            style={styles.playBtn}
             onPress={(e) => {
-              e.stopPropagation();
+              if (e && e.stopPropagation) e.stopPropagation();
               onTogglePlay();
             }}
+            testID="mini-play-pause"
+            accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
           >
             <Ionicons 
               name={isPlaying ? "pause" : "play"} 
@@ -108,9 +110,11 @@ export default function MiniPlayerBar({
           <TouchableOpacity 
             style={styles.nextBtn}
             onPress={(e) => {
-              e.stopPropagation();
+              if (e && e.stopPropagation) e.stopPropagation();
               onNext();
             }}
+            testID="mini-next"
+            accessibilityLabel="Next"
           >
             <Ionicons name="play-skip-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>

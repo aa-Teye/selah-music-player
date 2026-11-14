@@ -1,0 +1,36 @@
+diff --git a/node_modules/react-native-youtube-iframe/lib/commonjs/YoutubeIframe.js b/node_modules/react-native-youtube-iframe/lib/commonjs/YoutubeIframe.js
+index 0be2dad..2a12eec 100644
+--- a/node_modules/react-native-youtube-iframe/lib/commonjs/YoutubeIframe.js
++++ b/node_modules/react-native-youtube-iframe/lib/commonjs/YoutubeIframe.js
+@@ -101,6 +101,13 @@ const YoutubeIframe = (props, ref) => {
+     },
+     seekTo: (seconds, allowSeekAhead) => {
+       webViewRef.current.injectJavaScript(_PlayerScripts.PLAYER_FUNCTIONS.seekToScript(seconds, allowSeekAhead));
++    },
++    // Selah: play/pause straight on the player (the message channel can miss on Android)
++    playVideo: () => {
++      webViewRef.current.injectJavaScript(_PlayerScripts.PLAYER_FUNCTIONS.playVideo);
++    },
++    pauseVideo: () => {
++      webViewRef.current.injectJavaScript(_PlayerScripts.PLAYER_FUNCTIONS.pauseVideo);
+     }
+   }), []);
+   (0, _react.useEffect)(() => {
+diff --git a/node_modules/react-native-youtube-iframe/src/YoutubeIframe.js b/node_modules/react-native-youtube-iframe/src/YoutubeIframe.js
+index 4bbf487..d528e86 100644
+--- a/node_modules/react-native-youtube-iframe/src/YoutubeIframe.js
++++ b/node_modules/react-native-youtube-iframe/src/YoutubeIframe.js
+@@ -121,6 +121,13 @@ const YoutubeIframe = (props, ref) => {
+           PLAYER_FUNCTIONS.seekToScript(seconds, allowSeekAhead),
+         );
+       },
++      // Selah: play/pause straight on the player (the message channel can miss on Android)
++      playVideo: () => {
++        webViewRef.current.injectJavaScript(PLAYER_FUNCTIONS.playVideo);
++      },
++      pauseVideo: () => {
++        webViewRef.current.injectJavaScript(PLAYER_FUNCTIONS.pauseVideo);
++      },
+     }),
+     [],
+   );

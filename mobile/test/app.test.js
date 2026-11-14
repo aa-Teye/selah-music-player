@@ -611,6 +611,39 @@ test('the YouTube pause button really pauses and resumes the video', async () =>
   expect(global.__youtubeProps.play).toBe(true);
 });
 
+test('the bottom player bar pauses and resumes a YouTube video (also told to the player directly)', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+  await act(async () => {
+    global.__youtubeProps.onReady();
+  });
+  await settle(2);
+  expect(global.__youtubeProps.play).toBe(true);
+
+  await tap(screen.getByTestId('tab-home'));
+  global.__youtubeRef.pauseVideo.mockClear();
+  global.__youtubeRef.playVideo.mockClear();
+  await tap(screen.getByTestId('mini-play-pause'));
+  expect(global.__youtubeProps.play).toBe(false);
+  expect(global.__youtubeRef.pauseVideo).toHaveBeenCalled(); // straight to the video, not only the setting
+
+  await tap(screen.getByTestId('mini-play-pause'));
+  expect(global.__youtubeProps.play).toBe(true);
+  expect(global.__youtubeRef.playVideo).toHaveBeenCalled();
+});
+
+test('YouTube has no "Play as MP3" mode that hides the video (YouTube and Google Play rules)', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  expect(screen.queryByText('Play as MP3')).toBeNull();
+  expect(screen.queryByText(/STREAMING AS MP3/)).toBeNull();
+});
+
 androidOnly('YouTube pauses and never takes over when you play one of your own songs', async () => {
   media.__state.audio = phoneSongs(6);
   await render(<App />);

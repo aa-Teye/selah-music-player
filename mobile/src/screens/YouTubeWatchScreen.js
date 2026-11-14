@@ -113,7 +113,6 @@ function YouTubeWatchScreen({
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [playMode, setPlayMode] = useState('video'); // 'video' | 'mp3'
   const [isCustomExpanded, setIsCustomExpanded] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
@@ -139,6 +138,21 @@ function YouTubeWatchScreen({
   useEffect(() => {
     setIsYtPlaying(ytIsCurrent ? isPlaying : false);
   }, [isPlaying, ytIsCurrent, currentTrack?.id]);
+
+  // Tell the video player straight away too: on some Android phones the player's
+  // "play" setting alone never reaches the video, so pause from the bottom bar did nothing
+  useEffect(() => {
+    if (!isPlayerReady) return;
+    const player = playerRef.current;
+    if (!player) return;
+    try {
+      if (isYtPlaying) {
+        if (typeof player.playVideo === 'function') player.playVideo();
+      } else if (typeof player.pauseVideo === 'function') {
+        player.pauseVideo();
+      }
+    } catch {}
+  }, [isYtPlaying, isPlayerReady]);
 
   // Tell the app where the video really is (keeps the progress bar and lyrics in time)
   useEffect(() => {
@@ -424,41 +438,6 @@ function YouTubeWatchScreen({
     >
       {/* ── 1. TOP HERO PLAYER AREA ─────────────────────────────────── */}
       <View style={styles.heroPlayerSection}>
-        {/* Mode Switcher: Video vs MP3 Mode */}
-        <View style={styles.modeSwitchRow}>
-          <View style={styles.modeTabs}>
-            <TouchableOpacity 
-              style={[styles.modeTab, playMode === 'video' && styles.modeTabActive]}
-              onPress={() => setPlayMode('video')}
-              activeOpacity={0.8}
-            >
-              <Ionicons 
-                name="videocam" 
-                size={14} 
-                color={playMode === 'video' ? '#FFFFFF' : c.textMuted} 
-              />
-              <Text style={[styles.modeTabText, playMode === 'video' && styles.modeTabTextActive]}>
-                Video Mode
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.modeTab, playMode === 'mp3' && styles.modeTabActive]}
-              onPress={() => setPlayMode('mp3')}
-              activeOpacity={0.8}
-            >
-              <Ionicons 
-                name="musical-notes" 
-                size={14} 
-                color={playMode === 'mp3' ? '#FFFFFF' : c.textMuted} 
-              />
-              <Text style={[styles.modeTabText, playMode === 'mp3' && styles.modeTabTextActive]}>
-                Play as MP3
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* ── Single Persistent YouTube Player Container ── */}
         <View style={styles.playerContainer}>
           {/* Main YouTube Iframe Player (always kept mounted with full 16:9 dimensions so audio stream is never paused by OS) */}
@@ -489,27 +468,6 @@ function YouTubeWatchScreen({
             />
           </View>
 
-          {/* MP3 Audio Stream Visualizer (displayed in Play as MP3 mode without interrupting playback) */}
-          {playMode === 'mp3' && (
-            <View style={styles.mp3PlayerOverlay}>
-              <View style={styles.mp3DiscWrap}>
-                <Image 
-                  source={{ uri: selectedYtVideo?.coverUrl || `https://img.youtube.com/vi/${currentYtId}/hqdefault.jpg` }} 
-                  style={styles.mp3DiscImage}
-                />
-                <View style={styles.mp3CenterSpindle} />
-              </View>
-
-              <View style={styles.mp3Info}>
-                <View style={styles.mp3Badge}>
-                  <Ionicons name="radio" size={13} color="#34D399" />
-                  <Text style={styles.mp3BadgeText}>STREAMING AS MP3 AUDIO</Text>
-                </View>
-                <Text style={styles.mp3Title} numberOfLines={1}>{activeVideoTitle}</Text>
-                <Text style={styles.mp3Artist} numberOfLines={1}>{activeVideoArtist}</Text>
-              </View>
-            </View>
-          )}
         </View>
 
         {/* Now Playing Info Bar */}

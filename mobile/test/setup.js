@@ -22,6 +22,8 @@ jest.mock('react-native-youtube-iframe', () => {
       if (!global.__youtubeRef) {
         global.__youtubeRef = {
           seekTo: jest.fn(),
+          playVideo: jest.fn(), // added to the library by patches/react-native-youtube-iframe+2.4.1.patch
+          pauseVideo: jest.fn(),
           getCurrentTime: jest.fn(async () => global.__youtubeTime || 0),
           getDuration: jest.fn(async () => 0)
         };
