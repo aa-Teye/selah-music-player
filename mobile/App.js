@@ -21,7 +21,6 @@ import AudioTrimmerModal from './src/components/AudioTrimmerModal';
 import CarModeModal from './src/components/CarModeModal';
 import ListeningStatsModal from './src/components/ListeningStatsModal';
 import PrayerBookmarksModal from './src/components/PrayerBookmarksModal';
-import AmbientSoundscapesModal from './src/components/AmbientSoundscapesModal';
 import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 import DeepScanModal from './src/components/DeepScanModal';
@@ -36,7 +35,6 @@ import {
 } from './src/services/dailyService';
 import { StorageService } from './src/services/storageService';
 import { ScannerService, unsupportedFormat } from './src/services/scannerService';
-import { SOUNDSCAPE_ASSETS } from './src/data/soundscapes';
 import { isCloudReady, autoBackupIfDue } from './src/services/cloudService';
 import { onLoginChange } from './src/services/apiClient';
 import { loadAccount } from './src/services/accountService';
@@ -118,9 +116,6 @@ function SelahApp() {
   const [listeningStats, setListeningStats] = useState({ totalSeconds: 0, tracksPlayedCount: 0 });
   const [bookmarks, setBookmarks] = useState([]);
   const [isBookmarksModalVisible, setIsBookmarksModalVisible] = useState(false);
-  const [isAmbientModalVisible, setIsAmbientModalVisible] = useState(false);
-  const [activeSoundscape, setActiveSoundscape] = useState(null);
-  const [ambientVolume, setAmbientVolume] = useState(0.5);
   const [crossfadeSeconds, setCrossfadeSeconds] = useState(0);
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
   const [isEqVisible, setIsEqVisible] = useState(false);
@@ -197,8 +192,6 @@ function SelahApp() {
     StorageService.savePlayCounts(next);
   }, []);
   const isPlayingRef = useRef(false);
-  const ambientPlayerRef = useRef(null);
-  const ambientVolumeRef = useRef(0.5);
   const loadWatchdogRef = useRef(null);
   const localTracksRef = useRef([]);
   const deepScanningRef = useRef(false);
@@ -234,43 +227,14 @@ function SelahApp() {
     durationRef.current = duration;
   }, [duration]);
 
-  // Ambient soundscape: real looping background audio layered under the music
+  // Your songs keep playing with the screen off, in silent mode and in the background
   useEffect(() => {
-    ambientVolumeRef.current = ambientVolume;
-    if (ambientPlayerRef.current) {
-      try {
-        ambientPlayerRef.current.volume = ambientVolume;
-      } catch {}
-    }
-  }, [ambientVolume]);
-
-  useEffect(() => {
-    const source = activeSoundscape ? SOUNDSCAPE_ASSETS[activeSoundscape] : null;
     setAudioModeAsync({
       playsInSilentMode: true,
       shouldPlayInBackground: true,
-      // let the soundscape play together with the music instead of pausing it
-      interruptionMode: source ? 'mixWithOthers' : 'doNotMix'
+      interruptionMode: 'doNotMix'
     }).catch(() => {});
-    if (!source) return undefined;
-    let player = null;
-    try {
-      player = createAudioPlayer(source);
-      player.loop = true;
-      player.volume = ambientVolumeRef.current;
-      player.play();
-      ambientPlayerRef.current = player;
-    } catch (err) {
-      console.log('Ambient soundscape notice:', err);
-    }
-    return () => {
-      try {
-        player?.pause();
-        player?.remove();
-      } catch {}
-      if (ambientPlayerRef.current === player) ambientPlayerRef.current = null;
-    };
-  }, [activeSoundscape]);
+  }, []);
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -456,7 +420,6 @@ function SelahApp() {
         }
         if (savedSettings) {
           if (typeof savedSettings.crossfadeSeconds === 'number') setCrossfadeSeconds(savedSettings.crossfadeSeconds);
-          if (typeof savedSettings.ambientVolume === 'number') setAmbientVolume(savedSettings.ambientVolume);
         }
         if (savedLocal && savedLocal.length > 0) {
           setLocalTracks(savedLocal);
@@ -861,7 +824,6 @@ function SelahApp() {
         sleepEndRef.current = null;
         setSleepTimerRemaining(null);
         setIsPlaying(false);
-        setActiveSoundscape(null);
         if (soundRef.current) {
           try {
             soundRef.current.pause();
@@ -1247,20 +1209,10 @@ function SelahApp() {
     }, 300);
   };
 
-  // Soundscape & Crossfade settings
+  // Crossfade setting
   const handleSetCrossfade = (seconds) => {
     setCrossfadeSeconds(seconds);
-    StorageService.saveSettings({ crossfadeSeconds: seconds, ambientSoundType: activeSoundscape, ambientVolume });
-  };
-
-  const handleSelectSoundscape = (soundType) => {
-    setActiveSoundscape(soundType);
-    StorageService.saveSettings({ crossfadeSeconds, ambientSoundType: soundType, ambientVolume });
-  };
-
-  const handleSetAmbientVolume = (vol) => {
-    setAmbientVolume(vol);
-    StorageService.saveSettings({ crossfadeSeconds, ambientSoundType: activeSoundscape, ambientVolume: vol });
+    StorageService.saveSettings({ crossfadeSeconds: seconds });
   };
 
   // In-app tag editor save
@@ -1425,8 +1377,6 @@ function SelahApp() {
             onRemoveFromQueue={(trackId) => setQueueOverride((prev) => (prev ?? tracks).filter((t) => t.id !== trackId))}
             onClearQueue={() => setQueueOverride(currentTrack ? [currentTrack] : [])}
             onOpenPrayerBookmarks={() => setIsBookmarksModalVisible(true)}
-            onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
-            activeSoundscape={activeSoundscape}
             bookmarksCount={bookmarks.filter((b) => b.trackId === currentTrack?.id).length}
           />
         )}
@@ -1505,8 +1455,6 @@ function SelahApp() {
             onSetSpeed={handleSetSpeed}
             crossfadeSeconds={crossfadeSeconds}
             onSetCrossfade={handleSetCrossfade}
-            activeSoundscape={activeSoundscape}
-            onOpenAmbientSoundscapes={() => setIsAmbientModalVisible(true)}
           />
         )}
       </View>
@@ -1594,17 +1542,6 @@ function SelahApp() {
         onJumpToBookmark={handleJumpToBookmark}
       />
 
-      {/* Bedtime Ambient Soundscapes Modal */}
-      <AmbientSoundscapesModal
-        visible={isAmbientModalVisible}
-        onClose={() => setIsAmbientModalVisible(false)}
-        activeSoundscape={activeSoundscape}
-        onSelectSoundscape={handleSelectSoundscape}
-        ambientVolume={ambientVolume}
-        onSetVolume={handleSetAmbientVolume}
-        sleepTimerRemaining={sleepTimerRemaining}
-      />
-
       {/* In-App ID3 Tag Editor Modal */}
       <EditTagsModal
         visible={Boolean(tagEditTrack)}
@@ -1651,11 +1588,6 @@ function SelahApp() {
             onSetSpeed={handleSetSpeed}
             crossfadeSeconds={crossfadeSeconds}
             onSetCrossfade={handleSetCrossfade}
-            activeSoundscape={activeSoundscape}
-            onOpenAmbientSoundscapes={() => {
-              setIsEqVisible(false);
-              setIsAmbientModalVisible(true);
-            }}
           />
         </SafeAreaView>
       </Modal>

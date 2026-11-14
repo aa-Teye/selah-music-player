@@ -451,13 +451,13 @@ export const StorageService = {
     }
   },
 
-  // General App Settings (Crossfade, Ambient Sound, etc.)
+  // General App Settings (Crossfade)
   async getSettings() {
     try {
       const data = await AsyncStorage.getItem(KEYS.SETTINGS);
-      return data ? JSON.parse(data) : { crossfadeSeconds: 0, ambientSoundType: null, ambientVolume: 0.5 };
+      return data ? JSON.parse(data) : { crossfadeSeconds: 0 };
     } catch (e) {
-      return { crossfadeSeconds: 0, ambientSoundType: null, ambientVolume: 0.5 };
+      return { crossfadeSeconds: 0 };
     }
   },
 

@@ -98,8 +98,6 @@ export default function PlayerPanel({
   onRemoveFromQueue,
   onClearQueue,
   onOpenPrayerBookmarks,
-  onOpenAmbientSoundscapes,
-  activeSoundscape,
   bookmarksCount = 0
 }) {
   const c = useColors();
@@ -334,14 +332,6 @@ export default function PlayerPanel({
                 icon={<Ionicons name="bookmark-outline" size={15} color={c.ink} />}
                 label="Playlist"
                 onPress={() => onOpenAddToPlaylist(currentTrack)}
-              />
-            )}
-            {onOpenAmbientSoundscapes && (
-              <Pill
-                icon={<MaterialCommunityIcons name="weather-night" size={15} color={activeSoundscape ? '#FFFFFF' : c.ink} />}
-                label={activeSoundscape ? activeSoundscape : 'Ambience'}
-                active={Boolean(activeSoundscape)}
-                onPress={onOpenAmbientSoundscapes}
               />
             )}
             {onOpenPrayerBookmarks && (

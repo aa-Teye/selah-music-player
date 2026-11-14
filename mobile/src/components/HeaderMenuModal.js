@@ -67,7 +67,7 @@ export default function HeaderMenuModal({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuTitle}>Sound &amp; Sleep Timer</Text>
-                  <Text style={styles.menuSub}>Sleep timer, speed, crossfade, calming sounds</Text>
+                  <Text style={styles.menuSub}>Sleep timer, playback speed, crossfade</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={c.textSubtle} />
               </TouchableOpacity>

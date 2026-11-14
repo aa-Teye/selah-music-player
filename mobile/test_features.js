@@ -121,10 +121,10 @@ async function runTests() {
   bms = await StorageService.getBookmarks();
   assert(bms.length === 0, 'StorageService: Delete Bookmark');
 
-  // Settings (Crossfade, Ambient Sound)
-  await StorageService.saveSettings({ crossfadeSeconds: 6, ambientSoundType: 'rain', ambientVolume: 0.75 });
+  // Settings (Crossfade)
+  await StorageService.saveSettings({ crossfadeSeconds: 6 });
   const settings = await StorageService.getSettings();
-  assert(settings.crossfadeSeconds === 6 && settings.ambientSoundType === 'rain', 'StorageService: Crossfade & Ambient Settings save & retrieve');
+  assert(settings.crossfadeSeconds === 6, 'StorageService: Crossfade setting save & retrieve');
 
   // Recently Played
   await StorageService.addRecentlyPlayed({ id: 't-recent', title: 'Goodness of God', artist: 'CeCe Winans' });
@@ -217,7 +217,6 @@ async function runTests() {
     './src/components/SyncedLyricsView.js',
     './src/components/PlaybackQueueView.js',
     './src/components/PrayerBookmarksModal.js',
-    './src/components/AmbientSoundscapesModal.js',
     './src/components/EditTagsModal.js',
     './src/screens/HomeScreen.js',
     './src/screens/PlayerScreen.js',

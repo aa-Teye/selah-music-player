@@ -34,8 +34,6 @@ export default function EqualizerScreen({
   onSetSpeed,
   crossfadeSeconds = 0,
   onSetCrossfade,
-  activeSoundscape,
-  onOpenAmbientSoundscapes
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -74,7 +72,7 @@ export default function EqualizerScreen({
         )}
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Sound &amp; Settings</Text>
-          <Text style={styles.subtitle}>Equalizer, Bedtime Timer, Crossfade, and Soundscapes</Text>
+          <Text style={styles.subtitle}>Sleep timer, speed and crossfade</Text>
         </View>
       </View>
 
@@ -109,35 +107,6 @@ export default function EqualizerScreen({
             );
           })}
         </View>
-      </View>
-
-      {/* Bedtime Ambient Soundscapes Card */}
-      <View style={styles.settingCard}>
-        <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="weather-night" size={20} color={c.ink} />
-          <Text style={styles.cardTitle}>Bedtime Ambient Soundscapes</Text>
-          {activeSoundscape && (
-            <View style={styles.timerBadge}>
-              <Text style={styles.timerBadgeText}>Active</Text>
-            </View>
-          )}
-        </View>
-        <Text style={styles.cardSub}>
-          {activeSoundscape
-            ? `Playing soothing ${activeSoundscape.toUpperCase()} soundscape in the background`
-            : "Layer soft rain, cathedral pad, or river sounds behind worship"}
-        </Text>
-
-        <TouchableOpacity 
-          style={styles.actionCardBtn} 
-          onPress={onOpenAmbientSoundscapes}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="music-note-plus" size={16} color="#FFFFFF" />
-          <Text style={styles.actionCardBtnText}>
-            {activeSoundscape ? "Change / Tune Soundscape" : "Choose Ambient Soundscape"}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Audio Crossfade Card */}

@@ -37,7 +37,7 @@ SMART AND PERSONAL
 • Smart playlists: most played, recently added, never played, sermons and long worship
 • Your own playlists and loved songs
 • Repeat one or all, shuffle, playback speed, crossfade
-• Sleep timer with a gentle fade-out, and calming background sounds for prayer and rest
+• Sleep timer with a gentle fade-out
 
 A VERSE FOR EVERY DAY
 • Verse of the day with a short thought, and a song for today from your own music
