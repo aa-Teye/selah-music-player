@@ -1161,6 +1161,7 @@ test('Libraries: genres and gospel artists; a genre shows its latest songs on Yo
   expect(screen.getByText('Genres')).toBeTruthy();
   expect(screen.getByText('Gospel artists')).toBeTruthy();
   expect(screen.getByText('Ghana Gospel')).toBeTruthy();
+  expect(screen.getByTestId('genre-photo-ghana')).toBeTruthy(); // a real photo, not a coloured box
   expect(screen.queryByText(/YouVersion|Open Hymnal|Bible/)).toBeNull();
 
   global.fetch.mockClear();

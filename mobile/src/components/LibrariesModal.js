@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
@@ -43,8 +43,14 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
                 activeOpacity={0.85}
                 testID={`genre-${g.id}`}
               >
-                <View style={styles.genreGlow} />
-                <Ionicons name={g.icon} size={22} color="#FFFFFF" />
+                {g.photo ? (
+                  <Image source={g.photo} style={styles.genrePhoto} resizeMode="cover" testID={`genre-photo-${g.id}`} />
+                ) : (
+                  <>
+                    <View style={styles.genreGlow} />
+                    <Ionicons name={g.icon} size={22} color="#FFFFFF" style={styles.genreIcon} />
+                  </>
+                )}
                 <Text style={styles.genreName} numberOfLines={2}>{g.name}</Text>
               </TouchableOpacity>
             ))}
@@ -111,12 +117,15 @@ const makeStyles = (c) =>
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
     genre: {
       width: '48.5%',
-      height: 86,
+      height: 96,
       borderRadius: 16,
       padding: 12,
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
       overflow: 'hidden'
     },
+    // the photos already fade to dark at the bottom, so the white name is easy to read
+    genrePhoto: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
+    genreIcon: { position: 'absolute', top: 12, left: 12 },
     genreGlow: {
       position: 'absolute',
       width: 110,
@@ -127,7 +136,14 @@ const makeStyles = (c) =>
       top: -50,
       right: -40
     },
-    genreName: { color: '#FFFFFF', fontWeight: '900', fontSize: 15 },
+    genreName: {
+      color: '#FFFFFF',
+      fontWeight: '900',
+      fontSize: 15,
+      textShadowColor: 'rgba(0,0,0,0.6)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 6
+    },
     followedCard: { width: 76, alignItems: 'center', gap: 6 },
     followedName: { color: c.text, fontSize: 12, fontWeight: '700', textAlign: 'center' },
     artistRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: c.border },
