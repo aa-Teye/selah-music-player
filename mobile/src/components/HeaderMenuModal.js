@@ -9,9 +9,12 @@ import {
   TouchableWithoutFeedback
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
+// The version people have installed (app.json "version"), so you can always tell which one a phone runs
+export const APP_VERSION = (Constants.expoConfig && Constants.expoConfig.version) || '1.0.0';
 
 export default function HeaderMenuModal({
   visible,
@@ -129,7 +132,7 @@ export default function HeaderMenuModal({
               {/* Version & Badge Footer */}
               <View style={styles.drawerFooter}>
                 <Ionicons name="shield-checkmark" size={14} color="#10B981" />
-                <Text style={styles.footerText}>Selah v1.0 • Your music stays on your phone</Text>
+                <Text style={styles.footerText} testID="app-version">Selah {APP_VERSION} • Your music stays on your phone</Text>
               </View>
             </View>
           </TouchableWithoutFeedback>

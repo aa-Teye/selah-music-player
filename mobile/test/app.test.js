@@ -728,6 +728,15 @@ const OCEANS = {
   syncedLyrics: '[00:10.00] You call me out upon the waters\n[00:16.00] The great unknown where feet may fail'
 };
 
+test('the menu shows which version of Selah this is (the one in app.json)', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('open-menu'));
+  const text = [].concat(screen.getByTestId('app-version').props.children).join('');
+  expect(text).toContain(`Selah ${require('../app.json').expo.version}`);
+});
+
 test('bottom tabs are in the order: Home, Player, YouTube, Library, Playlists', async () => {
   await render(<App />);
   await settle();

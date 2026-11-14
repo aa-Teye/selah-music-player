@@ -253,7 +253,7 @@ export default function AccountModal({
   const premiumLine = () => {
     const p = account.premium || {};
     if (p.source === 'gift') return p.until ? `Gifted until ${day(p.until)}` : 'Gifted to you';
-    if (p.source === 'open') return 'Free while Selah is being tested';
+    if (p.source === 'open') return 'Free for everyone for now';
     return p.until ? `Renews or ends on ${day(p.until)}` : 'Active';
   };
 

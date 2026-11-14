@@ -2,6 +2,7 @@
 
 Everything Google Play Console asks for, ready to copy. Graphics are in this folder:
 `icon-512.png` (App icon) and `feature-graphic.png` (Feature graphic).
+How to build and upload: see `../RELEASING.md`.
 
 ---
 
@@ -23,7 +24,7 @@ Selah is a beautiful music player for the songs on your phone, made for worship.
 
 PLAYS ALL YOUR MUSIC
 • Finds every song on your phone: MP3, M4A, FLAC, WAV, OGG, Opus and more, in every folder and on your SD card
-• Shows each song's real title, artist and album art, read from inside the file
+• Shows each song's real title, artist and album art, read from inside the file. Songs without art get their own colourful cover
 • A detailed scan finds songs other players miss
 • Works offline. Your music never leaves your phone
 
@@ -40,36 +41,40 @@ SMART AND PERSONAL
 • Sleep timer with a gentle fade-out
 
 A VERSE FOR EVERY DAY
-• Verse of the day with a short thought, and a song for today from your own music
+• A Bible verse for every day of the year (King James Version), with a short thought
+• A song for today from your own music
 • An optional daily reminder at the time you choose
 
+DISCOVER
+• Browse genres: Worship, Praise, Ghana Gospel, Nigerian Gospel, Highlife Gospel, Hymns, Choir and more
+• Follow your favourite gospel artists and see their latest songs
+
 WORSHIP VIDEOS
-• Search and watch worship videos with the built-in YouTube player
+• Search and watch worship videos with the official YouTube player
+• Keep watching in a small window while you use other apps
+
+YOUR FREE SELAH ACCOUNT (optional)
+• Back up your playlists, loved songs, followed artists and the lyrics you typed
+• Get them back on a new phone just by logging in. Songs that are not on the new phone are listed, so you can find them again
+• Share lyrics with other Selah users
 
 MADE WITH CARE
 • Light and dark mode
 • No ads. No tracking.
 ```
 
-Add this part to the description **only once Selah Premium is live** (Vercel + payments set up):
-```
-SELAH PREMIUM (optional subscription)
-• Back up your playlists, loved songs and the lyrics you typed to your Selah account
-• Get them back on a new phone just by logging in
-• Automatic daily backup
-```
-
 **Category:** Music & Audio
 **Tags:** Music player, Offline music, Lyrics
-**Contact email:** your support email (required, shown publicly)
-**Privacy policy:** `https://YOUR-PROJECT.vercel.app/privacy` (needs the Vercel backend live)
+**Contact email:** awonders001@gmail.com (shown publicly; change it if you prefer another)
+**Privacy policy:** `https://selah-music-player-selah-api.vercel.app/privacy`
 
 **Screenshots** (2 to 8, phone): take them on your Android phone once the app is installed.
-Suggested: Home (Today card) · Now Playing · synced Lyrics · My Songs with covers · Playlists (smart lists) · YouTube.
+Suggested: Home (Today card) · Now Playing · synced Lyrics · My Songs with covers · Libraries (genres and artists) ·
+YouTube · Account & Backup.
 
 **Release notes for 1.0.0**
 ```
-Welcome to Selah: your worship music player with synced lyrics, album art, smart playlists, daily verses and a sleep timer.
+Welcome to Selah: play all your music with synced lyrics and album art, a Bible verse for every day, worship videos, gospel artists to follow, and a free account that backs up your playlists.
 ```
 
 ---
@@ -78,14 +83,14 @@ Welcome to Selah: your worship music player with synced lyrics, album art, smart
 
 **Ads:** No, the app has no ads.
 
-**App access:** All functionality is available without special access.
-(Once accounts and Premium are live: give Google a test account with Premium gifted. See the selah-api README, "Gift Premium".)
+**App access:** The account is optional and free, so choose *All functionality is available without special access*.
+If Google asks for a login, create a test account in the app and give them its email and password.
 
 **Target audience:** 13 and over (13–15, 16–17, 18+). Not designed for children.
 
 **Content rating questionnaire:** category "All other app types". Answer *No* to violence, sexual content, language,
-drugs and gambling. Answer *Yes* to "unrestricted internet access" (the YouTube search shows any public video).
-Once accounts are live: *Yes* to "users can share content" (shared lyrics) and *Yes* to digital purchases (Premium).
+drugs and gambling. Answer *Yes* to "unrestricted internet access" (the YouTube search shows any public video) and
+*Yes* to "users can share content" (shared lyrics). Digital purchases: *No* (Premium is not on sale in version 1).
 
 **Foreground service** (Android 14+ declaration): type **Media playback**.
 Description: "Selah keeps playing your music when the screen is off or you switch apps, with play/pause and skip
@@ -93,29 +98,29 @@ controls in the notification." Google may ask for a short screen recording that 
 
 **Data safety** (this is my reading of Google's rules; check each answer as you fill it in):
 
-*This first version (accounts not switched on):*
-- Data collected: **App activity › In-app search history.** YouTube searches are sent to YouTube to show results;
-  Selah does not keep them. Processed ephemerally: Yes. Optional: Yes. Purpose: App functionality.
-- Data shared with third parties: None.
+- **Personal info › Name, Email address:** collected; optional (only if you create an account);
+  for Account management and App functionality. Not shared.
+- **App activity › Other user-generated content:** backups (playlists, loved songs, followed artists, typed lyrics)
+  and shared lyrics. Collected; optional; App functionality.
+- **App activity › App interactions:** play counts inside backups. Collected; optional; App functionality.
+- **App activity › In-app search history:** YouTube searches go to YouTube to show results; Selah does not keep them.
+  Processed ephemerally; App functionality.
+- Song titles and artists are sent to look up lyrics (lrclib.net and the Selah server). Not stored, not linked to you.
+- Data shared with third parties: none.
 - Encrypted in transit: Yes.
-
-*Once accounts and Premium are live, add:*
-- **Personal info › Name, Email address:** collected, required for an account, for Account management and App functionality.
-- **App activity › Other user-generated content** (backups of playlists and typed lyrics, shared lyrics) and
-  **App interactions** (play counts in backups): collected, optional, App functionality.
-- **Financial info › Purchase history** (Premium subscription, via Google Play and RevenueCat): App functionality.
 - People can ask for their data to be deleted: **Yes**, in the app (Account & Backup › Delete my account) and at
-  `https://YOUR-PROJECT.vercel.app/delete-account`.
+  `https://selah-music-player-selah-api.vercel.app/delete-account` (Google asks for this link).
 
 ---
 
 ## Before going to Production
 
-- [ ] Vercel backend live (privacy policy URL; and the delete-account page once accounts are in the app)
+- [x] Selah server live (privacy policy and delete-account pages work)
 - [ ] Internal testing first: install from the Play Store test link and try it on a few phones
 - [ ] Screenshots taken on Android
-- [ ] For Premium: subscription created in Play Console, RevenueCat connected, keys added
-- [ ] Remove `PREMIUM_MODE=open` from Vercel before Premium goes on sale
+- [ ] App content forms filled in (above)
+
+Version 2 (push notifications, Premium payments) and the iPhone: see `../RELEASING.md`.
 
 ### Known risk to keep an eye on
 Selah's YouTube search reads YouTube's search page directly. YouTube's rules prefer its official
