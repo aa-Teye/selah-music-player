@@ -522,7 +522,8 @@ function YouTubeWatchScreen({
               <TouchableOpacity 
                 style={styles.actionIconBtn}
                 onPress={() => onOpenAddToPlaylist(currentTrack || DEFAULT_FEATURED[0])}
-                title="Add to Playlist"
+                accessibilityLabel="Add to a playlist"
+                testID="yt-add-to-playlist"
               >
                 <Ionicons name="bookmark-outline" size={18} color={c.ink} />
               </TouchableOpacity>

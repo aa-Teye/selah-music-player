@@ -728,6 +728,32 @@ const OCEANS = {
   syncedLyrics: '[00:10.00] You call me out upon the waters\n[00:16.00] The great unknown where feet may fail'
 };
 
+test('a YouTube video saved to a playlist plays from it inside Selah, also after closing the app', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+  const videoId = global.__youtubeProps.videoId;
+  await tap(screen.getByTestId('yt-add-to-playlist'));
+  await tap(screen.getByText('Create New Playlist'));
+  await fireEvent.changeText(screen.getByPlaceholderText('New playlist name...'), 'Sunday Worship');
+  await tap(screen.getByText('Save'));
+  await settle(4);
+
+  // close Selah and open it again: the video is still in the playlist, and plays from it
+  await cleanup();
+  await render(<App />);
+  await settle();
+  await tap(screen.getByTestId('tab-playlists'));
+  await tap(screen.getByText('Sunday Worship'));
+  expect(screen.getAllByText('Powerful Worship Songs for Prayer').length).toBeGreaterThan(0);
+  await tap(screen.getByTestId('playlist-play-all'));
+  await settle(4);
+  expect(global.__youtubeProps.videoId).toBe(videoId); // the official YouTube player, inside Selah
+  expect(global.__youtubeProps.play).toBe(true);
+});
+
 test('the menu shows which version of Selah this is (the one in app.json)', async () => {
   await render(<App />);
   await settle();
