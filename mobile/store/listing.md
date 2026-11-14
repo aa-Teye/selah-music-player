@@ -103,8 +103,11 @@ controls in the notification." Google may ask for a short screen recording that 
 - **App activity › Other user-generated content:** backups (playlists, loved songs, followed artists, typed lyrics)
   and shared lyrics. Collected; optional; App functionality.
 - **App activity › App interactions:** play counts inside backups. Collected; optional; App functionality.
-- **App activity › In-app search history:** YouTube searches go to YouTube to show results; Selah does not keep them.
-  Processed ephemerally; App functionality.
+- **App activity › In-app search history:** YouTube searches go through the Selah server to YouTube's official
+  search. The server remembers recent searches for up to a day (not linked to anyone) and then deletes them.
+  Not linked to you; App functionality.
+- **App activity › Other actions:** reports of shared lyrics or of the person who shared them, and accepting the
+  sharing rules (stored with your account). Collected; optional; Fraud prevention, security and compliance.
 - Song titles and artists are sent to look up lyrics (lrclib.net and the Selah server). Not stored, not linked to you.
 - Data shared with third parties: none.
 - Encrypted in transit: Yes.
