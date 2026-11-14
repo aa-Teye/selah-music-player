@@ -786,6 +786,30 @@ test('a YouTube search result can be saved to a playlist without playing it', as
   expect(screen.getAllByText('Chris Tomlin // Full Live Worship Set').length).toBeGreaterThan(0);
 });
 
+test('YouTube and Google Play rules: links to the terms and privacy policy are in the app', async () => {
+  const { Linking } = require('react-native');
+  const { setApiUrlForTests } = require('../src/services/apiClient');
+  setApiUrlForTests('https://selah.example');
+  const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  expect(screen.getByTestId('youtube-terms')).toBeTruthy();
+  await tap(screen.getByText('YouTube Terms of Service'));
+  expect(open).toHaveBeenLastCalledWith('https://www.youtube.com/t/terms');
+  await tap(screen.getByText('Google Privacy Policy'));
+  expect(open).toHaveBeenLastCalledWith('https://policies.google.com/privacy');
+
+  await tap(screen.getByTestId('open-menu'));
+  await tap(screen.getByTestId('menu-terms'));
+  expect(open).toHaveBeenLastCalledWith('https://selah.example/terms');
+  await tap(screen.getByTestId('menu-privacy'));
+  expect(open).toHaveBeenLastCalledWith('https://selah.example/privacy');
+  open.mockRestore();
+  setApiUrlForTests(null);
+});
+
 test('the menu shows which version of Selah this is (the one in app.json)', async () => {
   await render(<App />);
   await settle();

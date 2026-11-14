@@ -351,6 +351,9 @@ export default function AccountModal({
       <TouchableOpacity onPress={() => Linking.openURL(`${apiUrl()}/privacy`).catch(() => {})}>
         <Text style={styles.footLink}>Privacy policy</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => Linking.openURL(`${apiUrl()}/terms`).catch(() => {})} testID="account-terms">
+        <Text style={styles.footLink}>Terms of use</Text>
+      </TouchableOpacity>
     </>
   );
 

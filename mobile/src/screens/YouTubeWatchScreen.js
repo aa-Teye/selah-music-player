@@ -832,6 +832,19 @@ function YouTubeWatchScreen({
           </View>
         )}
       </View>
+
+      {/* YouTube API Services: users agree to YouTube's terms; Google's privacy policy applies */}
+      <Text style={styles.youtubeTerms} testID="youtube-terms">
+        Videos are provided by YouTube. By using them you agree to the{' '}
+        <Text style={styles.youtubeTermsLink} onPress={() => Linking.openURL('https://www.youtube.com/t/terms').catch(() => {})}>
+          YouTube Terms of Service
+        </Text>
+        {' '}and{' '}
+        <Text style={styles.youtubeTermsLink} onPress={() => Linking.openURL('https://policies.google.com/privacy').catch(() => {})}>
+          Google Privacy Policy
+        </Text>
+        .
+      </Text>
       </View>
     </ScrollView>
   );
@@ -1348,6 +1361,15 @@ const makeStyles = (c) => StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4
   },
+  youtubeTerms: {
+    color: c.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    marginTop: 18
+  },
+  youtubeTermsLink: { color: c.ink, fontWeight: '700', textDecorationLine: 'underline' },
 
   /* Custom Link Section */
   customSection: {

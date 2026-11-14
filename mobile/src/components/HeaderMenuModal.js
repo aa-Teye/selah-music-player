@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  Linking
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import { apiUrl } from '../services/apiClient';
 
 const { width, height } = Dimensions.get('window');
 // The version people have installed (app.json "version"), so you can always tell which one a phone runs
@@ -134,6 +136,17 @@ export default function HeaderMenuModal({
                 <Ionicons name="shield-checkmark" size={14} color="#10B981" />
                 <Text style={styles.footerText} testID="app-version">Selah {APP_VERSION} • Your music stays on your phone</Text>
               </View>
+              {apiUrl() ? (
+                <View style={styles.legalRow}>
+                  <TouchableOpacity onPress={() => Linking.openURL(`${apiUrl()}/privacy`).catch(() => {})} testID="menu-privacy">
+                    <Text style={styles.legalLink}>Privacy policy</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.legalDot}>·</Text>
+                  <TouchableOpacity onPress={() => Linking.openURL(`${apiUrl()}/terms`).catch(() => {})} testID="menu-terms">
+                    <Text style={styles.legalLink}>Terms of use</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -250,6 +263,9 @@ const makeStyles = (c) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: c.border
   },
+  legalRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  legalLink: { color: c.textMuted, fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+  legalDot: { color: c.textSubtle, fontSize: 12 },
   footerText: {
     color: c.textMuted,
     fontSize: 11,
