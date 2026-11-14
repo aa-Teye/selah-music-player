@@ -46,8 +46,9 @@ export async function buildBackup({ tracks = [], playlists = [], favorites = [],
   const remember = (id) => {
     const t = byId.get(id);
     if (!t || songs[id]) return Boolean(songs[id]);
-    songs[id] = { t: t.title || '', a: t.artist || '', d: Math.round(t.duration || 0) };
-    if (t.youtubeId) songs[id].y = t.youtubeId;
+    // YouTube songs: only the video's ID. YouTube's rules don't let apps keep its titles and
+    // pictures for more than 30 days; they are fetched fresh after a restore.
+    songs[id] = t.youtubeId ? { y: t.youtubeId } : { t: t.title || '', a: t.artist || '', d: Math.round(t.duration || 0) };
     return true;
   };
   playlists.forEach((pl) => (pl.trackIds || []).forEach(remember));
@@ -147,6 +148,7 @@ export function matchSongs(backupSongs = {}, tracks = []) {
       idMap[oldId] = byVideo.get(s.y).id;
       return;
     }
+    if (!s.t) return; // a video ID only: it comes back as a YouTube song
     const options = byName.get(songKey(s.t, s.a)) || [];
     const best = options.find((t) => !s.d || !t.duration || Math.abs(t.duration - s.d) <= 3) || options[0];
     if (best) idMap[oldId] = best.id;

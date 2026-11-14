@@ -305,7 +305,7 @@ test('restore on a new phone: songs not on it are listed to get back, and go bac
       songs: {
         a: { t: 'Way Maker', a: 'Sinach', d: 26 },
         b: { t: 'Imela', a: 'Nathaniel Bassey', d: 0 },
-        c: { t: 'Oceans', a: 'Hillsong United', d: 534, y: 'dy9nwe9_xzw' }
+        c: { y: 'dy9nwe9_xzw' } // a YouTube song: only its video ID is kept (YouTube's rules)
       },
       playlists: [{ id: 'pl-old', name: 'Sunday Service', trackIds: ['a', 'b', 'c'] }],
       favorites: ['b'],
@@ -314,6 +314,10 @@ test('restore on a new phone: songs not on it are listed to get back, and go bac
       artists: ['Joe Mettle']
     }
   });
+  // YouTube still has the video: after the restore its title and channel are fetched fresh
+  server.youtubeVideos = {
+    dy9nwe9_xzw: { youtubeId: 'dy9nwe9_xzw', title: 'Oceans', channel: 'Hillsong UNITED', duration: 534, picture: 'https://i.ytimg.com/vi/dy9nwe9_xzw/hqdefault.jpg' }
+  };
   try {
     await render(<App />);
     await settle(25);

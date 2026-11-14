@@ -30,6 +30,7 @@ import IntroSplash, { introSettings, hideNativeSplash } from './src/components/I
 import LibrariesModal from './src/components/LibrariesModal';
 import { artistSearch } from './src/data/discover';
 import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
+import { videosDue, checkVideos, applyVideoCheck } from './src/services/savedVideos';
 import {
   pipAvailable,
   setVideoPip,
@@ -384,6 +385,17 @@ function SelahApp() {
     isShuffleRef.current = isShuffle;
   }, [isShuffle]);
 
+  // YouTube's rules: saved videos get fresh details before they are 30 days old, and videos that
+  // no longer exist are removed. Checked in the background when Selah opens and after a restore.
+  const refreshVideoDetails = useCallback((due) => {
+    if (!due || due.length === 0) return;
+    checkVideos(due)
+      .then((result) => {
+        if (result) setTracks((prev) => applyVideoCheck(prev, result));
+      })
+      .catch(() => {});
+  }, []);
+
   // Initialize native audio & Load persistent state
   useEffect(() => {
     async function initApp() {
@@ -462,6 +474,7 @@ function SelahApp() {
             const have = new Set(prev.map((t) => t.youtubeId).filter(Boolean));
             return [...prev, ...savedYouTube.filter((t) => t && t.youtubeId && !have.has(t.youtubeId))];
           });
+          refreshVideoDetails(videosDue(savedYouTube));
         }
         if (savedGetBack.length > 0) setSongsToGetBack(savedGetBack);
         storageLoadedRef.current = true;
@@ -1199,6 +1212,7 @@ function SelahApp() {
         const add = result.youtube.filter((t) => !have.has(t.youtubeId));
         return add.length ? [...prev, ...add] : prev;
       });
+      refreshVideoDetails(result.youtube); // a backup keeps only video IDs: get titles and pictures
     }
     if (result.artists && result.artists.length > 0) {
       setFavoriteArtists((prev) => {
@@ -1310,11 +1324,11 @@ function SelahApp() {
     const keep = new Set(favorites);
     playlists.forEach((pl) => (pl.trackIds || []).forEach((id) => keep.add(id)));
     const kept = tracks.filter((t) => t && t.youtubeId && keep.has(t.id));
-    const sig = kept.map((t) => t.id).join('|');
+    const sig = kept.map((t) => `${t.id}:${t.checkedAt || 0}`).join('|');
     if (sig === keptYouTubeRef.current) return;
     keptYouTubeRef.current = sig;
     StorageService.saveYouTubeSongs(
-      kept.map(({ id, title, artist, album, duration, durationFormatted, youtubeId, coverUrl }) => ({
+      kept.map(({ id, title, artist, album, duration, durationFormatted, youtubeId, coverUrl, checkedAt }) => ({
         id,
         title,
         artist,
@@ -1323,10 +1337,12 @@ function SelahApp() {
         durationFormatted,
         youtubeId,
         sourceType: 'youtube',
-        coverUrl
+        coverUrl,
+        checkedAt: checkedAt || 0
       }))
     );
   }, [tracks, favorites, playlists]);
+
 
   // ── Picture-in-picture (Android): a playing YouTube video keeps going in a small window ──
   const isVideoCurrent = Boolean(currentTrack && (currentTrack.sourceType === 'youtube' || currentTrack.youtubeId));

@@ -78,7 +78,8 @@ test('a backup also keeps the artists you follow, your YouTube songs, and the so
     getBack: [{ key: 'imela|nathaniel bassey', title: 'Imela', artist: 'Nathaniel Bassey', duration: 0, playlists: ['pl-1', 'pl-gone'], loved: true }]
   });
   expect(data.artists).toEqual(['Joe Mettle', 'Sinach']);
-  expect(data.songs['yt-dy9nwe9_xzw']).toEqual({ t: 'Oceans', a: 'Hillsong United', d: 534, y: 'dy9nwe9_xzw' });
+  // YouTube songs: only the video ID (YouTube's rules: its titles and pictures are not kept beyond 30 days)
+  expect(data.songs['yt-dy9nwe9_xzw']).toEqual({ y: 'dy9nwe9_xzw' });
   expect(data.songs['getback:imela|nathaniel bassey']).toEqual({ t: 'Imela', a: 'Nathaniel Bassey', d: 0 });
   expect(data.playlists).toEqual([{ id: 'pl-1', name: 'Sunday', trackIds: ['s1', 'yt-dy9nwe9_xzw', 'getback:imela|nathaniel bassey'] }]);
   expect(data.favorites).toEqual(['getback:imela|nathaniel bassey']);
