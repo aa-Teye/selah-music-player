@@ -754,6 +754,27 @@ test('a YouTube video saved to a playlist plays from it inside Selah, also after
   expect(global.__youtubeProps.play).toBe(true);
 });
 
+test('a YouTube search result can be saved to a playlist without playing it', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  expect(global.__youtubeProps.play).toBe(false);
+  await tap(screen.getByTestId('yt-save-gIWCDgNt5ww')); // "Chris Tomlin // Full Live Worship Set", not playing
+  await tap(screen.getByText('Create New Playlist'));
+  await fireEvent.changeText(screen.getByPlaceholderText('New playlist name...'), 'For later');
+  await tap(screen.getByText('Save'));
+  await settle(4);
+  expect(global.__youtubeProps.play).toBe(false); // nothing started playing
+
+  await cleanup();
+  await render(<App />);
+  await settle();
+  await tap(screen.getByTestId('tab-playlists'));
+  await tap(screen.getByText('For later'));
+  expect(screen.getAllByText('Chris Tomlin // Full Live Worship Set').length).toBeGreaterThan(0);
+});
+
 test('the menu shows which version of Selah this is (the one in app.json)', async () => {
   await render(<App />);
   await settle();

@@ -233,6 +233,14 @@ function YouTubeWatchScreen({
     performSearch(localSearch);
   };
 
+  // Save a video from the results to a playlist, without playing it. It joins your songs too,
+  // so the playlist can show it (and it is kept after closing the app).
+  const saveVideoToPlaylist = (video) => {
+    if (!video || !onOpenAddToPlaylist) return;
+    if (onAddYouTubeTrack) onAddYouTubeTrack(video);
+    onOpenAddToPlaylist(video);
+  };
+
   // A genre or artist picked in Libraries: show its latest songs
   useEffect(() => {
     if (!externalSearch || !externalSearch.query) return;
@@ -742,6 +750,19 @@ function YouTubeWatchScreen({
                       </View>
                     )}
                   </View>
+
+                  {/* Save to a playlist without playing it first */}
+                  {onOpenAddToPlaylist && (
+                    <TouchableOpacity
+                      style={styles.cardSaveBtn}
+                      onPress={() => saveVideoToPlaylist(video)}
+                      hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+                      accessibilityLabel={`Save ${video.title} to a playlist`}
+                      testID={`yt-save-${video.youtubeId}`}
+                    >
+                      <Ionicons name="bookmark-outline" size={20} color={c.textMuted} />
+                    </TouchableOpacity>
+                  )}
 
                   {/* Play Action Icon */}
                   <View style={styles.cardPlayBtn}>
@@ -1316,6 +1337,10 @@ const makeStyles = (c) => StyleSheet.create({
   },
   cardPlayBtn: {
     paddingHorizontal: 4
+  },
+  cardSaveBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 4
   },
 
   /* Custom Link Section */
