@@ -500,6 +500,60 @@ androidOnly('a format the phone cannot play shows a clear message instead of fai
   expect(audio.createAudioPlayer).not.toHaveBeenCalled();
 });
 
+androidOnly('song names with #, % or spaces still play (the address is written safely)', async () => {
+  media.__state.audio = [
+    { id: '41', filename: 'Track #3.mp3', uri: 'file:///storage/emulated/0/Music/Track #3.mp3', mediaType: 'audio', duration: 200, modificationTime: 1 },
+    { id: '42', filename: '100% Praise.mp3', uri: 'file:///storage/emulated/0/Music/100% Praise.mp3', mediaType: 'audio', duration: 210, modificationTime: 2 }
+  ];
+  await render(<App />);
+  await settle(25);
+  await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-library'));
+  audio.createAudioPlayer.mockClear();
+  await tap(screen.getAllByText('Track #3')[0]);
+  expect(audio.createAudioPlayer).toHaveBeenLastCalledWith('file:///storage/emulated/0/Music/Track%20%233.mp3');
+  await tap(screen.getAllByText('100% Praise')[0]);
+  expect(audio.createAudioPlayer).toHaveBeenLastCalledWith('file:///storage/emulated/0/Music/100%25%20Praise.mp3');
+});
+
+androidOnly("a song whose file won't open tries again through Android's music library, then explains", async () => {
+  media.__state.audio = phoneSongs(3);
+  audio.__behaviour.failWhen = (source) => String(source).startsWith('file://');
+  try {
+    await render(<App />);
+    await settle(25);
+    await tap(screen.getByTestId('deep-scan-done'));
+    await tap(screen.getByTestId('tab-library'));
+    audio.createAudioPlayer.mockClear();
+    await tap(screen.getAllByText('Way Maker 1')[0]);
+    expect(audio.createAudioPlayer).toHaveBeenLastCalledWith(expect.stringMatching(/^file:\/\//));
+
+    await act(async () => {
+      jest.advanceTimersByTime(7500);
+    });
+    await settle(2);
+    expect(audio.createAudioPlayer).toHaveBeenLastCalledWith('content://media/external/audio/media/2');
+    await act(async () => {
+      jest.advanceTimersByTime(7500);
+    });
+    expect(Alert.alert).not.toHaveBeenCalledWith("Can't play this song", expect.any(String)); // the second way worked
+
+    // when both ways fail, a clear message
+    audio.__behaviour.failWhen = () => true;
+    await tap(screen.getAllByText('Way Maker 0')[0]);
+    await act(async () => {
+      jest.advanceTimersByTime(7500);
+    });
+    await settle(2);
+    await act(async () => {
+      jest.advanceTimersByTime(7500);
+    });
+    expect(Alert.alert).toHaveBeenCalledWith("Can't play this song", expect.stringContaining('(.mp3)'));
+  } finally {
+    audio.__behaviour.failWhen = null;
+  }
+});
+
 androidOnly('library is remembered after restart, and deleted songs disappear', async () => {
   media.__state.audio = phoneSongs(30);
   await render(<App />);

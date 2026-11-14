@@ -34,7 +34,7 @@ import {
   setupNotificationDisplay
 } from './src/services/dailyService';
 import { StorageService } from './src/services/storageService';
-import { ScannerService, unsupportedFormat } from './src/services/scannerService';
+import { ScannerService, unsupportedFormat, playableUri, mediaStoreUri } from './src/services/scannerService';
 import { isCloudReady, autoBackupIfDue } from './src/services/cloudService';
 import { onLoginChange } from './src/services/apiClient';
 import { loadAccount } from './src/services/accountService';
@@ -170,6 +170,7 @@ function SelahApp() {
   const playbackTimer = useRef(null);
   const sleepTimerRef = useRef(null);
   const handleNextTrackRef = useRef(null);
+  const handlePlayTrackRef = useRef(null); // lets a song try again through Android's music library
   const repeatModeRef = useRef(repeatMode);
   const isShuffleRef = useRef(isShuffle);
   const crossfadeRef = useRef(0);
@@ -546,13 +547,15 @@ function SelahApp() {
     setDuration(track.duration || 0);
 
     // Record to recently played and count the play (real listening time is tracked separately)
-    StorageService.addRecentlyPlayed(track).then((updated) => {
-      if (updated) setRecentTracks(updated);
-    });
-    StorageService.recordTrackPlayed().then((stats) => {
-      if (stats) setListeningStats(stats);
-    });
-    startListenCount(track.id);
+    if (!options._retry) {
+      StorageService.addRecentlyPlayed(track).then((updated) => {
+        if (updated) setRecentTracks(updated);
+      });
+      StorageService.recordTrackPlayed().then((stats) => {
+        if (stats) setListeningStats(stats);
+      });
+      startListenCount(track.id);
+    }
 
     // Clean up previous audio player so it stops immediately (e.g. when switching to YouTube or a new track)
     if (statusSubRef.current) {
@@ -582,8 +585,10 @@ function SelahApp() {
       return;
     }
 
-    // Play immediately if audio source exists (bundled asset or streaming/file URI)
-    const audioSource = track.asset || track.uri;
+    // Play immediately if audio source exists (bundled asset or streaming/file URI).
+    // File addresses are written safely (names with #, % or ? used to fail); the second try
+    // goes through Android's own music library instead.
+    const audioSource = track.asset || (options._viaMediaStore ? mediaStoreUri(track) : playableUri(track.uri));
     if (audioSource) {
       try {
         const player = createAudioPlayer(audioSource);
@@ -620,16 +625,22 @@ function SelahApp() {
             if (soundRef.current !== player) return;
             let loaded = false;
             try {
-              loaded = Boolean(player.isLoaded);
+              loaded = Boolean(player.isLoaded || player.playing || player.currentTime > 0);
             } catch {}
-            if (!loaded) {
-              setIsPlaying(false);
-              Alert.alert(
-                "Can't play this song",
-                `"${track.title}" could not be opened. The file may have been moved or deleted, or this phone can't play its format.`
-              );
+            if (loaded) return;
+            const secondWay = !options._viaMediaStore && mediaStoreUri(track);
+            if (secondWay && handlePlayTrackRef.current) {
+              // try once more through Android's music library before giving up
+              handlePlayTrackRef.current(track, { keepQueue: true, resumeAt, _retry: true, _viaMediaStore: true });
+              return;
             }
-          }, 8000);
+            setIsPlaying(false);
+            const ext = (String(track.uri || '').split('?')[0].match(/\.([a-z0-9]{1,5})$/i) || [])[1];
+            Alert.alert(
+              "Can't play this song",
+              `"${track.title}"${ext ? ` (.${ext.toLowerCase()})` : ''} could not be opened. It may have been moved or deleted, or the file may be damaged. If other songs play fine, try converting this one to MP3.`
+            );
+          }, 7000);
         }
 
         let durationRemembered = false;
@@ -711,7 +722,8 @@ function SelahApp() {
 
   useEffect(() => {
     handleNextTrackRef.current = handleNextTrack;
-  }, [handleNextTrack]);
+    handlePlayTrackRef.current = handlePlayTrack;
+  }, [handleNextTrack, handlePlayTrack]);
 
   // Previous Track
   const handlePrevTrack = useCallback(() => {

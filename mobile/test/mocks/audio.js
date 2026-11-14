@@ -1,16 +1,20 @@
-/* Fake audio player: records what the app asks it to do. */
+/* Fake audio player: records what the app asks it to do.
+   Tests can set __behaviour.failWhen = (source) => true to act like a file the phone can't open. */
 const players = [];
+const behaviour = { failWhen: null };
 
 function createAudioPlayer(source) {
   const listeners = {};
+  const fails = Boolean(behaviour.failWhen && behaviour.failWhen(source));
   const player = {
     source,
     volume: 1,
     loop: false,
-    isLoaded: true,
+    isLoaded: !fails,
     playing: false,
+    currentTime: 0,
     play: jest.fn(function play() {
-      this.playing = true;
+      if (!fails) this.playing = true;
     }),
     pause: jest.fn(function pause() {
       this.playing = false;
@@ -33,5 +37,6 @@ module.exports = {
   createAudioPlayer: jest.fn(createAudioPlayer),
   setAudioModeAsync: jest.fn(async () => {}),
   requestNotificationPermissionsAsync: jest.fn(async () => ({ granted: true })),
-  __players: players
+  __players: players,
+  __behaviour: behaviour
 };

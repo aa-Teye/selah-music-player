@@ -31,7 +31,10 @@ export const AUDIO_EXTENSIONS = [
 
 // Formats the phone's built-in decoders cannot play (we still list them, and explain on tap)
 const NOT_PLAYABLE = {
-  android: ['wma', 'ape', 'wv', 'dsf', 'dff', 'tta', 'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota', 'spx'],
+  android: [
+    'wma', 'ape', 'wv', 'dsf', 'dff', 'tta', 'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota', 'spx',
+    'caf', 'aif', 'aiff', 'aifc', 'm4p'
+  ],
   ios: [
     'wma', 'ape', 'wv', 'dsf', 'dff', 'tta', 'ogg', 'oga', 'opus', 'spx', 'amr', 'awb', '3ga',
     'mka', 'weba', 'mid', 'midi', 'xmf', 'mxmf', 'rtttl', 'imy', 'ota'
@@ -112,6 +115,32 @@ export function getExtension(nameOrUri = '') {
 
 export function isAudioFileName(name) {
   return AUDIO_EXTENSIONS.includes(getExtension(name));
+}
+
+/**
+ * The address the player should open. Song names can contain characters such as
+ * "#", "%" or "?" that break a file address ("Track #3.mp3" was read as "Track "),
+ * so each part of the path is written safely.
+ */
+export function playableUri(uri) {
+  const s = String(uri || '');
+  const m = s.match(/^file:\/\/(.*)$/i);
+  if (!m) return s; // content://, http(s)://, bundled sounds: leave as they are
+  const safePath = m[1]
+    .split('/')
+    .map((part) => encodeURIComponent(safeDecode(part)))
+    .join('/');
+  return `file://${safePath}`;
+}
+
+/**
+ * Android's own music library address for a song found by the phone's media index
+ * (a second way in, used when the file address doesn't open).
+ */
+export function mediaStoreUri(track) {
+  if (Platform.OS !== 'android' || !track || typeof track.id !== 'string') return null;
+  const m = track.id.match(/^local-scan-(\d+)$/);
+  return m ? `content://media/external/audio/media/${m[1]}` : null;
 }
 
 /** Returns the file type (e.g. 'wma') when this phone cannot play it, otherwise null */

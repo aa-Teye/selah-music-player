@@ -83,7 +83,12 @@ export const Id3Service = {
     // Extract folder name from uri if present
     let folderName = 'Internal Storage';
     if (asset.uri) {
-      const parts = decodeURIComponent(asset.uri).split('/');
+      // a raw "%" in a song's name ("100% Praise.mp3") must not stop the whole scan
+      let readable = String(asset.uri);
+      try {
+        readable = decodeURIComponent(readable);
+      } catch {}
+      const parts = readable.split('/');
       if (parts.length > 2) {
         // Parent folder
         folderName = parts[parts.length - 2] || 'Music';
