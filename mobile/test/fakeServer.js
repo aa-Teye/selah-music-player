@@ -107,7 +107,7 @@ function createFakeServer({ otherFetch } = {}) {
         if (!me) return respond(401, { error: 'Please log in to your Selah account' });
         if (!me.premium.active) return respond(402, { error: 'Cloud backup is part of Selah Premium', premium: false });
         if (method === 'PUT') {
-          const savedAt = '2026-11-13T10:00:00.000Z';
+          const savedAt = new Date().toISOString(); // like the real server: the time of the backup
           server.backups.set(me.id, { data: body.data, savedAt });
           return respond(200, { savedAt, size: JSON.stringify(body.data).length });
         }

@@ -81,7 +81,8 @@ test('backup needs an account, and Premium', async () => {
 
   server.giftPremium('ama@example.com');
   const result = await backupNow(state);
-  expect(result).toMatchObject({ playlists: 1, songs: 1, savedAt: '2026-11-13T10:00:00.000Z' });
+  expect(result).toMatchObject({ playlists: 1, songs: 1 });
+  expect(Date.now() - Date.parse(result.savedAt)).toBeLessThan(60000); // saved just now
   const put = server.calls.find((c) => c.method === 'PUT');
   expect(put.body.data.playlists[0].name).toBe('Sunday');
 
