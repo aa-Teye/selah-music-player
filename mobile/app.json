@@ -91,7 +91,7 @@
       ]
     ],
     "extra": {
-      "selahApiUrl": "",
+      "selahApiUrl": "https://selah-music-player-selah-api.vercel.app",
       "revenueCatAndroidKey": "",
       "revenueCatIosKey": "",
       "eas": {
