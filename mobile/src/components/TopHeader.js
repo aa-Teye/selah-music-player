@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { useTourTarget } from '../tour/tourTargets';
 
 export default function TopHeader({
   streakDays,
@@ -15,6 +16,8 @@ export default function TopHeader({
   const styles = useThemedStyles(makeStyles);
   const { scheme, setMode } = useTheme();
   const isDark = scheme === 'dark';
+  const accountTourRef = useTourTarget('header-account');
+  const menuTourRef = useTourTarget('open-menu');
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
@@ -26,6 +29,7 @@ export default function TopHeader({
           {/* Your account (optional): log in / sign up, Premium and backup */}
           {onOpenAccount && (
             <TouchableOpacity
+              ref={accountTourRef}
               onPress={onOpenAccount}
               testID="header-account"
               accessibilityRole="button"
@@ -57,7 +61,7 @@ export default function TopHeader({
 
           {/* Hamburger Menu Drawer Button */}
           {onOpenMenu && (
-            <TouchableOpacity onPress={onOpenMenu} testID="open-menu" style={styles.menuBtn} activeOpacity={0.7}>
+            <TouchableOpacity ref={menuTourRef} onPress={onOpenMenu} testID="open-menu" style={styles.menuBtn} activeOpacity={0.7}>
               <Ionicons name="menu-outline" size={22} color={c.text} />
             </TouchableOpacity>
           )}

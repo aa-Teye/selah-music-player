@@ -13,6 +13,7 @@ import ScanStatusBanner from '../components/ScanStatusBanner';
 import TodayCard from '../components/TodayCard';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import CoverArt from '../components/CoverArt';
+import { useTourTarget } from '../tour/tourTargets';
 
 const HOME_SONG_LIMIT = 30;
 
@@ -53,7 +54,8 @@ function HomeScreen({
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
-  const filteredTracks = activeMood === 'all' 
+  const librariesTourRef = useTourTarget('open-libraries');
+  const filteredTracks = activeMood === 'all'
     ? tracks 
     : tracks.filter(t => t.category === activeMood);
 
@@ -74,6 +76,7 @@ function HomeScreen({
       <View style={styles.quickBarRow}>
         {onOpenLibraries && (
           <TouchableOpacity
+            ref={librariesTourRef}
             style={styles.quickBarBtn}
             onPress={onOpenLibraries}
             activeOpacity={0.8}

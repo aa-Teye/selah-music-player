@@ -2,10 +2,19 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
+import { useTourTarget } from '../tour/tourTargets';
 
 function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
+  // The guided tour points at the tabs
+  const tourRefs = {
+    home: useTourTarget('tab-home'),
+    player: useTourTarget('tab-player'),
+    youtube: useTourTarget('tab-youtube'),
+    library: useTourTarget('tab-library'),
+    playlists: useTourTarget('tab-playlists')
+  };
   const tabs = [
     { id: 'home', label: 'Home', iconType: 'ion', icon: 'home-sharp' },
     { id: 'player', label: 'Player', iconType: 'ion', icon: 'disc-outline' },
@@ -28,6 +37,7 @@ function BottomTabs({ activeTab, onTabChange, onSelectTab }) {
         return (
           <TouchableOpacity
             key={tab.id}
+            ref={tourRefs[tab.id]}
             style={styles.tabButton}
             onPress={() => handlePress(tab.id)}
             testID={`tab-${tab.id}`}
