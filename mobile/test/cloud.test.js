@@ -7,6 +7,11 @@ import {
   deleteBackup,
   findSharedLyrics,
   shareLyrics,
+  reportSharedLyrics,
+  sharingRulesAccepted,
+  acceptSharingRules,
+  hideAuthor,
+  hiddenAuthors,
   setApiUrlForTests,
   isCloudReady,
   autoBackupIfDue,
@@ -179,7 +184,30 @@ test('shared lyrics: reading needs no account, sharing does', async () => {
   await expect(shareLyrics(lyric)).rejects.toMatchObject({ kind: 'logged-out' });
   await signUp({ name: 'Ama', email: 'ama@example.com', password: 'worship123' });
   await shareLyrics(lyric);
-  expect(server.posted).toEqual([expect.objectContaining({ by: 'ama@example.com', title: 'Odo Yewu' })]);
+  expect(server.posted).toEqual([expect.objectContaining({ by: 'ama@example.com', title: 'Odo Yewu', agreedToRules: true })]);
+});
+
+test("Google Play's rules for shared lyrics: accept the rules once, report lyrics or the person, hide a person", async () => {
+  expect(await sharingRulesAccepted()).toBe(false);
+  await acceptSharingRules();
+  expect(await sharingRulesAccepted()).toBe(true);
+
+  // hiding a person works without an account: their lyrics are not shown again
+  server.sharedLyrics = { id: 9, text: 'words', synced: false, author: 'a1b2c3d4e5f60718' };
+  expect(await findSharedLyrics({ title: 'Imela', artist: 'Nathaniel Bassey' })).toMatchObject({ id: 9 });
+  expect(await hideAuthor('not a code')).toBe(false);
+  expect(await hideAuthor('a1b2c3d4e5f60718')).toBe(true);
+  expect(await hiddenAuthors()).toEqual(['a1b2c3d4e5f60718']);
+  expect(await findSharedLyrics({ title: 'Imela', artist: 'Nathaniel Bassey' })).toBeNull();
+
+  await signUp({ name: 'Ama', email: 'ama@example.com', password: 'worship123' });
+  await reportSharedLyrics(9);
+  await reportSharedLyrics(9, { person: true });
+  expect(server.reports).toEqual([
+    expect.objectContaining({ id: 9 }),
+    expect.objectContaining({ id: 9, person: true })
+  ]);
+  expect(server.reports[0].person).toBeUndefined();
 });
 
 test('automatic backup: only when logged in and turned on, at most once a day', async () => {

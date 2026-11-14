@@ -117,10 +117,14 @@ function createFakeServer({ otherFetch } = {}) {
       case 'DELETE /api/backup':
         if (!me) return respond(401, { error: 'Please log in to your Selah account' });
         return respond(200, { deleted: server.backups.delete(me.id) });
-      case 'GET /api/lyrics':
-        return respond(200, server.sharedLyrics ? { found: true, lyrics: server.sharedLyrics } : { found: false });
+      case 'GET /api/lyrics': {
+        const hide = (new URL(u).searchParams.get('hide') || '').split(',').filter(Boolean);
+        const lyric = server.sharedLyrics && !hide.includes(server.sharedLyrics.author) ? server.sharedLyrics : null;
+        return respond(200, lyric ? { found: true, lyrics: lyric } : { found: false });
+      }
       case 'POST /api/lyrics':
         if (!me) return respond(401, { error: 'Please log in to your Selah account' });
+        if (body.agreedToRules !== true) return respond(400, { error: 'Please read and accept the sharing rules first' });
         server.posted.push({ by: me.email, ...body });
         return respond(200, { id: server.posted.length });
       case 'POST /api/lyrics/report':

@@ -410,6 +410,58 @@ test('buying Premium in the app unlocks backup straight away', async () => {
   }
 });
 
+androidOnly('sharing typed lyrics: the sharing rules are shown and accepted the first time', async () => {
+  const cloud = require('../src/services/cloudService');
+  const { resetTokenCacheForTests } = require('../src/services/apiClient');
+  const { logIn } = require('../src/services/accountService');
+  const { createFakeServer, BASE } = require('./fakeServer');
+  cloud.setApiUrlForTests(BASE);
+  resetTokenCacheForTests();
+  const server = createFakeServer({
+    otherFetch: async () => ({ ok: true, status: 200, json: async () => [], text: async () => '' }) // no lyrics anywhere
+  });
+  server.users.set('esi@example.com', { id: 'user-esi', name: 'Esi', email: 'esi@example.com', password: 'praise1234', premium: { active: false, until: null, source: null } });
+  global.fetch = server.fetch;
+  const pressAlert = async (title, button) => {
+    const shown = Alert.alert.mock.calls.filter((c) => c[0] === title).pop();
+    await act(async () => {
+      await shown[2].find((b) => b.text === button).onPress();
+    });
+  };
+  try {
+    media.__state.audio = phoneSongs(2);
+    await render(<App />);
+    await settle(25);
+    await tap(screen.getByTestId('deep-scan-done'));
+    await act(async () => {
+      await logIn({ email: 'esi@example.com', password: 'praise1234' });
+    });
+    await tap(screen.getByTestId('tab-library'));
+    await tap(screen.getAllByText('Way Maker 1')[0]);
+    await tap(screen.getByTestId('tab-player'));
+    await settle(10);
+    await tap(screen.getByTestId('player-view-lyrics'));
+    await tap(screen.getByText('Add lyrics'));
+    await fireEvent.changeText(screen.getByPlaceholderText('Paste lyrics here…'), 'Odo yewu, odo yewu\nYour love is so amazing');
+    Alert.alert.mockClear();
+    await tap(screen.getByText('Save'));
+    const first = Alert.alert.mock.calls.find((c) => c[0] === 'Share these lyrics?');
+    expect(first[1]).toMatch(/sharing rules/);
+    expect(first[2].map((b) => b.text)).toEqual(['Read the rules', 'Not now', 'Agree and share']);
+    await pressAlert('Share these lyrics?', 'Agree and share');
+    expect(server.posted).toEqual([expect.objectContaining({ title: 'Way Maker 1', agreedToRules: true })]);
+
+    // the next time: just a simple question
+    await tap(screen.getByText('Edit'));
+    Alert.alert.mockClear();
+    await tap(screen.getByText('Save'));
+    const next = Alert.alert.mock.calls.find((c) => c[0] === 'Share these lyrics?');
+    expect(next[2].map((b) => b.text)).toEqual(['Not now', 'Share']);
+  } finally {
+    cloud.setApiUrlForTests(null);
+  }
+});
+
 androidOnly('lyrics typed by other Selah users show when LRCLIB has none; reporting needs an account', async () => {
   const cloud = require('../src/services/cloudService');
   const { resetTokenCacheForTests } = require('../src/services/apiClient');
@@ -420,16 +472,29 @@ androidOnly('lyrics typed by other Selah users show when LRCLIB has none; report
   const server = createFakeServer({
     otherFetch: async () => ({ ok: true, status: 200, json: async () => [], text: async () => '' }) // LRCLIB has nothing
   });
-  server.sharedLyrics = { id: 42, title: 'Way Maker 1', artist: 'Sinach', duration: 241, synced: false, text: 'Odo yewu, odo yewu\nYour love is so amazing' };
+  server.sharedLyrics = {
+    id: 42,
+    title: 'Way Maker 1',
+    artist: 'Sinach',
+    duration: 241,
+    synced: false,
+    text: 'Odo yewu, odo yewu\nYour love is so amazing',
+    author: 'a1b2c3d4e5f60718'
+  };
   server.users.set('esi@example.com', { id: 'user-esi', name: 'Esi', email: 'esi@example.com', password: 'praise1234', premium: { active: false, until: null, source: null } });
   global.fetch = server.fetch;
-  const reportOnce = async () => {
+  const pressAlert = async (title, button) => {
+    const shown = Alert.alert.mock.calls.filter((c) => c[0] === title).pop();
+    await act(async () => {
+      await shown[2].find((b) => b.text === button).onPress();
+    });
+  };
+  // Report › these lyrics / the person
+  const reportOnce = async (what = 'These lyrics') => {
     Alert.alert.mockClear();
     await tap(screen.getByText('Report'));
-    const confirm = Alert.alert.mock.calls.find((c) => c[0] === 'Report these lyrics?');
-    await act(async () => {
-      await confirm[2].find((b) => b.text === 'Report').onPress();
-    });
+    await pressAlert('Shared lyrics', 'Report');
+    await pressAlert('What do you want to report?', what);
   };
   try {
     media.__state.audio = phoneSongs(2);
@@ -445,14 +510,26 @@ androidOnly('lyrics typed by other Selah users show when LRCLIB has none; report
     expect(screen.getByText('Your love is so amazing')).toBeTruthy();
 
     await reportOnce();
-    expect(Alert.alert).toHaveBeenCalledWith('Log in to report', expect.stringContaining('Account & Backup'));
+    expect(Alert.alert).toHaveBeenCalledWith('Log in to report', expect.stringContaining('account button at the top'));
     expect(server.reports).toHaveLength(0);
 
     await act(async () => {
       await logIn({ email: 'esi@example.com', password: 'praise1234' });
     });
     await reportOnce();
-    expect(server.reports).toEqual([{ by: 'esi@example.com', id: 42 }]);
+    await reportOnce('The person');
+    expect(server.reports).toEqual([
+      { by: 'esi@example.com', id: 42 },
+      { by: 'esi@example.com', id: 42, person: true }
+    ]);
+
+    // hide everything from this person: their lyrics go away straight away
+    Alert.alert.mockClear();
+    await tap(screen.getByText('Report'));
+    await pressAlert('Shared lyrics', 'Hide this person');
+    await settle(10);
+    expect(Alert.alert).toHaveBeenCalledWith('Hidden', expect.any(String));
+    expect(screen.queryByText('Your love is so amazing')).toBeNull();
   } finally {
     cloud.setApiUrlForTests(null);
   }

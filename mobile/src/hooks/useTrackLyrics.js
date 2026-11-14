@@ -111,6 +111,7 @@ export default function useTrackLyrics(track, { duration = 0 } = {}) {
               {
                 id: `selah-${shared.id}`,
                 selahId: shared.id,
+                selahAuthor: shared.author || null, // anonymous: lets you hide this person
                 community: true,
                 trackName: shared.title,
                 artistName: shared.artist,

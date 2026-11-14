@@ -10,15 +10,27 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  Linking
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import LyricCardModal from './LyricCardModal';
 import { parseLrc } from '../services/lyricsService';
-import { isCloudReady, shareLyrics, reportSharedLyrics } from '../services/cloudService';
+import {
+  isCloudReady,
+  apiUrl,
+  shareLyrics,
+  reportSharedLyrics,
+  hideAuthor,
+  sharingRulesAccepted,
+  acceptSharingRules
+} from '../services/cloudService';
 
-const NEEDS_ACCOUNT = 'This needs a free Selah account. Open the menu (☰) › Account & Backup to log in or sign up.';
+const NEEDS_ACCOUNT = 'This needs a free Selah account. Tap the account button at the top of the screen to log in or sign up.';
+const SHARING_RULES =
+  "By sharing you agree to Selah's sharing rules: share only the song's words, and nothing hateful, harassing, " +
+  'sexual, violent, illegal, spam or personal. Lyrics that break them are removed.';
 
 // The player reports whole seconds, so look slightly ahead to feel in time
 const LOOKAHEAD = 0.5;
@@ -122,48 +134,74 @@ export default function SyncedLyricsView({ lyrics, track, currentPosition = 0, o
     // Offer to help other Selah users who have the same song
     const artistKnown = track && track.artist && !/^unknown artist$/i.test(track.artist);
     if (text.length >= 20 && track && track.title && artistKnown && isCloudReady()) {
-      Alert.alert('Share these lyrics?', 'Other Selah users with this song will see them too. Only the words and the song name are shared.', [
-        { text: 'Not now', style: 'cancel' },
-        {
-          text: 'Share',
-          onPress: async () => {
-            try {
-              await shareLyrics({
-                title: track.title,
-                artist: track.artist,
-                duration: Math.round(track.duration || 0),
-                text,
-                synced: parseLrc(text).length > 0
-              });
-              Alert.alert('Thank you!', 'Your lyrics are now shared with other Selah users.');
-            } catch (err) {
-              if (err?.kind === 'logged-out') Alert.alert('Log in to share', NEEDS_ACCOUNT);
-              else Alert.alert('Not shared', err?.message || 'Please try again later.');
-            }
-          }
+      const share = async () => {
+        try {
+          await acceptSharingRules();
+          await shareLyrics({
+            title: track.title,
+            artist: track.artist,
+            duration: Math.round(track.duration || 0),
+            text,
+            synced: parseLrc(text).length > 0
+          });
+          Alert.alert('Thank you!', 'Your lyrics are now shared with other Selah users.');
+        } catch (err) {
+          if (err?.kind === 'logged-out') Alert.alert('Log in to share', NEEDS_ACCOUNT);
+          else Alert.alert('Not shared', err?.message || 'Please try again later.');
         }
-      ]);
+      };
+      const about = 'Other Selah users with this song will see them too. Only the words and the song name are shared.';
+      if (await sharingRulesAccepted()) {
+        Alert.alert('Share these lyrics?', about, [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Share', onPress: share }
+        ]);
+      } else {
+        // The first time: the sharing rules must be accepted (Google Play's rules for things users share)
+        Alert.alert('Share these lyrics?', `${about}\n\n${SHARING_RULES}`, [
+          { text: 'Read the rules', onPress: () => Linking.openURL(`${apiUrl()}/terms`).catch(() => {}) },
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Agree and share', onPress: share }
+        ]);
+      }
     }
   };
 
+  // Shared lyrics: report them or the person who shared them, or hide everything from that person
   const reportLyrics = () => {
     const id = lyrics.matched && lyrics.matched.selahId;
     if (!id) return;
-    Alert.alert('Report these lyrics?', 'Tell us if they are wrong or offensive. Lyrics reported by several people are hidden.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Report',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await reportSharedLyrics(id);
-            Alert.alert('Thank you', 'We have received your report.');
-          } catch (err) {
-            if (err?.kind === 'logged-out') Alert.alert('Log in to report', NEEDS_ACCOUNT);
-            else Alert.alert('Not sent', err?.message || 'Please try again later.');
-          }
-        }
+    const author = lyrics.matched.selahAuthor;
+
+    const sendReport = async (person) => {
+      try {
+        await reportSharedLyrics(id, { person });
+        Alert.alert('Thank you', 'We have received your report.');
+      } catch (err) {
+        if (err?.kind === 'logged-out') Alert.alert('Log in to report', NEEDS_ACCOUNT);
+        else Alert.alert('Not sent', err?.message || 'Please try again later.');
       }
+    };
+    const chooseReport = () =>
+      Alert.alert(
+        'What do you want to report?',
+        'Lyrics reported by several people are hidden, and so is everything from a person reported by several people.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'The person', onPress: () => sendReport(true) },
+          { text: 'These lyrics', onPress: () => sendReport(false) }
+        ]
+      );
+    const hidePerson = async () => {
+      await hideAuthor(author);
+      Alert.alert('Hidden', 'You will not see lyrics shared by this person again.');
+      if (lyrics.refresh) lyrics.refresh();
+    };
+
+    Alert.alert('Shared lyrics', 'Report them if they are wrong or offensive, or hide everything from the person who shared them.', [
+      { text: 'Cancel', style: 'cancel' },
+      ...(author ? [{ text: 'Hide this person', onPress: hidePerson }] : []),
+      { text: 'Report', style: 'destructive', onPress: chooseReport }
     ]);
   };
 

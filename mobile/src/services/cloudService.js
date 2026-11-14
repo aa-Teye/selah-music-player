@@ -226,11 +226,45 @@ export async function fetchRestore(tracks) {
 }
 
 // ── Lyrics shared between Selah users ───────────────────────────────────────
+// Google Play's rules for things users share: accept the rules before sharing, report lyrics
+// or the person who shared them, and hide everything from a person.
+const SHARING_RULES_KEY = '@selah_sharing_rules';
+const HIDDEN_AUTHORS_KEY = '@selah_hidden_authors';
+export const SHARING_RULES_VERSION = '2026-11-14'; // the rules in /terms
+
+export async function sharingRulesAccepted() {
+  return (await AsyncStorage.getItem(SHARING_RULES_KEY)) === SHARING_RULES_VERSION;
+}
+
+export async function acceptSharingRules() {
+  await AsyncStorage.setItem(SHARING_RULES_KEY, SHARING_RULES_VERSION);
+}
+
+/** The people you hid (anonymous author codes) */
+export async function hiddenAuthors() {
+  try {
+    const list = JSON.parse((await AsyncStorage.getItem(HIDDEN_AUTHORS_KEY)) || '[]');
+    return Array.isArray(list) ? list.filter((code) => /^[a-f0-9]{16}$/.test(code)) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Never show lyrics from this person again (works without an account) */
+export async function hideAuthor(code) {
+  if (!/^[a-f0-9]{16}$/.test(code || '')) return false;
+  const list = await hiddenAuthors();
+  if (!list.includes(code)) list.push(code);
+  await AsyncStorage.setItem(HIDDEN_AUTHORS_KEY, JSON.stringify(list.slice(-100)));
+  return true;
+}
+
 export async function findSharedLyrics({ title, artist, duration }) {
   if (!isCloudReady() || !title) return null;
+  const hide = await hiddenAuthors();
   const params = `title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist || '')}${
     duration > 0 ? `&duration=${Math.round(duration)}` : ''
-  }`;
+  }${hide.length ? `&hide=${hide.join(',')}` : ''}`;
   try {
     const res = await call(`/api/lyrics?${params}`, { timeout: 8000 });
     return res && res.found && res.lyrics ? res.lyrics : null;
@@ -239,10 +273,16 @@ export async function findSharedLyrics({ title, artist, duration }) {
   }
 }
 
+/** Only after the sharing rules were accepted (sharingRulesAccepted / acceptSharingRules) */
 export async function shareLyrics({ title, artist, duration, text, synced }) {
-  return call('/api/lyrics', { method: 'POST', auth: true, body: { title, artist, duration, text, synced } });
+  return call('/api/lyrics', {
+    method: 'POST',
+    auth: true,
+    body: { title, artist, duration, text, synced, agreedToRules: true }
+  });
 }
 
-export async function reportSharedLyrics(id) {
-  return call('/api/lyrics/report', { method: 'POST', auth: true, body: { id } });
+/** person: also report the person who shared them */
+export async function reportSharedLyrics(id, { person = false } = {}) {
+  return call('/api/lyrics/report', { method: 'POST', auth: true, body: person ? { id, person: true } : { id } });
 }
