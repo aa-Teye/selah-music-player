@@ -22,6 +22,11 @@ import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
+// YouTube's Required Minimum Functionality: the player at least 200×200, and any video
+// picture you tap to start a video at least 120×70
+export const MIN_PLAYER_SIZE = 200;
+export const MIN_VIDEO_PICTURE = { width: 120, height: 70 };
+
 const QUICK_SEARCH_CHIPS = [
   { id: 'curated', label: 'Curated Praise' },
   { id: 'brandon-lake', label: 'Brandon Lake', query: 'Brandon Lake Live Worship' },
@@ -458,7 +463,8 @@ function YouTubeWatchScreen({
 
   // In the small picture-in-picture window only the video shows, filling it.
   // (Same player, only resized: the video never restarts.)
-  const playerHeight = pipMode ? win.height : (win.width - 32) * (9 / 16);
+  // YouTube's rule: the player must be at least 200×200 (taller than 16:9 on narrow phones)
+  const playerHeight = pipMode ? win.height : Math.max(MIN_PLAYER_SIZE, (win.width - 32) * (9 / 16));
 
   return (
     <ScrollView
@@ -720,7 +726,7 @@ function YouTubeWatchScreen({
                   activeOpacity={0.8}
                 >
                   {/* Thumbnail with duration badge */}
-                  <View style={styles.thumbWrapper}>
+                  <View style={styles.thumbWrapper} testID="yt-result-picture">
                     <Image 
                       source={{ uri: video.coverUrl || `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg` }}
                       style={styles.thumbImage}
@@ -1268,8 +1274,8 @@ const makeStyles = (c) => StyleSheet.create({
     backgroundColor: c.surfaceAlt
   },
   thumbWrapper: {
-    width: 90,
-    height: 56,
+    width: 128, // at least 120×70 (YouTube's rule for pictures that start a video)
+    height: 72,
     borderRadius: 10,
     overflow: 'hidden',
     position: 'relative',

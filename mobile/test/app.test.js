@@ -754,6 +754,17 @@ test('a YouTube video saved to a playlist plays from it inside Selah, also after
   expect(global.__youtubeProps.play).toBe(true);
 });
 
+test("YouTube's size rules: the player is at least 200 high, result pictures at least 120×70", async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  expect(global.__youtubeProps.height).toBeGreaterThanOrEqual(200);
+  const picture = StyleSheet.flatten(screen.getAllByTestId('yt-result-picture')[0].props.style);
+  expect(picture.width).toBeGreaterThanOrEqual(120);
+  expect(picture.height).toBeGreaterThanOrEqual(70);
+});
+
 test('a YouTube search result can be saved to a playlist without playing it', async () => {
   await render(<App />);
   await settle();
