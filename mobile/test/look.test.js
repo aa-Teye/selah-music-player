@@ -21,3 +21,10 @@ test('no AI-looking icons or AI features anywhere in the app', () => {
   });
   expect(offenders).toEqual([]);
 });
+
+test('Libraries is about music now: no Bible-app or hymn-website links', () => {
+  const offenders = files.filter((file) =>
+    /YouVersion|Open Hymnal|Daily Audio Bible|Blue Letter Bible|DIGITAL_LIBRARIES/.test(fs.readFileSync(file, 'utf8'))
+  );
+  expect(offenders).toEqual([]);
+});

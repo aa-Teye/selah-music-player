@@ -104,7 +104,8 @@ function YouTubeWatchScreen({
   isActive = false,
   onVideoProgress,
   resumeAt,
-  onResumeDone
+  onResumeDone,
+  externalSearch // { query, at }: Libraries asking for "the latest songs" of a genre or artist
 }) {
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
@@ -220,6 +221,14 @@ function YouTubeWatchScreen({
     Keyboard.dismiss();
     performSearch(localSearch);
   };
+
+  // A genre or artist picked in Libraries: show its latest songs
+  useEffect(() => {
+    if (!externalSearch || !externalSearch.query) return;
+    setLocalSearch(externalSearch.query);
+    performSearch(externalSearch.query);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalSearch]);
 
   const handleChipSelect = (chip) => {
     setActiveChip(chip.id);
@@ -585,6 +594,7 @@ function YouTubeWatchScreen({
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color={c.textMuted} style={styles.searchIcon} />
           <TextInput
+            testID="yt-search-input"
             placeholder="Search YouTube worship, praise, songs..."
             placeholderTextColor={c.textSubtle}
             value={localSearch}

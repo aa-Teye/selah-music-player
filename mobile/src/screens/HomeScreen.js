@@ -15,7 +15,6 @@ import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import CoverArt from '../components/CoverArt';
 
 const HOME_SONG_LIMIT = 30;
-const FALLBACK_COVER = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
 
 /** "23 min left" / "1 h 5 min left" */
 export function timeLeft(position, length) {
@@ -41,8 +40,9 @@ function HomeScreen({
   searchQuery = '',
   onNavigateToYouTube,
   favoriteArtists = [],
+  onOpenArtist,
   onNextDevotional,
-  onOpenDigitalLibraries,
+  onOpenLibraries,
   onOpenLibrary,
   playlists = [],
   onPlayPlaylist,
@@ -72,11 +72,12 @@ function HomeScreen({
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Sleek Ceramic Quick Access Bar */}
       <View style={styles.quickBarRow}>
-        {onOpenDigitalLibraries && (
-          <TouchableOpacity 
-            style={styles.quickBarBtn} 
-            onPress={onOpenDigitalLibraries}
+        {onOpenLibraries && (
+          <TouchableOpacity
+            style={styles.quickBarBtn}
+            onPress={onOpenLibraries}
             activeOpacity={0.8}
+            testID="open-libraries"
           >
             <Ionicons name="library-outline" size={15} color={c.ink} />
             <Text style={styles.quickBarText}>Libraries</Text>
@@ -371,31 +372,47 @@ function HomeScreen({
         </TouchableOpacity>
       )}
       <View style={{ marginTop: 8 }}>
-        {/* Recommended For You Based on Favorite Artists */}
-        {favoriteArtists && favoriteArtists.length > 0 && (
+        {/* Artists you follow: tap one for their latest songs */}
+        {!searchQuery && (favoriteArtists.length > 0 || onOpenLibraries) && (
           <View style={styles.recommendedSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recommended For You</Text>
-              <Text style={styles.sectionSubtitle}>Based on your chosen worship leaders</Text>
+              <Text style={styles.sectionTitle}>Artists you follow</Text>
+              <Text style={styles.sectionSubtitle}>
+                {favoriteArtists.length > 0 ? 'Tap one for their latest songs' : 'Follow artists to see their new songs here'}
+              </Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-              {favoriteArtists.map((artistName, idx) => (
+              {favoriteArtists.map((artistName) => (
                 <TouchableOpacity
-                  key={`fav-art-${idx}`}
+                  key={`fav-art-${artistName}`}
                   style={styles.artistRecCard}
-                  onPress={() => onNavigateToYouTube && onNavigateToYouTube(artistName)}
+                  onPress={() => (onOpenArtist ? onOpenArtist(artistName) : onNavigateToYouTube && onNavigateToYouTube(artistName))}
                   activeOpacity={0.8}
+                  testID={`home-artist-${artistName}`}
                 >
-                  <View style={styles.artistRecAvatar}>
-                    <Text style={styles.artistRecInitial}>{artistName ? artistName.charAt(0) : 'W'}</Text>
-                  </View>
+                  <CoverArt track={{ title: artistName }} size={58} round style={{ marginBottom: 8 }} />
                   <Text style={styles.artistRecName} numberOfLines={1}>{artistName}</Text>
                   <View style={styles.artistRecPlayRow}>
-                    <Ionicons name="play-circle" size={13} color={c.ink} />
-                    <Text style={styles.artistRecPlayText}>Listen</Text>
+                    <Ionicons name="logo-youtube" size={13} color="#EF4444" />
+                    <Text style={styles.artistRecPlayText}>Latest</Text>
                   </View>
                 </TouchableOpacity>
               ))}
+              {onOpenLibraries && (
+                <TouchableOpacity
+                  style={[styles.artistRecCard, styles.artistAddCard]}
+                  onPress={onOpenLibraries}
+                  activeOpacity={0.8}
+                  testID="home-follow-more"
+                >
+                  <View style={styles.artistAddCircle}>
+                    <Ionicons name="person-add-outline" size={22} color={c.ink} />
+                  </View>
+                  <Text style={styles.artistRecName} numberOfLines={1}>
+                    {favoriteArtists.length > 0 ? 'Follow more' : 'Find artists'}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </ScrollView>
           </View>
         )}
@@ -770,21 +787,20 @@ const makeStyles = (c) => StyleSheet.create({
     shadowRadius: 3,
     elevation: 1
   },
-  artistRecAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  artistAddCard: {
+    justifyContent: 'center',
+    borderStyle: 'dashed'
+  },
+  artistAddCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: c.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
     borderWidth: 1,
     borderColor: c.border
-  },
-  artistRecInitial: {
-    color: c.ink,
-    fontSize: 17,
-    fontWeight: '800'
   },
   artistRecName: {
     color: c.text,

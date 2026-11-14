@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, Linking, TouchableOpacity, Text, ScrollView, AppState } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
-import { Ionicons } from '@expo/vector-icons';
 
 import TopHeader from './src/components/TopHeader';
 import BottomTabs from './src/components/BottomTabs';
@@ -25,7 +24,9 @@ import EditTagsModal from './src/components/EditTagsModal';
 import OnboardingArtistsModal from './src/components/OnboardingArtistsModal';
 import DeepScanModal from './src/components/DeepScanModal';
 
-import { DIGITAL_LIBRARIES, MOOD_TAGS } from './src/data/mockData';
+import { MOOD_TAGS } from './src/data/mockData';
+import LibrariesModal from './src/components/LibrariesModal';
+import { artistSearch } from './src/data/discover';
 import {
   dayNumber,
   devotionForDay,
@@ -163,7 +164,8 @@ function SelahApp() {
   const [today, setToday] = useState(() => dayNumber());
   const todayRef = useRef(today);
   const [devotionOffset, setDevotionOffset] = useState(0);
-  const [isDigitalLibrariesVisible, setIsDigitalLibrariesVisible] = useState(false);
+  const [isLibrariesVisible, setIsLibrariesVisible] = useState(false);
+  const [externalSearch, setExternalSearch] = useState(null); // { query, at } from Libraries
 
   const soundRef = useRef(null);
   const statusSubRef = useRef(null);
@@ -1284,7 +1286,25 @@ function SelahApp() {
   }, []);
   const nextDevotional = useCallback(() => setDevotionOffset((prev) => prev + 1), []);
   const songForToday = useMemo(() => songOfTheDay(localTracks, today), [localTracks, today]);
-  const openDigitalLibraries = useCallback(() => setIsDigitalLibrariesVisible(true), []);
+  const openLibraries = useCallback(() => setIsLibrariesVisible(true), []);
+  // A genre or an artist: show its latest songs on YouTube (the top search box stays as it is)
+  const discoverOnYouTube = useCallback((query) => {
+    if (!query) return;
+    setIsLibrariesVisible(false);
+    setExternalSearch({ query, at: Date.now() });
+    setActiveTab('youtube');
+  }, []);
+  const openArtist = useCallback((name) => discoverOnYouTube(artistSearch(name)), [discoverOnYouTube]);
+  const toggleFollowArtist = useCallback(
+    (name) => {
+      const next = favoriteArtists.includes(name)
+        ? favoriteArtists.filter((n) => n !== name)
+        : [...favoriteArtists, name];
+      setFavoriteArtists(next);
+      StorageService.saveFavoriteArtists(next);
+    },
+    [favoriteArtists]
+  );
   const openLibrary = useCallback(() => setActiveTab('library'), []);
   const openPlaylists = useCallback(() => setActiveTab('playlists'), []);
   const openEditTags = useCallback((track) => setTagEditTrack(track), []);
@@ -1338,8 +1358,9 @@ function SelahApp() {
             searchQuery={searchQuery}
             onNavigateToYouTube={navigateToYouTube}
             favoriteArtists={favoriteArtists}
+            onOpenArtist={openArtist}
             onNextDevotional={nextDevotional}
-            onOpenDigitalLibraries={openDigitalLibraries}
+            onOpenLibraries={openLibraries}
             onOpenLibrary={openLibrary}
             playlists={playlists}
             onPlayPlaylist={handlePlayPlaylist}
@@ -1440,6 +1461,7 @@ function SelahApp() {
             onVideoProgress={handleVideoProgress}
             resumeAt={resumeVideo}
             onResumeDone={clearResumeVideo}
+            externalSearch={externalSearch}
           />
         </View>
 
@@ -1604,49 +1626,14 @@ function SelahApp() {
         </SafeAreaView>
       </Modal>
 
-      {/* Digital Libraries & Hymnal Resources Modal */}
-      <Modal
-        visible={isDigitalLibrariesVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsDigitalLibrariesVisible(false)}
-      >
-        <View style={styles.libModalOverlay}>
-          <View style={styles.libModalContent}>
-            <View style={styles.libModalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="library" size={22} color="#34D399" />
-                <Text style={styles.libModalTitle}>Digital Libraries</Text>
-              </View>
-              <TouchableOpacity onPress={() => setIsDigitalLibrariesVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="close-circle" size={24} color={c.textSubtle} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.libModalSub}>Connect with global Christian libraries, public-domain hymnals, and scripture study tools.</Text>
-
-            <ScrollView style={{ marginTop: 12 }}>
-              {DIGITAL_LIBRARIES.map((lib) => (
-                <View key={lib.id} style={styles.libCard}>
-                  <View style={styles.libIconBox}>
-                    <Ionicons name={lib.icon || 'book'} size={22} color="#34D399" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.libName}>{lib.name}</Text>
-                    <Text style={styles.libDesc}>{lib.description}</Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.libOpenBtn} 
-                    onPress={() => Linking.openURL(lib.url).catch(() => Alert.alert("Notice", "Could not open browser."))}
-                  >
-                    <Text style={styles.libOpenText}>Open</Text>
-                    <Ionicons name="open-outline" size={14} color={c.text} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      {/* Libraries: genres and artists to follow; each shows its latest songs on YouTube */}
+      <LibrariesModal
+        visible={isLibrariesVisible}
+        onClose={() => setIsLibrariesVisible(false)}
+        followed={favoriteArtists}
+        onToggleFollow={toggleFollowArtist}
+        onSearch={discoverOnYouTube}
+      />
 
       {/* First-Time Onboarding Favorite Artists Modal */}
       <OnboardingArtistsModal
@@ -1693,82 +1680,6 @@ const makeStyles = (c) => StyleSheet.create({
   },
   mainContent: {
     flex: 1
-  },
-  libModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 17, 21, 0.45)',
-    justifyContent: 'flex-end'
-  },
-  libModalContent: {
-    backgroundColor: c.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '80%',
-    borderWidth: 1,
-    borderColor: c.border
-  },
-  libModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6
-  },
-  libModalTitle: {
-    color: c.text,
-    fontSize: 18,
-    fontWeight: '800'
-  },
-  libModalSub: {
-    color: c.textMuted,
-    fontSize: 13,
-    lineHeight: 18
-  },
-  libCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.bg,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: c.border,
-    gap: 12
-  },
-  libIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: c.surfaceAlt,
-    borderWidth: 1,
-    borderColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  libName: {
-    color: c.text,
-    fontSize: 14,
-    fontWeight: '700'
-  },
-  libDesc: {
-    color: c.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-    lineHeight: 15
-  },
-  libOpenBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: c.inverse,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 16,
-    gap: 4
-  },
-  libOpenText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 12
   }
 });
 

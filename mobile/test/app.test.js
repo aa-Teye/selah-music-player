@@ -698,6 +698,59 @@ test('YouTube has no "Play as MP3" mode that hides the video (YouTube and Google
   expect(screen.queryByText(/STREAMING AS MP3/)).toBeNull();
 });
 
+function youtubeSearches() {
+  return global.fetch.mock.calls
+    .map(([url]) => decodeURIComponent(String(url)))
+    .filter((url) => url.includes('youtube.com/results'));
+}
+
+test('Libraries: genres and gospel artists; a genre shows its latest songs on YouTube', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('open-libraries'));
+  expect(screen.getByText('Genres')).toBeTruthy();
+  expect(screen.getByText('Gospel artists')).toBeTruthy();
+  expect(screen.getByText('Ghana Gospel')).toBeTruthy();
+  expect(screen.queryByText(/YouVersion|Open Hymnal|Bible/)).toBeNull();
+
+  global.fetch.mockClear();
+  await tap(screen.getByTestId('genre-ghana'));
+  const year = new Date().getFullYear();
+  expect(youtubeSearches()).toEqual([expect.stringContaining(`search_query=latest Ghana gospel songs ${year}`)]);
+  expect(screen.queryByText('Gospel artists')).toBeNull(); // Libraries closed, YouTube is showing
+  expect(screen.getByTestId('yt-search-input').props.value).toBe(`latest Ghana gospel songs ${year}`);
+});
+
+test('following an artist: shows on Home, is remembered, and opens their latest songs', async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('home-follow-more')); // Home invites you to find artists
+  await tap(screen.getByTestId('follow-Joe Mettle'));
+  expect(screen.getByLabelText('Unfollow Joe Mettle')).toBeTruthy();
+  expect(screen.getAllByText('Artists you follow')).toHaveLength(2); // in Libraries and on Home
+  expect(JSON.parse(await AsyncStorage.getItem('@selah_fav_artists'))).toEqual(['Joe Mettle']);
+  await tap(screen.getByTestId('libraries-close'));
+
+  global.fetch.mockClear();
+  await tap(screen.getByTestId('home-artist-Joe Mettle'));
+  const year = new Date().getFullYear();
+  expect(youtubeSearches()).toEqual([expect.stringContaining(`search_query=latest Joe Mettle songs ${year}`)]);
+
+  // still followed after closing and opening Selah again
+  await cleanup();
+  await render(<App />);
+  await settle();
+  expect(screen.getByTestId('home-artist-Joe Mettle')).toBeTruthy();
+
+  // unfollow
+  await tap(screen.getByTestId('open-libraries'));
+  await tap(screen.getByTestId('follow-Joe Mettle'));
+  expect(screen.getByLabelText('Follow Joe Mettle')).toBeTruthy();
+  expect(JSON.parse(await AsyncStorage.getItem('@selah_fav_artists'))).toEqual([]);
+});
+
 androidOnly('YouTube pauses and never takes over when you play one of your own songs', async () => {
   media.__state.audio = phoneSongs(6);
   await render(<App />);
