@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 import CoverArt from './CoverArt';
-import { GENRES, ARTISTS, latestSongsSearch, artistSearch } from '../data/discover';
+import { GENRES, ARTISTS, latestSongsSearch, artistSearch, artistChannel } from '../data/discover';
 import useArtistPictures from '../hooks/useArtistPictures';
 
 /**
@@ -64,7 +64,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
               <Text style={styles.section}>Artists you follow</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 8 }}>
                 {followed.map((name) => (
-                  <TouchableOpacity key={name} style={styles.followedCard} onPress={() => onSearch(artistSearch(name))} activeOpacity={0.85}>
+                  <TouchableOpacity key={name} style={styles.followedCard} onPress={() => onSearch(artistSearch(name), artistChannel(name))} activeOpacity={0.85}>
                     <CoverArt person track={{ title: name }} picture={pictures[name]} size={60} round />
                     <Text style={styles.followedName} numberOfLines={1}>{name}</Text>
                   </TouchableOpacity>
@@ -86,7 +86,7 @@ export default function LibrariesModal({ visible, onClose, followed = [], onTogg
               <View key={a.name} style={styles.artistRow}>
                 <TouchableOpacity
                   style={styles.artistInfo}
-                  onPress={() => onSearch(artistSearch(a.name))}
+                  onPress={() => onSearch(artistSearch(a.name), a.youtube)}
                   activeOpacity={0.8}
                   testID={`artist-${a.name}`}
                 >

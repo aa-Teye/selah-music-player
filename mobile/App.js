@@ -32,7 +32,7 @@ import LibrariesModal from './src/components/LibrariesModal';
 import GuidedTour from './src/components/GuidedTour';
 import WhatsNewModal from './src/components/WhatsNewModal';
 import { whatsNewToShow, LATEST_WHATS_NEW } from './src/data/whatsNew';
-import { artistSearch } from './src/data/discover';
+import { artistSearch, artistChannel } from './src/data/discover';
 import { mergeGetBack, findGotBack, getBackSearch } from './src/services/getBack';
 import { videosDue, checkVideos, applyVideoCheck } from './src/services/savedVideos';
 import {
@@ -1506,13 +1506,14 @@ function SelahApp() {
   const songForToday = useMemo(() => songOfTheDay(localTracks, today), [localTracks, today]);
   const openLibraries = useCallback(() => setIsLibrariesVisible(true), []);
   // A genre or an artist: show its latest songs on YouTube (the top search box stays as it is)
-  const discoverOnYouTube = useCallback((query) => {
+  // channel: the artist's own channel, which gets their newest songs for far less of the day's search allowance
+  const discoverOnYouTube = useCallback((query, channel) => {
     if (!query) return;
     setIsLibrariesVisible(false);
-    setExternalSearch({ query, at: Date.now() });
+    setExternalSearch({ query, channel: channel || '', at: Date.now() });
     setActiveTab('youtube');
   }, []);
-  const openArtist = useCallback((name) => discoverOnYouTube(artistSearch(name)), [discoverOnYouTube]);
+  const openArtist = useCallback((name) => discoverOnYouTube(artistSearch(name), artistChannel(name)), [discoverOnYouTube]);
   const findSongOnYouTube = useCallback(
     (song) => {
       setIsAccountVisible(false);

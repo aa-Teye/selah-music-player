@@ -44,6 +44,12 @@ export const ARTISTS = [
   { name: 'Hillsong Worship', from: 'Australia', youtube: 'UC4q12NoPNySbVqwpw4iO5Vg' }
 ];
 
+/** The artist's own YouTube channel (ID or @handle), or '' for an artist Selah does not know */
+export function artistChannel(name) {
+  const known = ARTISTS.find((a) => a.name === name);
+  return known ? known.youtube : '';
+}
+
 /** "latest Ghana gospel songs 2026" — the newest songs on YouTube */
 export function latestSongsSearch(what, year = new Date().getFullYear()) {
   return `latest ${what} ${year}`.replace(/\s+/g, ' ').trim();
