@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions, TouchableOpacity, Animated, PanResponder, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
@@ -68,6 +68,8 @@ const LONG_TRACK_SECONDS = 600;
 // Selah's floating video window: YouTube's rule says a player must be at least 200×200
 const FLOATING_VIDEO_SIZE = 200;
 const FLOATING_BAR_HEIGHT = 32;
+const FLOATING_MARGIN = 12;
+const FLOATING_TOP_ROOM = 70; // the floating window stays below the top bar
 
 function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
   const freshById = new Map(foundTracks.map((t) => [t.id, t]));
@@ -198,6 +200,30 @@ function SelahApp() {
   const [songsToGetBack, setSongsToGetBack] = useState([]); // from a restore: not on this phone yet
   const [inPip, setInPip] = useState(false); // Android: shrunk to the small picture-in-picture window
   // A YouTube video playing while you are on another tab shows in Selah's floating window
+  // The floating window can be dragged by its bar, so it never hides what is underneath it.
+  const floatPos = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const floatLast = useRef({ x: 0, y: 0 });
+  const floatPan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => floatPos.extractOffset(),
+      onPanResponderMove: Animated.event([null, { dx: floatPos.x, dy: floatPos.y }], { useNativeDriver: false }),
+      onPanResponderRelease: () => {
+        floatPos.flattenOffset();
+        const { width, height } = Dimensions.get('window');
+        const spot = {
+          x: Math.min(FLOATING_MARGIN, Math.max(-(width - FLOATING_VIDEO_SIZE - FLOATING_MARGIN * 2), floatLast.current.x)),
+          y: Math.min(FLOATING_MARGIN, Math.max(-(height - FLOATING_VIDEO_SIZE - FLOATING_BAR_HEIGHT - FLOATING_MARGIN - FLOATING_TOP_ROOM), floatLast.current.y))
+        };
+        floatPos.setValue(spot);
+      }
+    })
+  ).current;
+  useEffect(() => {
+    const id = floatPos.addListener((v) => { floatLast.current = v; });
+    return () => floatPos.removeListener(id);
+  }, [floatPos]);
+
   const showFloatingVideo =
     !inPip &&
     activeTab !== 'youtube' &&
@@ -1669,14 +1695,14 @@ function SelahApp() {
         {/* One YouTube player for the whole app (it never restarts). On the YouTube tab: the full screen.
             On another tab while a video plays: Selah's floating window, so the video can always be seen
             (YouTube's rule: no playing from a hidden player). Paused: kept out of sight. */}
-        <View
+        <Animated.View
           style={
             inPip
               ? styles.pipVideo // the small picture-in-picture window: only the video
               : activeTab === 'youtube'
               ? { flex: 1 }
               : showFloatingVideo
-              ? styles.floatingVideo
+              ? [styles.floatingVideo, { transform: floatPos.getTranslateTransform() }]
               : { position: 'absolute', top: -99999, left: -99999, width: 1, height: 1, opacity: 0 }
           }
           pointerEvents={inPip || activeTab === 'youtube' || showFloatingVideo ? 'auto' : 'none'}
@@ -1692,6 +1718,9 @@ function SelahApp() {
               >
                 <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
               </TouchableOpacity>
+              <View style={styles.floatingDrag} {...floatPan.panHandlers} testID="float-drag" accessibilityLabel="Drag to move the video">
+                <Ionicons name="reorder-two" size={22} color="#9CA3AF" />
+              </View>
               <TouchableOpacity
                 onPress={() => handleTogglePlay(false)}
                 style={styles.floatingButton}
@@ -1726,7 +1755,7 @@ function SelahApp() {
             floatSize={showFloatingVideo ? FLOATING_VIDEO_SIZE : 0}
             onOpenSmallWindow={pipAvailable() ? openSmallWindow : undefined}
           />
-        </View>
+        </Animated.View>
 
         {activeTab === 'playlists' && (
           <PlaylistsScreen
@@ -1995,6 +2024,7 @@ const makeStyles = (c) => StyleSheet.create({
     paddingHorizontal: 4,
     backgroundColor: '#111318'
   },
+  floatingDrag: { flex: 1, height: FLOATING_BAR_HEIGHT, alignItems: 'center', justifyContent: 'center' },
   floatingButton: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center' }
 });
 

@@ -1155,6 +1155,10 @@ test("YouTube's rule: on another tab a playing video shows in Selah's floating w
   expect(global.__youtubeProps.height).toBeGreaterThanOrEqual(200);
   expect(global.__youtubeProps.width).toBeGreaterThanOrEqual(200);
 
+  // its bar has a handle to drag it away from what it covers
+  expect(screen.getByTestId('float-drag')).toBeTruthy();
+  expect(screen.getByTestId('youtube-area').props.style).toEqual(expect.objectContaining({ transform: expect.any(Array) })); // it can be moved
+
   // the expand button goes back to the YouTube tab
   await tap(screen.getByTestId('float-open'));
   expect(screen.queryByTestId('yt-float-video')).toBeNull();
