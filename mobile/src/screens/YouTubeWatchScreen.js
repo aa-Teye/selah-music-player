@@ -113,8 +113,10 @@ function YouTubeWatchScreen({
   onResumeDone,
   externalSearch, // { query, at }: Libraries asking for "the latest songs" of a genre or artist
   pipMode = false, // Selah is shrunk to the small picture-in-picture window (Android)
+  floatSize = 0, // on another tab: only the video, in Selah's floating window (this many points square)
   onOpenSmallWindow // shows the small-window button (only where picture-in-picture works)
 }) {
+  const videoOnly = pipMode || floatSize > 0;
   const c = useColors();
   const styles = useThemedStyles(makeStyles);
   const win = useWindowDimensions();
@@ -187,10 +189,10 @@ function YouTubeWatchScreen({
 
   // The small window shows the top of the screen: make sure that is the video
   useEffect(() => {
-    if (pipMode && scrollRef.current && scrollRef.current.scrollTo) {
+    if (videoOnly && scrollRef.current && scrollRef.current.scrollTo) {
       scrollRef.current.scrollTo({ y: 0, animated: false });
     }
-  }, [pipMode]);
+  }, [videoOnly]);
 
 
   const cycleRepeatMode = () => {
@@ -464,28 +466,37 @@ function YouTubeWatchScreen({
   // In the small picture-in-picture window only the video shows, filling it.
   // (Same player, only resized: the video never restarts.)
   // YouTube's rule: the player must be at least 200×200 (taller than 16:9 on narrow phones)
-  const playerHeight = pipMode ? win.height : Math.max(MIN_PLAYER_SIZE, (win.width - 32) * (9 / 16));
+  // In Selah's floating window (other tabs) the player is a square of at least 200×200.
+  const playerHeight = pipMode
+    ? win.height
+    : floatSize > 0
+    ? Math.max(MIN_PLAYER_SIZE, floatSize)
+    : Math.max(MIN_PLAYER_SIZE, (win.width - 32) * (9 / 16));
+  const playerWidth = pipMode ? win.width : floatSize > 0 ? Math.max(MIN_PLAYER_SIZE, floatSize) : undefined;
 
   return (
     <ScrollView
       ref={scrollRef}
-      style={pipMode ? styles.pipScroll : styles.container}
-      contentContainerStyle={pipMode ? styles.pipContent : styles.content}
-      scrollEnabled={!pipMode}
+      style={videoOnly ? styles.pipScroll : styles.container}
+      contentContainerStyle={videoOnly ? styles.pipContent : styles.content}
+      scrollEnabled={!videoOnly}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {/* ── 1. TOP HERO PLAYER AREA ─────────────────────────────────── */}
-      <View style={[styles.heroPlayerSection, pipMode && styles.pipFill]}>
+      <View style={[styles.heroPlayerSection, videoOnly && styles.pipFill]}>
         {/* ── Single Persistent YouTube Player Container ── */}
-        <View style={[styles.playerContainer, pipMode && styles.pipFill]}>
+        <View style={[styles.playerContainer, videoOnly && styles.pipFill]}>
           {/* Main YouTube Iframe Player (always kept mounted with full 16:9 dimensions so audio stream is never paused by OS) */}
-          <View style={[styles.videoPlayerCard, pipMode && styles.pipFill]} testID={pipMode ? 'yt-pip-video' : undefined}>
+          <View
+            style={[styles.videoPlayerCard, videoOnly && styles.pipFill]}
+            testID={pipMode ? 'yt-pip-video' : floatSize > 0 ? 'yt-float-video' : undefined}
+          >
             <YoutubePlayer
               ref={playerRef}
               forceAndroidAutoplay={true}
               height={playerHeight}
-              width={pipMode ? win.width : undefined}
+              width={playerWidth}
               play={isYtPlaying}
               videoId={currentYtId}
               onReady={() => setIsPlayerReady(true)}
@@ -511,7 +522,7 @@ function YouTubeWatchScreen({
         </View>
 
         {/* Now Playing Info Bar */}
-        <View style={[styles.playingBar, pipMode && styles.pipHidden]}>
+        <View style={[styles.playingBar, videoOnly && styles.pipHidden]}>
           <View style={styles.playingBarLeft}>
             <View style={styles.livePulseDot} />
             <View style={{ flex: 1 }}>
@@ -562,7 +573,7 @@ function YouTubeWatchScreen({
         </View>
 
         {/* Playback Controls Row: Shuffle, Prev, Master Play/Pause, Next, Loop */}
-        <View style={[styles.controlsRow, pipMode && styles.pipHidden]}>
+        <View style={[styles.controlsRow, videoOnly && styles.pipHidden]}>
           {/* Shuffle Toggle */}
           <TouchableOpacity 
             style={[styles.ctrlBtn, isShuffle && styles.ctrlBtnActive]}
@@ -633,7 +644,7 @@ function YouTubeWatchScreen({
       </View>
 
       {/* Everything below the player is hidden in the small window (kept, not removed) */}
-      <View style={pipMode ? styles.pipHidden : null}>
+      <View style={videoOnly ? styles.pipHidden : null}>
       {/* ── 2. SEARCH BAR & QUICK CHIPS ─────────────────────────────── */}
       <View style={styles.searchSection}>
         <View style={styles.searchBox}>
