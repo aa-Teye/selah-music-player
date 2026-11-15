@@ -38,16 +38,28 @@ export function videoToTrack(video) {
   };
 }
 
-/** YouTube's official search, through Selah's server. Nothing found (or offline): [] */
-export async function searchYouTube(query, maxResults = 20) {
+/**
+ * YouTube's official search, through Selah's server, and why nothing came back when that happens:
+ *   problem 'resting' = the day's allowance of searches is used up (it fills again every morning),
+ *   'offline' = no internet, 'busy' = YouTube or the server could not answer. null = all fine.
+ * channel (an artist's own channel, ID or @handle): their newest songs, which costs the allowance far less.
+ */
+export async function searchYouTubeWithStatus(query, { channel = '', max = 20 } = {}) {
   const q = String(query || '').trim();
-  if (!q || !isCloudReady()) return [];
+  if (!q || !isCloudReady()) return { results: [], problem: null };
   try {
-    const res = await call(`/api/youtube/search?q=${encodeURIComponent(q)}`, { timeout: 12000 });
-    return (res.results || []).slice(0, maxResults).map(videoToTrack);
-  } catch {
-    return [];
+    const path = `/api/youtube/search?q=${encodeURIComponent(q)}${channel ? `&channel=${encodeURIComponent(channel)}` : ''}`;
+    const res = await call(path, { timeout: 12000 });
+    return { results: (res.results || []).slice(0, max).map(videoToTrack), problem: null };
+  } catch (err) {
+    const problem = err && err.code === 'resting' ? 'resting' : err && err.kind === 'offline' ? 'offline' : 'busy';
+    return { results: [], problem };
   }
+}
+
+/** The songs only. Nothing found (or offline): [] */
+export async function searchYouTube(query, maxResults = 20, channel = '') {
+  return (await searchYouTubeWithStatus(query, { channel, max: maxResults })).results;
 }
 
 /**
