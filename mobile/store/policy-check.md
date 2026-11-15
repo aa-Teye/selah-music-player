@@ -42,7 +42,7 @@ rules (Developer Policies and Required Minimum Functionality).
 
 | Rule | | What Selah does |
 | --- | --- | --- |
-| Use the official API, never read YouTube's website | ✅ | Search goes through the Selah server to the YouTube Data API. ☐ Add `YOUTUBE_API_KEY` in Vercel: search shows nothing until then |
+| Use the official API, never read YouTube's website | ✅ | Search goes through the Selah server to the YouTube Data API. `YOUTUBE_API_KEY` is set in Vercel (checked 2026-11-15: health shows youtube ready, all 22 artist channels found) |
 | No unofficial Google services | ✅ | The search-suggestion address was removed |
 | Player at least 200 × 200 | ✅ | The player is never less than 200 high |
 | A video picture that starts a video: at least 120 × 70 | ✅ | Search results show 128 × 72; smaller spots show a red play tile instead of the picture |
