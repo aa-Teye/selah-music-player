@@ -625,6 +625,14 @@ test('privacy and delete-account pages (Google Play needs both)', async () => {
   assert.doesNotMatch(deletion, /<script>/);
 });
 
+test('terms: cover copyright removal, ending use, and that the stores are not a party', async () => {
+  const terms = await (await termsPage.GET()).text();
+  assert.match(terms, /Songs, lyrics and copyright/);
+  assert.match(terms, /want it\s+removed/);
+  assert.match(terms, /Ending your use/);
+  assert.match(terms, /Google, Apple and the other app stores are not responsible/);
+});
+
 test('YouTube rules: privacy policy and terms say Selah uses YouTube API Services, with the required links', async () => {
   const policy = await (await privacy.GET()).text();
   assert.match(policy, /YouTube API Services/);

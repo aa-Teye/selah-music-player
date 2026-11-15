@@ -4,7 +4,7 @@
 import { html } from '../lib/http.js';
 import { page, supportLine } from '../lib/pages.js';
 
-const UPDATED = '14 November 2026';
+const UPDATED = '15 November 2026';
 
 export function GET() {
   return html(
@@ -41,6 +41,22 @@ Share only the words of the song. Do not share anything that is:</p>
 <p>Anyone can report shared lyrics or the person who shared them, right from the lyrics, and can hide everything
 from a person. Lyrics reported by several people are hidden automatically. We review reports, remove lyrics that
 break these rules, and close the accounts of people who keep breaking them.</p>
+
+<h2>Songs, lyrics and copyright</h2>
+<p>The songs on your phone are yours; Selah only plays them and never uploads them. Videos, music and pictures
+from YouTube belong to their owners and are shown through YouTube's own player. Lyrics belong to their writers.
+Lyrics found by Selah come from the community library <a href="https://lrclib.net">LRCLIB</a>; lyrics you share
+stay yours, and you let Selah show them to other Selah users. If you own a song, a lyric or a picture and want it
+removed, ${supportLine()}. We remove it promptly, and we close the accounts of people who keep sharing what is
+not theirs to share.</p>
+
+<h2>Ending your use</h2>
+<p>You can stop using Selah and delete your account at any time. We may suspend or close an account that breaks
+these terms or harms other people. If Selah is ever shut down, we will say so in the app first.</p>
+
+<h2>Stores</h2>
+<p>These terms are between you and Selah. Google, Apple and the other app stores are not responsible for Selah
+or for helping with it; questions go to us at the address below.</p>
 
 <h2>Premium</h2>
 <p>If Selah Premium is offered, it is paid through Google Play (or the App Store on iPhone), renews automatically

@@ -3,7 +3,7 @@
 import { html } from '../lib/http.js';
 import { page, supportLine } from '../lib/pages.js';
 
-const UPDATED = '14 November 2026';
+const UPDATED = '15 November 2026';
 
 export function GET() {
   return html(
