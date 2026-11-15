@@ -188,10 +188,10 @@ export async function saveYouTubeCache(key, data) {
     ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, fetched_at = now()`;
 }
 
-/** Old answers are removed (YouTube's rules: never kept longer than 30 days; here, 2 days) */
+/** Old answers are removed (YouTube's rules: never kept longer than 30 days; here, 5 days) */
 export async function clearOldYouTubeCache() {
   const sql = await db();
-  const cutoff = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
   await sql`DELETE FROM youtube_cache WHERE fetched_at < ${cutoff}`;
 }
 

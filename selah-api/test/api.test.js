@@ -269,6 +269,40 @@ test("when the day's allowance is used up: the last answer is shown again; with 
   }
 });
 
+test('a typed search is remembered for 3 days, and spellings of the same search share one answer', async () => {
+  process.env.YOUTUBE_API_KEY = 'test-key';
+  let keywordSearches = 0;
+  useYouTubeFetchForTests(async (url) => {
+    const what = new URL(url).pathname.split('/').pop();
+    if (what === 'search') {
+      keywordSearches++;
+      return { ok: true, json: async () => ({ items: [{ id: { videoId: 'gIWCDgNt5ww' } }] }) };
+    }
+    return {
+      ok: true,
+      json: async () => ({ items: [{ id: 'gIWCDgNt5ww', snippet: { title: 'Worship', channelTitle: 'Church' }, contentDetails: { duration: 'PT5M' } }] })
+    };
+  });
+  try {
+    await call(youtubeSearch.GET, '/api/youtube/search?q=Ghana%20gospel');
+    await call(youtubeSearch.GET, '/api/youtube/search?q=ghana%20%20gospel%20songs!');
+    await call(youtubeSearch.GET, '/api/youtube/search?q=Ghana%20Gospel%20Song');
+    assert.equal(keywordSearches, 1, 'three spellings, one question to YouTube');
+
+    // 2 days later: still the same answer; after 4 days: asked again
+    const ago = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    await sql`UPDATE youtube_cache SET fetched_at = ${ago(2)} WHERE key = 'search:ghana gospel'`;
+    await call(youtubeSearch.GET, '/api/youtube/search?q=Ghana%20gospel');
+    assert.equal(keywordSearches, 1);
+    await sql`UPDATE youtube_cache SET fetched_at = ${ago(4)} WHERE key = 'search:ghana gospel'`;
+    await call(youtubeSearch.GET, '/api/youtube/search?q=Ghana%20gospel');
+    assert.equal(keywordSearches, 2);
+  } finally {
+    useYouTubeFetchForTests(null);
+    delete process.env.YOUTUBE_API_KEY;
+  }
+});
+
 test("artists' pictures: their own YouTube channel pictures, by channel ID or @handle, remembered for a day", async () => {
   delete process.env.YOUTUBE_API_KEY;
   assert.equal((await call(youtubeChannels.GET, '/api/youtube/channels?ids=UCcaV40yrjS5R88xYHxK_0rA')).status, 503);

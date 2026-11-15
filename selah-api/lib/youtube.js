@@ -8,8 +8,10 @@ import { HttpError } from './http.js';
 import { cachedYouTube, saveYouTubeCache, clearOldYouTubeCache } from './db.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
-const SEARCH_MAX_AGE = 24 * 60 * 60 * 1000;
-const STALE_MAX_AGE = 2 * 24 * 60 * 60 * 1000; // shown when YouTube cannot be asked (Selah deletes older answers)
+const DAY = 24 * 60 * 60 * 1000;
+const SEARCH_MAX_AGE = DAY; // an artist's newest songs: asked again after a day
+const TYPED_MAX_AGE = 3 * DAY; // a typed search: songs do not change fast, so keep the answer longer
+const STALE_MAX_AGE = 5 * DAY; // shown when YouTube cannot be asked (Selah deletes older answers)
 const MIN_UPLOADS = 3; // a channel with fewer songs than this: use a keyword search instead
 const MIN_SONG_SECONDS = 60; // shorter uploads are clips and Shorts, not songs
 const VIDEOS_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -178,12 +180,15 @@ async function channelUploads(channel) {
 export async function searchVideos(q, channel = '') {
   const query = String(q || '').replace(/\s+/g, ' ').trim().slice(0, 100);
   if (!query) throw new HttpError(400, 'What should we search for?');
-  const key = `search:${query.toLowerCase()}`;
-  const cached = await cachedYouTube(key, SEARCH_MAX_AGE);
+  const wanted = String(channel || '').trim();
+  // "Ghana gospel", "ghana gospel songs!" and "Ghana  Gospel Song" share one answer
+  const same = query.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter((w) => w && w !== 'song' && w !== 'songs').join(' ');
+  const newest = isChannelKey(wanted); // artist taps: the newest songs, so a fresher answer
+  const key = `${newest ? 'newest' : 'search'}:${same || query.toLowerCase()}`;
+  const cached = await cachedYouTube(key, newest ? SEARCH_MAX_AGE : TYPED_MAX_AGE);
   if (cached) return cached;
   try {
-    const wanted = String(channel || '').trim();
-    if (isChannelKey(wanted)) {
+    if (newest) {
       let uploads = [];
       try {
         uploads = await channelUploads(wanted);

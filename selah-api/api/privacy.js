@@ -35,7 +35,7 @@ are kept so the community rules in our <a href="/terms">terms of use</a> can be 
 
 <h2>YouTube</h2>
 <p>Selah uses YouTube API Services to search for and play videos. Your searches are sent through Selah's server to
-YouTube; the server keeps recent search results for up to a day, not linked to you, so the same search does not
+YouTube; the server keeps recent search results for a few days, not linked to you, so the same search does not
 have to be repeated. Videos play in YouTube's own player. The videos you save (their title, channel and picture)
 are kept on your phone and refreshed at least every 30 days; if you back up, your account keeps only each video's ID.
 The gospel artists in Libraries show their own YouTube channel pictures, which are refreshed the same way.
