@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import YouTubeService, { extractVideoId, searchYouTube } from '../services/youtubeService';
+import YouTubeService, { extractVideoId, searchYouTubeWithStatus } from '../services/youtubeService';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -25,6 +25,30 @@ const { width } = Dimensions.get('window');
 // YouTube's Required Minimum Functionality: the player at least 200×200, and any video
 // picture you tap to start a video at least 120×70
 export const MIN_PLAYER_SIZE = 200;
+
+// What an empty search list says. "resting": YouTube gives Selah a limited number of searches each day.
+export const SEARCH_PROBLEMS = {
+  none: {
+    icon: 'musical-notes-outline',
+    title: (q) => `No songs found for "${q}"`,
+    text: 'Try searching an artist like "Brandon Lake" or "CeCe Winans"'
+  },
+  resting: {
+    icon: 'moon-outline',
+    title: () => 'Search is resting until tomorrow morning',
+    text: 'YouTube gives Selah a limited number of searches each day. Your saved songs and videos still play.'
+  },
+  offline: {
+    icon: 'cloud-offline-outline',
+    title: () => 'No internet connection',
+    text: 'Connect to the internet, then search again.'
+  },
+  busy: {
+    icon: 'alert-circle-outline',
+    title: () => "YouTube search isn't available right now",
+    text: 'Please try again in a little while.'
+  }
+};
 export const MIN_VIDEO_PICTURE = { width: 120, height: 70 };
 
 const QUICK_SEARCH_CHIPS = [
@@ -125,6 +149,7 @@ function YouTubeWatchScreen({
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchProblem, setSearchProblem] = useState(null); // why a search showed nothing: 'resting' | 'offline' | 'busy'
   const [isCustomExpanded, setIsCustomExpanded] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
@@ -214,11 +239,12 @@ function YouTubeWatchScreen({
   }, [searchQuery]);
 
   // Execute direct YouTube Search
-  const performSearch = async (term) => {
+  const performSearch = async (term, channel = '') => {
     const q = (term || '').trim();
     if (!q) {
       setSearchResults([]);
       setHasSearched(false);
+      setSearchProblem(null);
       setIsSearching(false);
       return;
     }
@@ -226,8 +252,10 @@ function YouTubeWatchScreen({
     try {
       setIsSearching(true);
       setHasSearched(true);
-      const results = await searchYouTube(q, 20);
+      setSearchProblem(null);
+      const { results, problem } = await searchYouTubeWithStatus(q, { channel, max: 20 });
       setSearchResults(results);
+      setSearchProblem(results.length === 0 ? problem : null);
     } catch (err) {
       console.error('YouTube search error:', err);
     } finally {
@@ -252,7 +280,7 @@ function YouTubeWatchScreen({
   useEffect(() => {
     if (!externalSearch || !externalSearch.query) return;
     setLocalSearch(externalSearch.query);
-    performSearch(externalSearch.query);
+    performSearch(externalSearch.query, externalSearch.channel || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalSearch]);
 
@@ -262,6 +290,7 @@ function YouTubeWatchScreen({
       setLocalSearch('');
       setSearchResults([]);
       setHasSearched(false);
+      setSearchProblem(null);
     } else {
       setLocalSearch(chip.query);
       performSearch(chip.query);
@@ -272,6 +301,7 @@ function YouTubeWatchScreen({
     setLocalSearch('');
     setSearchResults([]);
     setHasSearched(false);
+    setSearchProblem(null);
     setActiveChip('curated');
   };
 
@@ -720,10 +750,10 @@ function YouTubeWatchScreen({
             <Text style={styles.loadingText}>Searching YouTube live...</Text>
           </View>
         ) : displayVideos.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Ionicons name="musical-notes-outline" size={36} color={c.textSubtle} />
-            <Text style={styles.emptyTitle}>No songs found for "{localSearch}"</Text>
-            <Text style={styles.emptySub}>Try searching an artist like "Brandon Lake" or "CeCe Winans"</Text>
+          <View style={styles.emptyBox} testID={searchProblem ? `yt-problem-${searchProblem}` : 'yt-empty'}>
+            <Ionicons name={SEARCH_PROBLEMS[searchProblem || 'none'].icon} size={36} color={c.textSubtle} />
+            <Text style={styles.emptyTitle}>{SEARCH_PROBLEMS[searchProblem || 'none'].title(localSearch)}</Text>
+            <Text style={styles.emptySub}>{SEARCH_PROBLEMS[searchProblem || 'none'].text}</Text>
           </View>
         ) : (
           <View style={styles.videoList}>
