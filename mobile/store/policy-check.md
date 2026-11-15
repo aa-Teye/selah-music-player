@@ -47,13 +47,13 @@ rules (Developer Policies and Required Minimum Functionality).
 | Player at least 200 × 200 | ✅ | The player is never less than 200 high |
 | A video picture that starts a video: at least 120 × 70 | ✅ | Search results show 128 × 72; smaller spots show a red play tile instead of the picture |
 | Users agree to YouTube's Terms; Google's Privacy Policy linked | ✅ | In `/terms`, `/privacy` and at the bottom of the YouTube tab |
-| Stored YouTube details: at most 30 days | ✅ | Saved videos are checked again after 25 days (fresh details; removed videos dropped). Backups keep only video IDs. The server forgets searches after 12 hours and deletes them after 2 days. Artist pictures: asked again after 25 days, never shown after 30 |
+| Stored YouTube details: at most 30 days | ✅ | Saved videos are checked again after 25 days (fresh details; removed videos dropped). Backups keep only video IDs. The server forgets searches after a day and deletes them after 2 days. Artist pictures: asked again after 25 days, never shown after 30 |
 | Say when something comes from YouTube | ✅ | Libraries: "Pictures from the artists' YouTube channels" with the YouTube logo; Home: "pictures from YouTube" |
 | Do not change, cover or block the player | ✅ | Play and pause use the player's own documented functions; nothing covers the player |
 | Autoplay only when the player can be seen | ✅ | Videos start when you tap them on the YouTube tab |
 | No playing from a player that is not on screen | ✅ | On another Selah tab a playing video shows in Selah's floating window (200 × 200, with expand and stop buttons); outside the app it shows in Android's small window. Paused videos are kept out of sight. (Replaces the earlier hidden playing that YouTube's rule III.I.9 forbids) |
 | **Picture-in-picture window size** | ⚠️ | **Accepted by the owner.** Android's small window can be smaller than 200 × 200. If YouTube objects: remove the small window |
-| Daily allowance | ☐ | 10,000 free units a day (about 100 new searches; repeated searches are free for 12 hours). When Selah grows, ask Google for more (a free YouTube compliance check) |
+| Daily allowance | ☐ | 10,000 free units a day (about 100 new keyword searches). Made to last: answers are remembered for a day; an artist's latest songs come from their channel (about 3 units); old answers show when the day's allowance is used up, and the app says "Search is resting until tomorrow morning" when there is nothing to show. When Selah grows, ask Google for more (a free audit; it checks the rules above) |
 
 ---
 
