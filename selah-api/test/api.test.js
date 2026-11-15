@@ -165,6 +165,110 @@ test("YouTube's official search through Selah's server: answers are remembered f
   }
 });
 
+test("the allowance lasts: an artist's latest songs come from their channel (about 3 units, not 100)", async () => {
+  process.env.YOUTUBE_API_KEY = 'test-key';
+  const asked = [];
+  const video = (id, title, seconds, extra = {}) => ({
+    id,
+    snippet: { title, channelTitle: 'Sinach', thumbnails: { high: { url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` } } },
+    contentDetails: { duration: `PT${seconds}S` },
+    ...extra
+  });
+  useYouTubeFetchForTests(async (url) => {
+    const u = new URL(url);
+    const what = u.pathname.split('/').pop();
+    asked.push(what);
+    if (what === 'channels') {
+      return { ok: true, json: async () => ({ items: [{ id: 'UCzzzzzzzzzzzzzzzzzzzzzz', snippet: { title: 'Sinach', thumbnails: { medium: { url: 'https://yt3.ggpht.com/s' } } } }] }) };
+    }
+    if (what === 'playlistItems') {
+      // a channel's uploads are the playlist starting "UU" instead of "UC"
+      assert.match(u.searchParams.get('playlistId'), /^UU(caV40yrjS5R88xYHxK_0rA|zzzzzzzzzzzzzzzzzzzzzz)$/);
+      const ids = ['aaaaaaaaaaa', 'bbbbbbbbbbb', 'ccccccccccc', 'ddddddddddd', 'eeeeeeeeeee'];
+      return { ok: true, json: async () => ({ items: ids.map((videoId) => ({ contentDetails: { videoId } })) }) };
+    }
+    if (what === 'videos') {
+      assert.match(u.searchParams.get('part'), /status/);
+      return {
+        ok: true,
+        json: async () => ({
+          items: [
+            video('aaaaaaaaaaa', 'Way Maker (Live)', 480),
+            video('bbbbbbbbbbb', 'A Short', 30), // a Short: left out
+            video('ccccccccccc', 'Not for apps', 300, { status: { embeddable: false } }), // cannot play in apps: left out
+            video('ddddddddddd', 'Great Are You', 360, { status: { embeddable: true } }),
+            video('eeeeeeeeeee', 'Waymaker', 200)
+          ]
+        })
+      };
+    }
+    throw new Error(`not expected: ${what}`);
+  });
+  try {
+    // by channel ID: the upload list and the details, no keyword search
+    const byId = await call(youtubeSearch.GET, '/api/youtube/search?q=latest%20Sinach%20songs%202026&channel=UCcaV40yrjS5R88xYHxK_0rA');
+    assert.equal(byId.status, 200);
+    assert.deepEqual(byId.body.results.map((v) => v.title), ['Way Maker (Live)', 'Great Are You', 'Waymaker']);
+    assert.deepEqual(asked, ['playlistItems', 'videos']);
+
+    // the same tap again: from memory
+    await call(youtubeSearch.GET, '/api/youtube/search?q=latest%20Sinach%20songs%202026&channel=UCcaV40yrjS5R88xYHxK_0rA');
+    assert.equal(asked.length, 2);
+
+    // by @handle: a small call to find the channel, then its upload list (the video details are the
+    // same ones as before, so they are remembered)
+    asked.length = 0;
+    const byHandle = await call(youtubeSearch.GET, '/api/youtube/search?q=latest%20Sinach%20worship%202026&channel=%40SinachOfficial');
+    assert.equal(byHandle.body.results.length, 3);
+    assert.deepEqual(asked, ['channels', 'playlistItems']);
+    assert.ok(!asked.includes('search'), 'a keyword search (100 units) is never used for an artist with a channel');
+  } finally {
+    useYouTubeFetchForTests(null);
+    delete process.env.YOUTUBE_API_KEY;
+  }
+});
+
+test("when the day's allowance is used up: the last answer is shown again; with none, 'Search is resting'", async () => {
+  process.env.YOUTUBE_API_KEY = 'test-key';
+  let used = 0;
+  useYouTubeFetchForTests(async (url) => {
+    used++;
+    const what = new URL(url).pathname.split('/').pop();
+    if (what === 'search') return { ok: true, json: async () => ({ items: [{ id: { videoId: 'gIWCDgNt5ww' } }] }) };
+    return {
+      ok: true,
+      json: async () => ({ items: [{ id: 'gIWCDgNt5ww', snippet: { title: 'Worship', channelTitle: 'Church' }, contentDetails: { duration: 'PT5M' } }] })
+    };
+  });
+  try {
+    assert.equal((await call(youtubeSearch.GET, '/api/youtube/search?q=worship')).body.results.length, 1);
+
+    // an answer from 30 hours ago: too old to use as new, still good when YouTube cannot be asked
+    const thirtyHoursAgo = new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString();
+    await sql`UPDATE youtube_cache SET fetched_at = ${thirtyHoursAgo} WHERE key = 'search:worship'`;
+    useYouTubeFetchForTests(async () => ({ ok: false, status: 403, json: async () => ({}) })); // allowance used up
+    const again = await call(youtubeSearch.GET, '/api/youtube/search?q=worship');
+    assert.equal(again.status, 200);
+    assert.equal(again.body.results[0].youtubeId, 'gIWCDgNt5ww');
+
+    // a search nobody made before: nothing to show, and a message that says what is happening
+    const none = await call(youtubeSearch.GET, '/api/youtube/search?q=something%20new');
+    assert.equal(none.status, 429);
+    assert.equal(none.body.code, 'resting');
+    assert.match(none.body.error, /resting until tomorrow morning/);
+
+    // any other YouTube trouble: a calm "busy" message
+    useYouTubeFetchForTests(async () => ({ ok: false, status: 500, json: async () => ({}) }));
+    const busy = await call(youtubeSearch.GET, '/api/youtube/search?q=another%20new%20one');
+    assert.equal(busy.status, 502);
+    assert.equal(busy.body.code, undefined);
+    assert.ok(used > 0);
+  } finally {
+    useYouTubeFetchForTests(null);
+    delete process.env.YOUTUBE_API_KEY;
+  }
+});
+
 test("artists' pictures: their own YouTube channel pictures, by channel ID or @handle, remembered for a day", async () => {
   delete process.env.YOUTUBE_API_KEY;
   assert.equal((await call(youtubeChannels.GET, '/api/youtube/channels?ids=UCcaV40yrjS5R88xYHxK_0rA')).status, 503);
