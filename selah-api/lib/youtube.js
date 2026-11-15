@@ -1,11 +1,17 @@
 // YouTube's official search (YouTube Data API v3), used instead of reading YouTube's website.
 // Needs YOUTUBE_API_KEY in Vercel (Google Cloud › APIs & Services › YouTube Data API v3 › Credentials).
-// Each search costs 100 of the 10,000 free units a day, so answers are remembered for 12 hours.
+// Each keyword search costs 100 of the 10,000 free units a day, so the allowance is made to last:
+//  • answers are remembered for a day (YouTube allows up to 30 days);
+//  • an artist's "latest songs" come from the artist's own channel uploads (about 3 units, not 100);
+//  • when the day's allowance is used up, the last answer is shown again instead of an error.
 import { HttpError } from './http.js';
 import { cachedYouTube, saveYouTubeCache, clearOldYouTubeCache } from './db.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
-const SEARCH_MAX_AGE = 12 * 60 * 60 * 1000;
+const SEARCH_MAX_AGE = 24 * 60 * 60 * 1000;
+const STALE_MAX_AGE = 2 * 24 * 60 * 60 * 1000; // shown when YouTube cannot be asked (Selah deletes older answers)
+const MIN_UPLOADS = 3; // a channel with fewer songs than this: use a keyword search instead
+const MIN_SONG_SECONDS = 60; // shorter uploads are clips and Shorts, not songs
 const VIDEOS_MAX_AGE = 24 * 60 * 60 * 1000;
 const CHANNELS_MAX_AGE = 24 * 60 * 60 * 1000;
 let fetchForTests = null;
@@ -24,8 +30,9 @@ async function api(path, params) {
   const doFetch = fetchForTests || fetch;
   const res = await doFetch(`${API}/${path}?${query}`, { headers: { Accept: 'application/json' } });
   if (!res.ok) {
-    // 403: the daily allowance is used up (or the key is wrong)
-    throw new HttpError(res.status === 403 ? 429 : 502, 'YouTube is busy right now. Please try again later.');
+    // 403: the daily allowance is used up (or the key is wrong); it fills up again every morning
+    if (res.status === 403) throw new HttpError(429, 'Search is resting until tomorrow morning.', { code: 'resting' });
+    throw new HttpError(502, 'YouTube is busy right now. Please try again later.');
   }
   return res.json();
 }
@@ -65,7 +72,8 @@ function videoFromApi(item) {
     duration: seconds,
     durationFormatted: seconds ? formatSeconds(seconds) : '',
     picture,
-    live: snippet.liveBroadcastContent === 'live'
+    live: snippet.liveBroadcastContent === 'live',
+    ...(item.status && item.status.embeddable === false ? { embeddable: false } : {}) // cannot play inside apps
   };
 }
 
@@ -76,7 +84,7 @@ export async function videoDetails(ids) {
   const key = `videos:${[...clean].sort().join(',')}`;
   const cached = await cachedYouTube(key, VIDEOS_MAX_AGE);
   if (cached) return cached;
-  const data = await api('videos', { part: 'snippet,contentDetails', id: clean.join(','), maxResults: '50' });
+  const data = await api('videos', { part: 'snippet,contentDetails,status', id: clean.join(','), maxResults: '50' });
   const videos = (data.items || []).map(videoFromApi);
   await saveYouTubeCache(key, videos);
   return videos;
@@ -116,38 +124,95 @@ export async function channelPictures(keys) {
     });
   }
   for (const handle of handles) {
-    const key = `handle:${handle.toLowerCase()}`;
-    let channels = await cachedYouTube(key, CHANNELS_MAX_AGE);
-    if (!channels) {
-      const data = await api('channels', { part: 'snippet', forHandle: handle });
-      channels = (data.items || []).map(channelFromApi).filter((c) => c.picture);
-      await saveYouTubeCache(key, channels);
-    }
-    if (channels[0]) found[handle] = channels[0];
+    const channel = await channelForHandle(handle);
+    if (channel) found[handle] = channel;
   }
   return found;
 }
 
-/** Search: up to 20 videos that can be played inside apps */
-export async function searchVideos(q) {
+/** The channel behind an @handle (1 unit, remembered for a day), or null */
+async function channelForHandle(handle) {
+  const key = `handle:${handle.toLowerCase()}`;
+  let channels = await cachedYouTube(key, CHANNELS_MAX_AGE);
+  if (!channels) {
+    const data = await api('channels', { part: 'snippet', forHandle: handle });
+    channels = (data.items || []).map(channelFromApi).filter((c) => c.picture);
+    await saveYouTubeCache(key, channels);
+  }
+  return channels[0] || null;
+}
+
+const isChannelKey = (k) => /^UC[\w-]{22}$/.test(k) || /^@[\w.-]{3,30}$/.test(k);
+
+/**
+ * The newest songs an artist uploaded to their own channel: about 3 units (handle lookup, upload list,
+ * details) instead of the 100 a keyword search costs. Shorts and clips are left out.
+ */
+async function channelUploads(channel) {
+  let id = channel;
+  if (channel.startsWith('@')) {
+    const found = await channelForHandle(channel);
+    id = found && found.id;
+  }
+  if (!id) return [];
+  const key = `uploads:${id}`;
+  const cached = await cachedYouTube(key, SEARCH_MAX_AGE);
+  if (cached) return cached;
+  // a channel's uploads are the playlist with the same ID, starting "UU" instead of "UC"
+  const list = await api('playlistItems', { part: 'contentDetails', playlistId: `UU${id.slice(2)}`, maxResults: '25' });
+  const ids = (list.items || []).map((i) => i.contentDetails && i.contentDetails.videoId).filter(Boolean);
+  const details = ids.length ? await videoDetails(ids) : [];
+  const byId = new Map(details.map((v) => [v.youtubeId, v]));
+  const songs = ids
+    .map((vid) => byId.get(vid))
+    .filter((v) => v && !v.live && v.embeddable !== false && v.duration >= MIN_SONG_SECONDS);
+  await saveYouTubeCache(key, songs);
+  return songs;
+}
+
+/**
+ * Search: up to 20 videos that can be played inside apps.
+ * channel (optional, an artist's channel ID or @handle): the newest songs from that channel instead.
+ * When YouTube cannot be asked (the day's allowance is used up), the last answer is shown again.
+ */
+export async function searchVideos(q, channel = '') {
   const query = String(q || '').replace(/\s+/g, ' ').trim().slice(0, 100);
   if (!query) throw new HttpError(400, 'What should we search for?');
   const key = `search:${query.toLowerCase()}`;
   const cached = await cachedYouTube(key, SEARCH_MAX_AGE);
   if (cached) return cached;
-  const found = await api('search', {
-    part: 'snippet',
-    type: 'video',
-    videoEmbeddable: 'true',
-    safeSearch: 'moderate',
-    maxResults: '20',
-    q: query
-  });
-  const ids = (found.items || []).map((i) => i.id && i.id.videoId).filter(Boolean);
-  const details = ids.length ? await videoDetails(ids) : [];
-  const byId = new Map(details.map((v) => [v.youtubeId, v]));
-  const results = ids.map((id) => byId.get(id)).filter((v) => v && !v.live);
-  await saveYouTubeCache(key, results);
-  clearOldYouTubeCache().catch(() => {});
-  return results;
+  try {
+    const wanted = String(channel || '').trim();
+    if (isChannelKey(wanted)) {
+      let uploads = [];
+      try {
+        uploads = await channelUploads(wanted);
+      } catch (err) {
+        if (err && err.status === 429) throw err; // allowance used up: a keyword search would fail too
+      }
+      if (uploads.length >= MIN_UPLOADS) {
+        await saveYouTubeCache(key, uploads);
+        return uploads;
+      }
+    }
+    const found = await api('search', {
+      part: 'snippet',
+      type: 'video',
+      videoEmbeddable: 'true',
+      safeSearch: 'moderate',
+      maxResults: '20',
+      q: query
+    });
+    const ids = (found.items || []).map((i) => i.id && i.id.videoId).filter(Boolean);
+    const details = ids.length ? await videoDetails(ids) : [];
+    const byId = new Map(details.map((v) => [v.youtubeId, v]));
+    const results = ids.map((id) => byId.get(id)).filter((v) => v && !v.live);
+    await saveYouTubeCache(key, results);
+    clearOldYouTubeCache().catch(() => {});
+    return results;
+  } catch (err) {
+    const old = await cachedYouTube(key, STALE_MAX_AGE).catch(() => null);
+    if (old) return old;
+    throw err;
+  }
 }
