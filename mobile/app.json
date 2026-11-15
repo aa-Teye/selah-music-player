@@ -16,7 +16,7 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#08090C",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.selah.musicplayer",
       "infoPlist": {
         "UIBackgroundModes": [
