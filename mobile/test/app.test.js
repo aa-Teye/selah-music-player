@@ -1159,6 +1159,22 @@ test("YouTube's rule: on another tab a playing video shows in Selah's floating w
   expect(screen.getByTestId('float-drag')).toBeTruthy();
   expect(screen.getByTestId('youtube-area').props.style).toEqual(expect.objectContaining({ transform: expect.any(Array) })); // it can be moved
 
+  // a finger drag on the handle moves the window up and to the left
+  const touch = (x, y, from) => ({
+    touchHistory: {
+      indexOfSingleActiveTouch: 0, mostRecentTimeStamp: 1, numberActiveTouches: 1,
+      touchBank: [{ touchActive: true, startPageX: from.x, startPageY: from.y, startTimeStamp: 0, currentPageX: x, currentPageY: y, currentTimeStamp: 1, previousPageX: from.x, previousPageY: from.y, previousTimeStamp: 0 }]
+    },
+    nativeEvent: { pageX: x, pageY: y, touches: [{ pageX: x, pageY: y }], changedTouches: [{ pageX: x, pageY: y }], timestamp: 1 }
+  });
+  const handle = screen.getByTestId('float-drag');
+  const start = { x: 300, y: 700 };
+  await fireEvent(handle, 'responderGrant', touch(300, 700, start));
+  await fireEvent(handle, 'responderMove', touch(200, 400, start));
+  await fireEvent(handle, 'responderRelease', touch(200, 400, start));
+  const moved = screen.getByTestId('youtube-area').props.style.transform;
+  expect(moved).toEqual([{ translateX: -100 }, { translateY: -300 }]);
+
   // the expand button goes back to the YouTube tab
   await tap(screen.getByTestId('float-open'));
   expect(screen.queryByTestId('yt-float-video')).toBeNull();

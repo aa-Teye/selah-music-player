@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions, TouchableOpacity, Animated, PanResponder, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions, TouchableOpacity, Animated, PanResponder, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
@@ -67,7 +67,7 @@ import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeConte
 const LONG_TRACK_SECONDS = 600;
 // Selah's floating video window: YouTube's rule says a player must be at least 200×200
 const FLOATING_VIDEO_SIZE = 200;
-const FLOATING_BAR_HEIGHT = 32;
+const FLOATING_BAR_HEIGHT = 44;
 const FLOATING_MARGIN = 12;
 const FLOATING_TOP_ROOM = 70; // the floating window stays below the top bar
 
@@ -1719,7 +1719,8 @@ function SelahApp() {
                 <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
               </TouchableOpacity>
               <View style={styles.floatingDrag} {...floatPan.panHandlers} testID="float-drag" accessibilityLabel="Drag to move the video">
-                <Ionicons name="reorder-two" size={22} color="#9CA3AF" />
+                <Ionicons name="move" size={22} color="#FFFFFF" />
+                <Text style={styles.floatingDragText}>Hold and drag</Text>
               </View>
               <TouchableOpacity
                 onPress={() => handleTogglePlay(false)}
@@ -2025,7 +2026,8 @@ const makeStyles = (c) => StyleSheet.create({
     backgroundColor: '#111318'
   },
   floatingDrag: { flex: 1, height: FLOATING_BAR_HEIGHT, alignItems: 'center', justifyContent: 'center' },
-  floatingButton: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center' }
+  floatingDragText: { color: '#9CA3AF', fontSize: 10, fontWeight: '700', marginTop: -2 },
+  floatingButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }
 });
 
 export default function App() {
