@@ -16,6 +16,7 @@ import {
   useWindowDimensions
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { artistSearch, artistChannel } from '../data/discover';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import YouTubeService, { extractVideoId, searchYouTubeWithStatus } from '../services/youtubeService';
 import { useColors, useThemedStyles } from '../theme/ThemeContext';
@@ -51,15 +52,17 @@ export const SEARCH_PROBLEMS = {
 };
 export const MIN_VIDEO_PICTURE = { width: 120, height: 70 };
 
+// artist: the chip asks the artist's own channel (about 3 units, not 100)
+const HEADER_SEARCH_WAIT = 1000;
 const QUICK_SEARCH_CHIPS = [
   { id: 'curated', label: 'Curated Praise' },
-  { id: 'brandon-lake', label: 'Brandon Lake', query: 'Brandon Lake Live Worship' },
-  { id: 'cece-winans', label: 'CeCe Winans', query: 'CeCe Winans Goodness of God' },
-  { id: 'maverick-city', label: 'Maverick City', query: 'Maverick City Music' },
-  { id: 'dunsin-oyekan', label: 'Dunsin Oyekan', query: 'Dunsin Oyekan Worship' },
-  { id: 'nathaniel-bassey', label: 'Nathaniel Bassey', query: 'Nathaniel Bassey Songs' },
-  { id: 'hillsong', label: 'Hillsong', query: 'Hillsong Worship' },
-  { id: 'elevation', label: 'Elevation Worship', query: 'Elevation Worship Live' },
+  { id: 'brandon-lake', label: 'Brandon Lake', artist: 'Brandon Lake' },
+  { id: 'cece-winans', label: 'CeCe Winans', artist: 'CeCe Winans' },
+  { id: 'maverick-city', label: 'Maverick City', artist: 'Maverick City Music' },
+  { id: 'dunsin-oyekan', label: 'Dunsin Oyekan', artist: 'Dunsin Oyekan' },
+  { id: 'nathaniel-bassey', label: 'Nathaniel Bassey', artist: 'Nathaniel Bassey' },
+  { id: 'hillsong', label: 'Hillsong', artist: 'Hillsong Worship' },
+  { id: 'elevation', label: 'Elevation Worship', artist: 'Elevation Worship' },
   { id: 'instrumental-prayer', label: 'Prayer Piano', query: 'Instrumental Prayer Worship Piano' }
 ];
 
@@ -209,7 +212,6 @@ function YouTubeWatchScreen({
   }, [ytIsCurrent, isYtPlaying, isPlayerReady, onVideoProgress]);
 
   const scrollRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
   const playerRef = useRef(null);
 
   // The small window shows the top of the screen: make sure that is the video
@@ -231,11 +233,15 @@ function YouTubeWatchScreen({
   };
 
   // Synchronize when global searchQuery prop updates from TopHeader
+  // (Each YouTube search uses up part of the day's allowance, so this waits until typing has stopped.)
   useEffect(() => {
-    if (searchQuery && searchQuery.trim() !== localSearch) {
-      setLocalSearch(searchQuery);
-      performSearch(searchQuery);
-    }
+    const typed = (searchQuery || '').trim();
+    if (!typed || typed === localSearch.trim()) return undefined;
+    setLocalSearch(searchQuery);
+    if (typed.length < 3) return undefined;
+    const wait = setTimeout(() => performSearch(typed), HEADER_SEARCH_WAIT);
+    return () => clearTimeout(wait);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // Execute direct YouTube Search
@@ -292,8 +298,9 @@ function YouTubeWatchScreen({
       setHasSearched(false);
       setSearchProblem(null);
     } else {
-      setLocalSearch(chip.query);
-      performSearch(chip.query);
+      const query = chip.artist ? artistSearch(chip.artist) : chip.query;
+      setLocalSearch(query);
+      performSearch(query, chip.artist ? artistChannel(chip.artist) : '');
     }
   };
 
@@ -685,15 +692,9 @@ function YouTubeWatchScreen({
             placeholderTextColor={c.textSubtle}
             value={localSearch}
             onChangeText={(text) => {
+              // no search while typing: each one uses part of the day's allowance. Search runs on the search key.
               setLocalSearch(text);
-              if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-              searchTimeoutRef.current = setTimeout(() => {
-                if (text.trim().length >= 2) {
-                  performSearch(text);
-                } else if (!text.trim()) {
-                  handleClearSearch();
-                }
-              }, 600);
+              if (!text.trim()) handleClearSearch();
             }}
             onSubmitEditing={handleSearchSubmit}
             returnKeyType="search"

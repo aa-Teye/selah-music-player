@@ -1201,6 +1201,24 @@ test('Libraries: genres and gospel artists; a genre shows its latest songs on Yo
   done();
 });
 
+test("a YouTube search is asked once, when the person presses search, not on every letter typed (each one uses the day's allowance)", async () => {
+  const done = useSelahServer();
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  global.fetch.mockClear();
+  await fireEvent.changeText(screen.getByTestId('yt-search-input'), 'hill');
+  await fireEvent.changeText(screen.getByTestId('yt-search-input'), 'hillsong wor');
+  await fireEvent.changeText(screen.getByTestId('yt-search-input'), 'hillsong worship');
+  await settle();
+  expect(youtubeSearches()).toEqual([]);
+  await fireEvent(screen.getByTestId('yt-search-input'), 'submitEditing');
+  await settle();
+  expect(youtubeSearches()).toEqual([expect.stringContaining('q=hillsong worship')]);
+  done();
+});
+
 test('following an artist: shows on Home, is remembered, and opens their latest songs', async () => {
   const done = useSelahServer();
   await render(<App />);

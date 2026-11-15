@@ -1705,7 +1705,7 @@ function SelahApp() {
           <YouTubeWatchScreen
             currentTrack={currentTrack}
             isPlaying={isPlaying}
-            searchQuery={searchQuery}
+            searchQuery={activeTab === 'youtube' ? searchQuery : ''}
             onPlayTrack={handlePlayTrack}
             onTogglePlayPause={handleTogglePlay}
             onAddYouTubeTrack={handleAddYouTubeTrack}
