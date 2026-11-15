@@ -51,7 +51,7 @@ rules (Developer Policies and Required Minimum Functionality).
 | Say when something comes from YouTube | ✅ | Libraries: "Pictures from the artists' YouTube channels" with the YouTube logo; Home: "pictures from YouTube" |
 | Do not change, cover or block the player | ✅ | Play and pause use the player's own documented functions; nothing covers the player |
 | Autoplay only when the player can be seen | ✅ | Videos start when you tap them on the YouTube tab |
-| **No playing from a player that is not on screen** | ⚠️ | **Accepted by the owner.** When you leave the YouTube tab for another tab, the video keeps playing with the player hidden. YouTube's rule III.I.9 forbids this. If YouTube or Google objects: pause the video when you leave the YouTube tab (one small change) |
+| No playing from a player that is not on screen | ✅ | On another Selah tab a playing video shows in Selah's floating window (200 × 200, with expand and stop buttons); outside the app it shows in Android's small window. Paused videos are kept out of sight. (Replaces the earlier hidden playing that YouTube's rule III.I.9 forbids) |
 | **Picture-in-picture window size** | ⚠️ | **Accepted by the owner.** Android's small window can be smaller than 200 × 200. If YouTube objects: remove the small window |
 | Daily allowance | ☐ | 10,000 free units a day (about 100 new searches; repeated searches are free for 12 hours). When Selah grows, ask Google for more (a free YouTube compliance check) |
 
