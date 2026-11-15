@@ -104,7 +104,7 @@ controls in the notification." Google may ask for a short screen recording that 
   and shared lyrics. Collected; optional; App functionality.
 - **App activity › App interactions:** play counts inside backups. Collected; optional; App functionality.
 - **App activity › In-app search history:** YouTube searches go through the Selah server to YouTube's official
-  search. The server remembers recent searches for up to a day (not linked to anyone) and then deletes them.
+  search. The server remembers recent searches for a few days (not linked to anyone, deleted after 5 days at most).
   Not linked to you; App functionality.
 - **App activity › Other actions:** reports of shared lyrics or of the person who shared them, and accepting the
   sharing rules (stored with your account). Collected; optional; Fraud prevention, security and compliance.
