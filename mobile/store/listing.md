@@ -129,3 +129,56 @@ Version 2 (push notifications, Premium payments) and the iPhone: see `../RELEASI
 Selah's YouTube search reads YouTube's search page directly. YouTube's rules prefer its official
 YouTube Data API. If Google or YouTube ever object, switch the search to the official API: it needs a free key from
 Google Cloud and has a limited number of searches per day.
+
+---
+
+## App Store (iPhone) text
+
+Use these instead of the Android texts. The iPhone version leads with worship videos and discovery, because many iPhone
+users do not keep music files on their phone. Do not promise folder scanning or SD cards on iPhone.
+
+**Name:** Selah Music Player (30 max; if taken: Selah: Worship Music Player)
+
+**Subtitle** (30 max)
+```
+Worship music, videos, lyrics
+```
+
+**Promotional text** (170 max)
+```
+Find the latest gospel songs, watch worship videos, follow your favourite artists, read a Bible verse every day and keep your own music with synced lyrics.
+```
+
+**Description**
+```
+Selah is a music player made for worship.
+
+WORSHIP VIDEOS AND NEW SONGS
+• Search and watch worship and gospel videos with the official YouTube player
+• Browse genres: Worship, Praise, Ghana Gospel, Nigerian Gospel, Highlife Gospel, Hymns, Choir and more
+• Follow your favourite gospel artists and see their latest songs
+• Keep watching in a small window you can move around while you use other parts of the app
+
+LYRICS THAT FOLLOW THE SONG
+• Synced lyrics that scroll with the music
+• Add your own lyrics, adjust the timing and the text size
+• Share a lyric line as a beautiful picture
+
+YOUR OWN MUSIC
+• Play songs you add from the Files app
+• Playlists, loved songs, repeat, shuffle, playback speed and a sleep timer
+• Works offline for your own songs
+
+A VERSE FOR EVERY DAY
+• A Bible verse for every day of the year (King James Version), with a short thought
+• An optional daily reminder at the time you choose
+
+YOUR FREE SELAH ACCOUNT (optional)
+• Back up your playlists, loved songs, followed artists and typed lyrics
+• Get them back on a new phone just by logging in
+• Delete your account any time inside the app
+
+No ads. No tracking.
+```
+
+**What's New:** `Welcome to Selah.`
