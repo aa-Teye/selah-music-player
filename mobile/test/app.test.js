@@ -1140,6 +1140,33 @@ test('no small-window button where picture-in-picture does not exist (iPhone, Ex
   expect(screen.queryByTestId('yt-small-window')).toBeNull();
 });
 
+test("YouTube's rule: on another tab a playing video shows in Selah's floating window, never hidden", async () => {
+  await render(<App />);
+  await settle();
+  if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+  await tap(screen.getByTestId('tab-youtube'));
+  await tap(screen.getByText('Powerful Worship Songs for Prayer'));
+  expect(screen.queryByTestId('yt-float-video')).toBeNull(); // on the YouTube tab: the normal screen
+
+  // another tab: the video keeps playing, in the floating window, at least 200×200
+  await tap(screen.getByTestId('tab-home'));
+  expect(global.__youtubeProps.play).toBe(true);
+  expect(screen.getByTestId('yt-float-video')).toBeTruthy();
+  expect(global.__youtubeProps.height).toBeGreaterThanOrEqual(200);
+  expect(global.__youtubeProps.width).toBeGreaterThanOrEqual(200);
+
+  // the expand button goes back to the YouTube tab
+  await tap(screen.getByTestId('float-open'));
+  expect(screen.queryByTestId('yt-float-video')).toBeNull();
+  expect(screen.getByTestId('yt-search-input')).toBeTruthy();
+
+  // × stops the video: nothing plays hidden
+  await tap(screen.getByTestId('tab-home'));
+  await tap(screen.getByTestId('float-close'));
+  expect(global.__youtubeProps.play).toBe(false);
+  expect(screen.queryByTestId('yt-float-video')).toBeNull();
+});
+
 // YouTube searches go to YouTube's official search through Selah's server (never youtube.com pages)
 function youtubeSearches() {
   const urls = global.fetch.mock.calls.map(([url]) => decodeURIComponent(String(url)));
