@@ -1232,6 +1232,62 @@ test('following an artist: shows on Home, is remembered, and opens their latest 
   done();
 });
 
+test("the day's YouTube searches last: an artist asks for their own channel, a genre searches, and a used-up day says so", async () => {
+  const { createFakeServer, BASE } = require('./fakeServer');
+  const { setApiUrlForTests } = require('../src/services/apiClient');
+  setApiUrlForTests(BASE);
+  const server = createFakeServer({ otherFetch: global.fetch });
+  global.fetch = server.fetch;
+  const searches = () =>
+    server.fetch.mock.calls.map(([url]) => decodeURIComponent(String(url))).filter((url) => url.includes('/api/youtube/search'));
+  try {
+    await render(<App />);
+    await settle();
+    if (isAndroid) await tap(screen.getByTestId('deep-scan-done'));
+
+    // an artist from Libraries: their own channel is sent along (about 3 units instead of 100)
+    await tap(screen.getByTestId('open-libraries'));
+    await tap(screen.getByTestId('artist-Joe Mettle'));
+    const year = new Date().getFullYear();
+    expect(searches().pop()).toContain(`q=latest Joe Mettle songs ${year}&channel=@JoeMettleMinistries`);
+
+    // a genre has no channel: a normal search
+    await tap(screen.getByTestId('tab-home'));
+    await tap(screen.getByTestId('open-libraries'));
+    await tap(screen.getByTestId('genre-ghana'));
+    expect(searches().pop()).not.toContain('channel=');
+
+    // an artist you follow, opened from Home: also their channel
+    await tap(screen.getByTestId('tab-home'));
+    await tap(screen.getByTestId('open-libraries'));
+    await tap(screen.getByTestId('follow-Sinach'));
+    await tap(screen.getByTestId('libraries-close'));
+    await tap(screen.getByTestId('home-artist-Sinach'));
+    expect(searches().pop()).toContain('channel=UCcaV40yrjS5R88xYHxK_0rA');
+
+    // the day's searches are used up and there is nothing remembered: it says so, not "No songs found"
+    server.youtubeResting = true;
+    await tap(screen.getByTestId('tab-home'));
+    await tap(screen.getByTestId('open-libraries'));
+    await tap(screen.getByTestId('artist-Mercy Chinwo'));
+    await settle();
+    expect(screen.getByTestId('yt-problem-resting')).toBeTruthy();
+    expect(screen.getByText('Search is resting until tomorrow morning')).toBeTruthy();
+    expect(screen.queryByText(/No songs found/)).toBeNull();
+
+    // the next morning
+    server.youtubeResting = false;
+    await tap(screen.getByTestId('tab-home'));
+    await tap(screen.getByTestId('open-libraries'));
+    await tap(screen.getByTestId('artist-Mercy Chinwo'));
+    await settle();
+    expect(screen.queryByTestId('yt-problem-resting')).toBeNull();
+    expect(screen.getByTestId('yt-empty')).toBeTruthy(); // really nothing in the fake answer: the normal message
+  } finally {
+    setApiUrlForTests(null);
+  }
+});
+
 test("artists show their own YouTube channel pictures, in Libraries and on Home, and say they come from YouTube", async () => {
   const { createFakeServer, BASE } = require('./fakeServer');
   const { setApiUrlForTests } = require('../src/services/apiClient');

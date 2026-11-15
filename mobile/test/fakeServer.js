@@ -118,6 +118,8 @@ function createFakeServer({ otherFetch } = {}) {
         if (!me) return respond(401, { error: 'Please log in to your Selah account' });
         return respond(200, { deleted: server.backups.delete(me.id) });
       case 'GET /api/youtube/search':
+        // server.youtubeResting: the day's allowance of searches is used up
+        if (server.youtubeResting) return respond(429, { error: 'Search is resting until tomorrow morning.', code: 'resting' });
         return respond(200, { results: server.youtubeResults || [] });
       case 'GET /api/youtube/videos': {
         const ids = (new URL(u).searchParams.get('ids') || '').split(',');
