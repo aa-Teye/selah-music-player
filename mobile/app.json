@@ -22,6 +22,7 @@
         "UIBackgroundModes": [
           "audio"
         ],
+        "ITSAppUsesNonExemptEncryption": false,
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true
       }
