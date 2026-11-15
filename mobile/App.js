@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, StatusBar, Alert, Platform, Modal, AppState, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, requestNotificationPermissionsAsync } from 'expo-audio';
 
@@ -64,6 +65,9 @@ import { ThemeProvider, useTheme, useThemedStyles } from './src/theme/ThemeConte
 // kinds = which scanned songs this scan fully covers (only those can be removed as "gone")
 // Songs at least this long (sermons, worship sets) remember their own spot
 const LONG_TRACK_SECONDS = 600;
+// Selah's floating video window: YouTube's rule says a player must be at least 200×200
+const FLOATING_VIDEO_SIZE = 200;
+const FLOATING_BAR_HEIGHT = 32;
 
 function mergeScan(prev, foundTracks, kinds = ['local-scan-', 'local-doc-']) {
   const freshById = new Map(foundTracks.map((t) => [t.id, t]));
@@ -193,6 +197,12 @@ function SelahApp() {
   const [externalSearch, setExternalSearch] = useState(null); // { query, at } from Libraries
   const [songsToGetBack, setSongsToGetBack] = useState([]); // from a restore: not on this phone yet
   const [inPip, setInPip] = useState(false); // Android: shrunk to the small picture-in-picture window
+  // A YouTube video playing while you are on another tab shows in Selah's floating window
+  const showFloatingVideo =
+    !inPip &&
+    activeTab !== 'youtube' &&
+    isPlaying &&
+    Boolean(currentTrack && (currentTrack.sourceType === 'youtube' || currentTrack.youtubeId));
   const [tourVisible, setTourVisible] = useState(false);
   const [whatsNew, setWhatsNew] = useState(null);
   const pendingTourRef = useRef(false);
@@ -1655,18 +1665,42 @@ function SelahApp() {
           />
         )}
 
-        {/* Keep YouTube player persistent across tabs so audio continues playing in background without Android View.GONE pause */}
+        {/* One YouTube player for the whole app (it never restarts). On the YouTube tab: the full screen.
+            On another tab while a video plays: Selah's floating window, so the video can always be seen
+            (YouTube's rule: no playing from a hidden player). Paused: kept out of sight. */}
         <View
           style={
             inPip
               ? styles.pipVideo // the small picture-in-picture window: only the video
               : activeTab === 'youtube'
               ? { flex: 1 }
+              : showFloatingVideo
+              ? styles.floatingVideo
               : { position: 'absolute', top: -99999, left: -99999, width: 1, height: 1, opacity: 0 }
           }
-          pointerEvents={inPip || activeTab === 'youtube' ? 'auto' : 'none'}
+          pointerEvents={inPip || activeTab === 'youtube' || showFloatingVideo ? 'auto' : 'none'}
           testID="youtube-area"
         >
+          {showFloatingVideo && (
+            <View style={styles.floatingBar}>
+              <TouchableOpacity
+                onPress={() => setActiveTab('youtube')}
+                style={styles.floatingButton}
+                accessibilityLabel="Open the YouTube tab"
+                testID="float-open"
+              >
+                <Ionicons name="expand-outline" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleTogglePlay(false)}
+                style={styles.floatingButton}
+                accessibilityLabel="Stop the video"
+                testID="float-close"
+              >
+                <Ionicons name="close" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          )}
           <YouTubeWatchScreen
             currentTrack={currentTrack}
             isPlaying={isPlaying}
@@ -1688,6 +1722,7 @@ function SelahApp() {
             onResumeDone={clearResumeVideo}
             externalSearch={externalSearch}
             pipMode={inPip}
+            floatSize={showFloatingVideo ? FLOATING_VIDEO_SIZE : 0}
             onOpenSmallWindow={pipAvailable() ? openSmallWindow : undefined}
           />
         </View>
@@ -1933,7 +1968,33 @@ const makeStyles = (c) => StyleSheet.create({
     zIndex: 50,
     elevation: 50,
     backgroundColor: '#000000'
-  }
+  },
+  // Selah's floating video window on other tabs: a 200×200 player (YouTube's minimum) with its buttons above
+  floatingVideo: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    width: FLOATING_VIDEO_SIZE,
+    height: FLOATING_VIDEO_SIZE + FLOATING_BAR_HEIGHT,
+    zIndex: 40,
+    elevation: 12,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#000000',
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 }
+  },
+  floatingBar: {
+    height: FLOATING_BAR_HEIGHT,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    backgroundColor: '#111318'
+  },
+  floatingButton: { width: 34, height: 30, alignItems: 'center', justifyContent: 'center' }
 });
 
 export default function App() {
